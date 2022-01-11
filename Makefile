@@ -1,6 +1,6 @@
 NAME		= webserv
 
-SRCS		= main.cpp
+SRCS		= src/main.cpp src/net/Server.cpp
 
 OBJS		= $(SRCS:.cpp=.o)
 
