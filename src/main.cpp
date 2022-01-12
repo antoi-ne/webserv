@@ -1,15 +1,21 @@
+#include <iostream>
+
 #include "./net/Server.hpp"
 
 using namespace ws;
 
-void client_handler(int fd)
-{
-	send(fd, "Hello World!\n", 13, 0);
-}
-
 int main(void)
 {
-	net::Server serv("9000", 5, &client_handler);
+	net::Server server;
 
-	serv.listen();
+	server.listen("9000");
+
+	for(;;)
+	{
+		net::Socket sock = server.accept();
+		sock.send("Hello World!\n");
+		std::string s = sock.recv(50);
+		std::cout << "received: " << s << std::endl;
+		sock.close();
+	}
 }

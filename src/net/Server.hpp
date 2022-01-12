@@ -1,12 +1,15 @@
 #ifndef WS_NET_SERVER_HPP
-#define WS_NET_SERVER_HPP
+# define WS_NET_SERVER_HPP
 
-#include <string>
-#include <cstdint>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
+# include <string>
+# include <iostream>
+
+# include <unistd.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netdb.h>
+
+# include "Socket.hpp"
 
 namespace ws
 {
@@ -15,18 +18,18 @@ namespace ws
 		class Server
 		{
 		public:
-			Server(std::string port, int backlog, void (*handler)(int));
 
+			Server();
 			~Server();
 
-			void listen();
+			void listen(std::string port);
+
+			Socket accept();
 
 		private:
-			std::string _port;
-			int _backlog;
-			struct addrinfo *_serv_addr;
-			int _socket;
-			void (*_handler)(int);
+
+			int _socketfd;
+
 		};
 	}
 }
