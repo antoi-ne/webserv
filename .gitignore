@@ -1,5 +1,6 @@
 *.[oa]
 *.dSYM
+/webserv
 
 DS_Store
 *.swp

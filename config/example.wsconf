@@ -1,0 +1,9 @@
+server:
+	listen 8000
+
+	server_name
+
+	root /example/
+
+server:
+	listen 9000
