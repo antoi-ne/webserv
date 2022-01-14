@@ -1,5 +1,5 @@
-#ifndef WS_UTILS_LOG_HPP
-#define WS_UTILS_LOG_HPP
+#ifndef WS_SHARED_LOG_HPP
+#define WS_SHARED_LOG_HPP
 
 #include <string>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 namespace ws
 {
-	namespace utils
+	namespace shared
 	{
 		class Log
 		{
