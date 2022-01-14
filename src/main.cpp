@@ -3,6 +3,7 @@
 #include "./net/Server.hpp"
 #include "./conf/Config.hpp"
 #include "./conf/Parser.hpp"
+#include "./http/Res.hpp"
 
 using namespace ws;
 
