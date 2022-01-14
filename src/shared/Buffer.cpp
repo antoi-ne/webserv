@@ -4,6 +4,11 @@ namespace ws
 {
 	namespace shared
 	{
+		Buffer::Buffer(size_t size)
+		{
+			this->_size = size;
+			this->_data = new char[this->_size]();
+		}
 
 		Buffer::Buffer(std::string str)
 		{
@@ -38,6 +43,5 @@ namespace ws
 		{
 			return std::string(this->_data, this->_size);
 		}
-
 	}
 }

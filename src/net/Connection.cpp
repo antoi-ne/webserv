@@ -1,0 +1,19 @@
+#include "Connection.hpp"
+
+namespace ws
+{
+	namespace net
+	{
+		void Connection::send(shared::Buffer buff)
+		{
+			::send(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+		}
+
+		shared::Buffer Connection::recv(size_t size)
+		{
+			shared::Buffer buff(size);
+
+			::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+		}
+	}
+}

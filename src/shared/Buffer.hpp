@@ -13,7 +13,8 @@ namespace ws
 		{
 		public:
 
-			Buffer(std::string str = "");
+			Buffer(size_t size = 0);
+			Buffer(std::string str);
 			Buffer(char *buff, size_t size);
 			~Buffer();
 

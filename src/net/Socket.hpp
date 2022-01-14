@@ -1,11 +1,7 @@
 #ifndef WS_NET_SOCKET_HPP
 # define WS_NET_SOCKET_HPP
 
-# include <exception>
-# include <string>
-# include <iostream>
 # include <unistd.h>
-# include <sys/socket.h>
 
 namespace ws
 {
@@ -15,24 +11,16 @@ namespace ws
 		{
 		public:
 
-			class SocketClosedException: public std::exception
-		{
-			public:
-				virtual const char* what() const throw();
-		};
+			Socket(int fd = -1);
+			virtual ~Socket();
 
-			Socket(int fd);
-			~Socket();
-
-			std::string recv(size_t size);
-			void send(std::string str);
+			int get_fd();
 
 			void close();
 
-		private:
+		protected:
 
-			int _fd;
-			bool _open;
+			int _sockfd;
 
 		};
 	}
