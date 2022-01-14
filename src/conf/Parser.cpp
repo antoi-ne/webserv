@@ -11,7 +11,7 @@ namespace ws
 			std::string tab("\t");
 			while (it != content.end())
 			{
-				if (it->length() == 0)  // empty line
+				if (it->length() == 0) // empty line
 				{}
 				else if (!it->compare(0, tab.size(), tab)) // starts with tab
 				{

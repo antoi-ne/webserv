@@ -1,13 +1,15 @@
 #ifndef WS_CONF_CONFG_HPP
 # define WS_CONF_CONFG_HPP
 
-#include <vector>
-#include <map>
+# include <string>
+# include <vector>
+# include <map>
 
 namespace ws
 {
 	namespace conf
 	{
+
 		struct Target
 		{
 			std::string host;
@@ -32,6 +34,7 @@ namespace ws
 		{
 			std::vector<Server> servers;
 		};
+
 	}
 }
 

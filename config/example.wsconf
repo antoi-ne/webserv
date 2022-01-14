@@ -1,9 +1,13 @@
 server:
-	listen 8000
+ listen localhost 9000
 
-	server_name
+ server_name hello.local
 
-	root /example/
+ root /example/
+
+ location x
+  root /hello
 
 server:
-	listen 9000
+ listen 10.5.5.5 9000
+
