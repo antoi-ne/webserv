@@ -6,7 +6,7 @@ namespace ws
 	{
 		Server::Server()
 		{
-			if (this->_sockfd = ::socket(AF_INET, SOCK_STREAM, 0) < 0)
+			if ((this->_sockfd = ::socket(AF_INET, SOCK_STREAM, 0)) < 0)
 				shared::Log::fatal("net::Server: syscall socket failed");
 		}
 
@@ -26,9 +26,9 @@ namespace ws
 				shared::Log::fatal("net::Server: syscall listen failed");
 		}
 
-		Socket Server::accept()
+		Connection Server::accept()
 		{
-			return Socket(::accept(this->_sockfd, NULL, NULL));
+			return Connection(::accept(this->_sockfd, NULL, NULL));
 		}
 	}
 }

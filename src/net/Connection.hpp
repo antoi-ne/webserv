@@ -14,6 +14,8 @@ namespace ws
 		{
 		public:
 
+			Connection(int fd = -1);
+
 			void send(shared::Buffer buff);
 
 			shared::Buffer recv(size_t size);

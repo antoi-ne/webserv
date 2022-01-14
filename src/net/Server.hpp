@@ -25,7 +25,7 @@ namespace ws
 
 			void listen(in_port_t port);
 
-			Socket accept();
+			Connection accept();
 
 		};
 	}

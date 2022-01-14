@@ -1,26 +1,25 @@
 #include <iostream>
 #include <string>
 
+#include "shared/Buffer.hpp"
+#include "net/Connection.hpp"
+#include "net/Server.hpp"
+
+using namespace ws;
 
 int main(void)
 {
-	// net::Server server;
-	// std::string const PORT = "9000";
+	net::Server serv;
+	net::Connection con;
 
-	// server.listen(PORT);
-	// utils::Log::info("webserv running on port: " + PORT);
 
+	serv.listen(9000);
 	
-	// for(;;)
-	// {
-	// 	net::Socket sock = server.accept();
-	// 	sock.send("Hello World!\n");
-	// 	std::cout << "received: " << sock.recv(100) << std::endl;
-	// 	sock.close();
-	// }
-
-	std::string hello("hello");
-
-	std::cout << hello.length() << std::endl;
-		std::cout << hello.size() << std::endl;
+	for (;;)
+	{
+		con = serv.accept();
+		std::cout << "Received: " << con.recv(1024).to_string() << std::endl;
+		con.send(shared::Buffer(std::string("Goodbye!")));
+		con.close();
+	}
 }

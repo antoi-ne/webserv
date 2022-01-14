@@ -4,6 +4,10 @@ namespace ws
 {
 	namespace net
 	{
+		Connection::Connection(int fd)
+			: Socket(fd)
+		{}
+
 		void Connection::send(shared::Buffer buff)
 		{
 			::send(this->get_fd(), buff.get_ptr(), buff.size(), 0);
@@ -14,6 +18,8 @@ namespace ws
 			shared::Buffer buff(size);
 
 			::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+
+			return buff;
 		}
 	}
 }
