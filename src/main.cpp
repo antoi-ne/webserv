@@ -11,12 +11,18 @@ using namespace ws;
 
 int main(void)
 {
+	net::Server srv1(9000);
+	net::Server srv2(9001);
+
 	std::list<net::Server> srvs;
 	std::list<net::Connection> ready;
 	std::list<net::Connection>::iterator it;
 
-	srvs.push_back(net::Server(9000));
-	srvs.push_back(net::Server(9001));
+	srv1.listen(10);
+	srv2.listen(10);
+
+	srvs.push_back(srv1);
+	srvs.push_back(srv2);
 
 	net::Pool pool(srvs);
 
@@ -26,7 +32,7 @@ int main(void)
 
 		for (it = ready.begin(); it != ready.end(); it++)
 		{
-			std::cout << "received: " << it->recv(1024);
+			std::cout << "received" <<" : " << it->recv(1024).to_string();
 		}
 	}
 }

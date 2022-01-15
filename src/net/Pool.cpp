@@ -44,7 +44,10 @@ namespace ws
 			for (cit = this->_con.begin(); cit != this->_con.end(); cit++)
 			{
 				if (FD_ISSET(cit->get_fd(), &reader_set))
+				{
+					shared::Log::info("net::Pool connection ready to read");
 					ready.push_back(*cit);
+				}
 			}
 
 			// called AFTER the connections loop to prevent new cons to be checked
@@ -57,6 +60,7 @@ namespace ws
 						shared::Log::error("net::Pool accept failed");
 						continue;
 					}
+					shared::Log::info("net::Pool new connection");
 					this->_con.push_back(con);
 					FD_SET(con.get_fd(), &this->_set);
 					if (con.get_fd() > this->_fdmax)
