@@ -4,21 +4,20 @@
 #include "shared/Buffer.hpp"
 #include "net/Connection.hpp"
 #include "net/Server.hpp"
+#include "net/Pool.hpp"
 
 using namespace ws;
 
 int main(void)
 {
-	net::Server serv(8900);
-	net::Connection con;
+	net::Pool pool;
 
-	serv.listen(10);
-	
-	for (;;)
-	{
-		con = serv.accept();
-		std::cout << "Received: " << con.recv(100).to_string();
-		con.send(shared::Buffer("Bye!\n"));
-		con.close();
-	}
+	pool.add_server(net::Server(9000));
+	pool.add_server(net::Server(9001));
+	pool.add_server(net::Server(9002));
+	pool.add_server(net::Server(9003));
+	pool.add_server(net::Server(9004));
+
+	pool.probe();
+
 }
