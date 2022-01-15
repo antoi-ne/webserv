@@ -4,31 +4,53 @@ namespace ws
 {
 	namespace net
 	{
-		Server::Server()
+		Server::Server(in_port_t port)
 		{
-			if ((this->_sockfd = ::socket(AF_INET, SOCK_STREAM, 0)) < 0)
-				shared::Log::fatal("net::Server: syscall socket failed");
+			struct addrinfo hints, *servinfo, *p;
+			int yes = 1;
+
+			std::memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_UNSPEC;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_flags = AI_PASSIVE;
+
+			if (::getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &servinfo) < 0)
+				shared::Log::fatal("net::Server: syscall getaddrinfo failed");
+
+			for (p = servinfo; p != NULL; p = p->ai_next)
+			{
+				if ((this->_sockfd = ::socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+					continue;
+
+				if (::setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
+					shared::Log::fatal("net::Server: syscall setsockopt failed");
+
+				if (::bind(this->_sockfd, p->ai_addr, p->ai_addrlen) < 0)
+				{
+					::close(this->_sockfd);
+					continue;
+				}
+
+				break;
+			}
+
+			freeaddrinfo(servinfo);
+
+			if (p == NULL)
+				shared::Log::fatal("net::Server: failed to bind");
 		}
 
-		void Server::listen(in_port_t port)
+		void Server::listen(int backlog)
 		{
-			struct sockaddr_in addr;
-
-			std::memset(&addr, 0, sizeof(addr));
-			addr.sin_family = AF_INET;
-			addr.sin_addr.s_addr = htonl(INADDR_ANY);
-			addr.sin_port = port;
-
-			if (::bind(this->_sockfd, (struct sockaddr *)&addr,sizeof(addr)) < 0)
-				shared::Log::fatal("net::Server: syscall bind failed");
-
-			if (::listen(this->_sockfd, 10) < 0)
+			if (::listen(this->_sockfd, backlog) < 0)
 				shared::Log::fatal("net::Server: syscall listen failed");
 		}
 
 		Connection Server::accept()
 		{
-			return Connection(::accept(this->_sockfd, NULL, NULL));
+			int cs = ::accept(this->_sockfd, NULL, NULL);
+
+			return Connection(cs);
 		}
 	}
 }

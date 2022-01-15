@@ -9,17 +9,16 @@ using namespace ws;
 
 int main(void)
 {
-	net::Server serv;
+	net::Server serv(8900);
 	net::Connection con;
 
-
-	serv.listen(9000);
+	serv.listen(10);
 	
 	for (;;)
 	{
 		con = serv.accept();
-		std::cout << "Received: " << con.recv(1024).to_string() << std::endl;
-		con.send(shared::Buffer(std::string("Goodbye!")));
+		std::cout << "Received: " << con.recv(100).to_string();
+		con.send(shared::Buffer("Bye!\n"));
 		con.close();
 	}
 }

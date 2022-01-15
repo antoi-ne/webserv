@@ -9,9 +9,7 @@ namespace ws
 		{}
 
 		Socket::~Socket()
-		{
-			this->close();
-		}
+		{}
 
 		void Socket::close()
 		{

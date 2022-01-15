@@ -21,9 +21,9 @@ namespace ws
 		{
 		public:
 
-			Server();
+			Server(in_port_t port);
 
-			void listen(in_port_t port);
+			void listen(int backlog);
 
 			Connection accept();
 

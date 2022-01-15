@@ -8,13 +8,14 @@ namespace ws
 		{
 			this->_size = size;
 			this->_data = new char[this->_size]();
+			std::fill_n(this->_data, this->_size, 0);
 		}
 
 		Buffer::Buffer(std::string str)
 		{
 			this->_size = str.size();
 			this->_data = new char[this->_size]();
-			std::fill_n(this->_data, this->_size, 0);
+			std::memcpy(this->_data, str.c_str(), this->_size);
 		}
 
 		Buffer::Buffer(char *buff, size_t size)
