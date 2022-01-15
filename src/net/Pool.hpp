@@ -19,16 +19,15 @@ namespace ws
 		{
 		public:
 
-			Pool();
+			Pool(std::list<Server> srv);
 			~Pool();
 
-			void add_server(Server srv);
-			void add_connection(Connection con);
-
-			void probe();
+			std::list<Connection> probe();
 
 		private:
 
+			fd_set _set;
+			int _fdmax;
 			std::list<Server> _srv;
 			std::list<Connection> _con;
 

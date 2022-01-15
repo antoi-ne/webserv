@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <list>
 
 #include "shared/Buffer.hpp"
 #include "net/Connection.hpp"
@@ -10,14 +11,22 @@ using namespace ws;
 
 int main(void)
 {
-	net::Pool pool;
+	std::list<net::Server> srvs;
+	std::list<net::Connection> ready;
+	std::list<net::Connection>::iterator it;
 
-	pool.add_server(net::Server(9000));
-	pool.add_server(net::Server(9001));
-	pool.add_server(net::Server(9002));
-	pool.add_server(net::Server(9003));
-	pool.add_server(net::Server(9004));
+	srvs.push_back(net::Server(9000));
+	srvs.push_back(net::Server(9001));
 
-	pool.probe();
+	net::Pool pool(srvs);
 
+	for (;;)
+	{
+		ready = pool.probe();
+
+		for (it = ready.begin(); it != ready.end(); it++)
+		{
+			std::cout << "received: " << it->recv(1024);
+		}
+	}
 }
