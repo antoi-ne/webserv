@@ -55,16 +55,16 @@ namespace ws
 			{
 				if (FD_ISSET(sit->get_fd(), &reader_set))
 				{
-					if ((con = sit->accept()).get_fd() < 0)
+					for (;;)
 					{
-						shared::Log::error("net::Pool accept failed");
-						continue;
+						if ((con = sit->accept()).get_fd() <= 0)
+							break;
+						shared::Log::info("net::Pool new connection");
+						this->_con.push_back(std::make_pair(con, *sit));
+						FD_SET(con.get_fd(), &this->_set);
+						if (con.get_fd() > this->_fdmax)
+							this->_fdmax = con.get_fd();
 					}
-					shared::Log::info("net::Pool new connection");
-					this->_con.push_back(std::make_pair(con, *sit));
-					FD_SET(con.get_fd(), &this->_set);
-					if (con.get_fd() > this->_fdmax)
-						this->_fdmax = con.get_fd();
 				}
 			}
 
