@@ -23,6 +23,9 @@ namespace ws
 				if ((this->_sockfd = ::socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
 					continue;
 
+				if (fcntl(this->_sockfd, F_SETFL, O_NONBLOCK) < 0)
+					shared::Log::fatal("net::Server: syscall fcntl failed");
+
 				if (::setsockopt(this->_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
 					shared::Log::fatal("net::Server: syscall setsockopt failed");
 
