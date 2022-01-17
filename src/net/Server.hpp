@@ -3,11 +3,13 @@
 
 # include <string>
 # include <iostream>
+
 # include <unistd.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netdb.h>
-#include <arpa/inet.h>
+# include <arpa/inet.h>
+# include <fcntl.h>
 
 # include "shared/Log.hpp"
 # include "Socket.hpp"
