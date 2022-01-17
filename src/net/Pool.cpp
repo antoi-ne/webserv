@@ -70,5 +70,28 @@ namespace ws
 
 			return ready;
 		}
+
+		void Pool::close_con(Connection con)
+		{
+			std::list< std::pair<Connection, Server> >::iterator it;
+			int fdmax = 0;
+
+			for (it = this->_con.begin(); it != this->_con.end(); it++)
+			{
+				if (it->first.get_fd() == con.get_fd())
+				{
+					FD_CLR(it->first.get_fd(), &this->_set);
+					it->first.close();
+					this->_con.erase(it);
+					break;
+				}
+			}
+
+			for (it = this->_con.begin(); it != this->_con.end(); it++)
+			{
+				if (it->first.get_fd() > fdmax)
+					fdmax = it->first.get_fd();
+			}
+		}
 	}
 }

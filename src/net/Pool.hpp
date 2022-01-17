@@ -25,6 +25,8 @@ namespace ws
 
 			std::list< std::pair<Connection, Server> > probe();
 
+			void close_con(Connection con);
+
 		private:
 
 			fd_set _set;

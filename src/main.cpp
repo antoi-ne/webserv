@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <vector>
 
 #include "shared/Buffer.hpp"
 #include "net/Connection.hpp"
