@@ -5,6 +5,7 @@ namespace ws
 	namespace net
 	{
 		Server::Server(in_port_t port)
+			: _port(port)
 		{
 			struct addrinfo hints, *servinfo, *p;
 			int yes = 1;
@@ -51,6 +52,11 @@ namespace ws
 			int cs = ::accept(this->_sockfd, NULL, NULL);
 
 			return Connection(cs);
+		}
+
+		in_port_t Server::get_port()
+		{
+			return this->_port;
 		}
 	}
 }

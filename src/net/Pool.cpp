@@ -23,13 +23,13 @@ namespace ws
 		Pool::~Pool()
 		{}
 
-		std::list<Connection> Pool::probe()
+		std::list< std::pair<Connection, Server> > Pool::probe()
 		{
 			fd_set reader_set;
 			net::Connection con;
-			std::list<Connection>::iterator cit;
+			std::list< std::pair<Connection, Server> >::iterator cit;
 			std::list<Server>::iterator sit;
-			std::list<Connection> ready;
+			std::list< std::pair<Connection, Server> > ready;
 
 			FD_ZERO(&reader_set);
 
@@ -43,7 +43,7 @@ namespace ws
 
 			for (cit = this->_con.begin(); cit != this->_con.end(); cit++)
 			{
-				if (FD_ISSET(cit->get_fd(), &reader_set))
+				if (FD_ISSET(cit->first.get_fd(), &reader_set))
 				{
 					shared::Log::info("net::Pool connection ready to read");
 					ready.push_back(*cit);
@@ -61,7 +61,7 @@ namespace ws
 						continue;
 					}
 					shared::Log::info("net::Pool new connection");
-					this->_con.push_back(con);
+					this->_con.push_back(std::make_pair(con, *sit));
 					FD_SET(con.get_fd(), &this->_set);
 					if (con.get_fd() > this->_fdmax)
 						this->_fdmax = con.get_fd();

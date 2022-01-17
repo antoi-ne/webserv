@@ -23,14 +23,14 @@ namespace ws
 			Pool(std::list<Server> srv);
 			~Pool();
 
-			std::list<Connection> probe();
+			std::list< std::pair<Connection, Server> > probe();
 
 		private:
 
 			fd_set _set;
 			int _fdmax;
 			std::list<Server> _srv;
-			std::list<Connection> _con;
+			std::list< std::pair<Connection, Server> > _con;
 
 		};
 	}

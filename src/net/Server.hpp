@@ -21,11 +21,17 @@ namespace ws
 		{
 		public:
 
-			Server(in_port_t port);
+			Server(in_port_t port = 0);
 
 			void listen(int backlog);
 
 			Connection accept();
+
+			in_port_t get_port();
+		
+		private:
+
+			in_port_t _port;
 
 		};
 	}

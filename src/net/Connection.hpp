@@ -1,7 +1,11 @@
 #ifndef WS_NET_CONNECTION_HPP
 # define WS_NET_CONNECTION_HPP
 
+# include <iostream>
+# include <string>
+
 # include <sys/socket.h>
+# include "arpa/inet.h"
 
 # include "shared/Buffer.hpp"
 # include "Socket.hpp"
@@ -20,7 +24,7 @@ namespace ws
 
 			shared::Buffer recv(size_t size);
 
-		private:
+			std::string get_address();
 
 		};
 	}

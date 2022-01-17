@@ -15,8 +15,8 @@ int main(void)
 	net::Server srv2(9001);
 
 	std::list<net::Server> srvs;
-	std::list<net::Connection> ready;
-	std::list<net::Connection>::iterator it;
+	std::list< std::pair<net::Connection, net::Server> > ready;
+	std::list< std::pair<net::Connection, net::Server> >::iterator it;
 
 	srv1.listen(10);
 	srv2.listen(10);
@@ -32,7 +32,7 @@ int main(void)
 
 		for (it = ready.begin(); it != ready.end(); it++)
 		{
-			std::cout << "received" <<" : " << it->recv(1024).to_string();
+			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] : " << it->first.recv(1024).to_string();
 		}
 	}
 }

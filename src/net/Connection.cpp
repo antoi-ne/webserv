@@ -1,5 +1,4 @@
 #include "Connection.hpp"
-#include <iostream>
 
 namespace ws
 {
@@ -21,5 +20,22 @@ namespace ws
 
 			return buff;
 		}
+
+		std::string Connection::get_address()
+		{
+			struct sockaddr_in addr;
+			socklen_t addr_len = sizeof(addr);
+			char pres[INET6_ADDRSTRLEN];
+			int ret;
+
+			ret = getpeername(this->get_fd(), (struct sockaddr *) &addr, &addr_len);
+			if (ret < 0)
+				return "";
+
+			inet_ntop(addr.sin_family, &addr, pres, INET6_ADDRSTRLEN);
+
+			return pres;
+		}
+
 	}
 }
