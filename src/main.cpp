@@ -1,28 +1,45 @@
 #include <iostream>
+#include <string>
+#include <list>
 
+<<<<<<< HEAD
 #include "./net/Server.hpp"
 #include "./conf/Config.hpp"
 #include "./conf/Parser.hpp"
 #include "./http/Res.hpp"
+=======
+#include "shared/Buffer.hpp"
+#include "net/Connection.hpp"
+#include "net/Server.hpp"
+#include "net/Pool.hpp"
+>>>>>>> master
 
 using namespace ws;
 
-// int main(void)
-// {
-// 	conf::Parser parser("./config/example.wsconf");
-// }
-
 int main(void)
 {
-	net::Server server;
+	net::Server srv1(9000);
+	net::Server srv2(9001);
 
-	server.listen("9000");
-	
-	for(;;)
+	std::list<net::Server> srvs;
+	std::list< std::pair<net::Connection, net::Server> > ready;
+	std::list< std::pair<net::Connection, net::Server> >::iterator it;
+
+	srv1.listen(10);
+	srv2.listen(10);
+
+	srvs.push_back(srv1);
+	srvs.push_back(srv2);
+
+	net::Pool pool(srvs);
+
+	for (;;)
 	{
-		net::Socket sock = server.accept();
-		sock.send("Hello World!\n");
-		std::cout << "received: " << sock.recv(100) << std::endl;
-		sock.close();
+		ready = pool.probe();
+
+		for (it = ready.begin(); it != ready.end(); it++)
+		{
+			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] : " << it->first.recv(1024).to_string();
+		}
 	}
 }

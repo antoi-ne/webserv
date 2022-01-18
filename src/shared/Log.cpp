@@ -2,7 +2,7 @@
 
 namespace ws
 {
-	namespace utils
+	namespace shared
 	{
 		void Log::info(std::string message)
 		{
