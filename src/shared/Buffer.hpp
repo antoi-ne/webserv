@@ -18,12 +18,14 @@ namespace ws
 			Buffer(char *buff, size_t size);
 			~Buffer();
 
-			size_t size();
+			size_t size() const;
 			char * get_ptr();
+			const char * get_ptr() const;
 
 			std::string to_string();
 
 			void join(Buffer buff);
+			void	assign(char* buff, size_t size);
 
 		private:
 

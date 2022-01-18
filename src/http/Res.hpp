@@ -1,22 +1,31 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Res.hpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/01/18 14:38:17 by vneirinc         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #include <string>
+#include "Status.hpp"
+#include "res_header.h"
+#include "../shared/Buffer.hpp"
 
-class Res
+namespace http
 {
-
-	typedef struct header
+	class Res
 	{
-		unsigned int status;
-		size_t contentLength;
-		std::string contentType;
-	} s_header;
+	private:
+		Status	_status;
 
-private:
-	s_header _header;
-	std::string _raw;
+	public:
+		Res(void);
 
-public:
-	Res(void);
-
-	s_header &header(void);
-};
+		void	sendRes(void) const;
+	};
+}

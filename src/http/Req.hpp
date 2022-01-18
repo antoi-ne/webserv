@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Req.hpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/01/18 16:41:19 by vneirinc         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #include "../shared/Buffer.hpp"
 #include "method.h"
@@ -7,24 +19,26 @@ namespace http
 {
 	class Req
 	{
-		typedef std::map<std::string, std::string>	body_m;
+	public:
+		typedef std::map<std::string, std::string>	header_m;
+
+		Req(ws::shared::Buffer buff);
+
+		e_method			method(void) const;
+		const std::string&	path(void) const;
+		const std::string&	header(const std::string& field) const;
+		const ws::shared::Buffer&	body(void) const;
 
 	private:
-		char*		_raw;
 		e_method	_method;
 		std::string	_path;
-		body_m		_body;
+		header_m	_header;
+		ws::shared::Buffer	_body;
 
-	public:
-		Req(ws::shared::Buffer buff);
-		e_method	method(void) const;
-		const std::string&	path(void) const;
-
-	private:
-		std::string		_getNextHttpLine(void);
-		void			_getStartLine(std::string line);
+		std::string		_getNextHttpLine(const ws::shared::Buffer& buff, size_t& headerSize) const;
 		size_t			_getMethod(std::string& line);
-		void			_getBody(void);
-		void			_insertBodyField(std::string& line);
+		void			_getStartLine(std::string line);
+		void			_getHeader(const ws::shared::Buffer& buff, size_t& headerSize);
+		void			_insertHeaderField(std::string& line);
 	};
 } // namespace http

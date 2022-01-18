@@ -1,4 +1,5 @@
 #include "Buffer.hpp"
+#include <iostream>
 
 namespace ws
 {
@@ -20,6 +21,12 @@ namespace ws
 
 		Buffer::Buffer(char *buff, size_t size)
 		{
+			this->assign(buff, size);
+		}
+
+		void	Buffer::assign(char* buff, size_t size)
+		{
+//			this->~Buffer();
 			this->_size = size;
 			this->_data = new char[this->_size]();
 			std::memcpy(this->_data, buff, this->_size);
@@ -30,12 +37,17 @@ namespace ws
 			delete [] this->_data;
 		}
 
-		size_t Buffer::size()
+		size_t Buffer::size() const
 		{
 			return this->_size;
 		}
 
 		char * Buffer::get_ptr()
+		{
+			return this->_data;
+		}
+
+		const char * Buffer::get_ptr() const
 		{
 			return this->_data;
 		}

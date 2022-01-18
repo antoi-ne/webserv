@@ -1,29 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Res.cpp                                            :+:      :+:    :+:   */
+/*   Status.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/18 15:06:47 by vneirinc         ###   ########.fr       */
+/*   Created: 2022/01/18 14:31:34 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/01/18 14:35:38 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Res.hpp"
-
+#pragma once
+#include <string>
 namespace http
 {
-
-	Res::Res(void)
-	 : _status()
+	class Status
 	{
-	}
+	private:
+		unsigned int	_code;
+		std::string		_msg;
+	
+	public:
+		Status(void);
 
-	void	Res::sendRes(void) const
-	{
-		ws::shared::Buffer	buff(HTTPVER);
+		void	setCode(unsigned int code);
 
-		std::to_string(42).c_str();
-	}
+		unsigned int	code(void) const;
+		const std::string&	msg(void) const;
+	};
 }
