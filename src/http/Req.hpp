@@ -1,33 +1,30 @@
 #pragma once
-#include <string>
+#include "../shared/Buffer.hpp"
+#include "method.h"
+#include <map>
 
-class Req
+namespace http
 {
-	enum e_method
+	class Req
 	{
-		GET,
-		POST,
-		PUT,
-		DELETE
+		typedef std::map<std::string, std::string>	body_m;
+
+	private:
+		char*		_raw;
+		e_method	_method;
+		std::string	_path;
+		body_m		_body;
+
+	public:
+		Req(ws::shared::Buffer buff);
+		e_method	method(void) const;
+		const std::string&	path(void) const;
+
+	private:
+		std::string		_getNextHttpLine(void);
+		void			_getStartLine(std::string line);
+		size_t			_getMethod(std::string& line);
+		void			_getBody(void);
+		void			_insertBodyField(std::string& line);
 	};
-
-	struct s_header
-	{
-		e_method		method;
-		std::string		path;
-		std::string		host;
-		bool			keepAlive;
-		std::string		
-	};
-
-	typedef struct s_header s_header;
-
-private:
-	std::string	_header;
-	std::string	_body;
-public:
-	Req(const s_buff& buff);
-	
-	const std::string&	header(const std::string& field) const;
-	const std::string&	body(const std::string& field) const;
-};
+} // namespace http

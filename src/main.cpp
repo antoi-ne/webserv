@@ -2,17 +2,11 @@
 #include <string>
 #include <list>
 
-<<<<<<< HEAD
-#include "./net/Server.hpp"
-#include "./conf/Config.hpp"
-#include "./conf/Parser.hpp"
-#include "./http/Res.hpp"
-=======
 #include "shared/Buffer.hpp"
 #include "net/Connection.hpp"
 #include "net/Server.hpp"
 #include "net/Pool.hpp"
->>>>>>> master
+#include "http/Req.hpp"
 
 using namespace ws;
 
@@ -22,8 +16,8 @@ int main(void)
 	net::Server srv2(9001);
 
 	std::list<net::Server> srvs;
-	std::list< std::pair<net::Connection, net::Server> > ready;
-	std::list< std::pair<net::Connection, net::Server> >::iterator it;
+	std::list<std::pair<net::Connection, net::Server> > ready;
+	std::list<std::pair<net::Connection, net::Server> >::iterator it;
 
 	srv1.listen(10);
 	srv2.listen(10);
@@ -39,7 +33,8 @@ int main(void)
 
 		for (it = ready.begin(); it != ready.end(); it++)
 		{
-			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] : " << it->first.recv(1024).to_string();
+			http::Req	request(it->first.recv(1024));
+			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] ";
 		}
 	}
 }
