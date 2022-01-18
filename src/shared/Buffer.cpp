@@ -8,14 +8,14 @@ namespace ws
 		Buffer::Buffer(size_t size)
 		{
 			this->_size = size;
-			this->_data = new char[this->_size]();
+			this->_data = new char[this->_size + 1]();
 			std::fill_n(this->_data, this->_size, 0);
 		}
 
 		Buffer::Buffer(std::string str)
 		{
 			this->_size = str.size();
-			this->_data = new char[this->_size]();
+			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, str.c_str(), this->_size);
 		}
 
@@ -28,7 +28,7 @@ namespace ws
 		{
 //			this->~Buffer();
 			this->_size = size;
-			this->_data = new char[this->_size]();
+			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, buff, this->_size);
 		}
 		

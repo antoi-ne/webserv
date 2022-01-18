@@ -1,14 +1,19 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <list>
+#include <vector>
 
 #include "shared/Buffer.hpp"
+
 #include "net/Connection.hpp"
 #include "net/Server.hpp"
 #include "net/Pool.hpp"
 #include "http/Req.hpp"
 
 using namespace ws;
+
 
 int main(void)
 {

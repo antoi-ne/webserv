@@ -55,20 +55,43 @@ namespace ws
 			{
 				if (FD_ISSET(sit->get_fd(), &reader_set))
 				{
-					if ((con = sit->accept()).get_fd() < 0)
+					for (;;)
 					{
-						shared::Log::error("net::Pool accept failed");
-						continue;
+						if ((con = sit->accept()).get_fd() <= 0)
+							break;
+						shared::Log::info("net::Pool new connection");
+						this->_con.push_back(std::make_pair(con, *sit));
+						FD_SET(con.get_fd(), &this->_set);
+						if (con.get_fd() > this->_fdmax)
+							this->_fdmax = con.get_fd();
 					}
-					shared::Log::info("net::Pool new connection");
-					this->_con.push_back(std::make_pair(con, *sit));
-					FD_SET(con.get_fd(), &this->_set);
-					if (con.get_fd() > this->_fdmax)
-						this->_fdmax = con.get_fd();
 				}
 			}
 
 			return ready;
+		}
+
+		void Pool::close_con(Connection con)
+		{
+			std::list< std::pair<Connection, Server> >::iterator it;
+			int fdmax = 0;
+
+			for (it = this->_con.begin(); it != this->_con.end(); it++)
+			{
+				if (it->first.get_fd() == con.get_fd())
+				{
+					FD_CLR(it->first.get_fd(), &this->_set);
+					it->first.close();
+					this->_con.erase(it);
+					break;
+				}
+			}
+
+			for (it = this->_con.begin(); it != this->_con.end(); it++)
+			{
+				if (it->first.get_fd() > fdmax)
+					fdmax = it->first.get_fd();
+			}
 		}
 	}
 }

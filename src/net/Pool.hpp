@@ -11,6 +11,7 @@
 
 # include "Server.hpp"
 # include "Connection.hpp"
+# include "Context.hpp"
 
 namespace ws
 {
@@ -24,6 +25,8 @@ namespace ws
 			~Pool();
 
 			std::list< std::pair<Connection, Server> > probe();
+
+			void close_con(Connection con);
 
 		private:
 
