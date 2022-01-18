@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/18 16:41:19 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/18 18:22:26 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,9 @@ namespace http
 		const ws::shared::Buffer&	body(void) const;
 
 	private:
-		e_method	_method;
-		std::string	_path;
-		header_m	_header;
+		e_method			_method;
+		std::string			_path;
+		header_m			_header;
 		ws::shared::Buffer	_body;
 
 		std::string		_getNextHttpLine(const ws::shared::Buffer& buff, size_t& headerSize) const;

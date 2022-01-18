@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/18 15:06:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/18 18:26:45 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,14 @@ namespace http
 {
 
 	Res::Res(void)
-	 : _status()
-	{
-	}
+	 : _status(200)
+	{}
 
 	void	Res::sendRes(void) const
 	{
-		ws::shared::Buffer	buff(HTTPVER);
+		std::string	buff = (HTTPVER);
 
-		std::to_string(42).c_str();
+		buff += std::to_string(this->_status);
+		buff += " OK\r\nServer: webserv/0.1.0\r\nDate: ";
 	}
 }
