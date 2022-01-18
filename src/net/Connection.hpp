@@ -8,6 +8,7 @@
 # include "arpa/inet.h"
 
 # include "shared/Buffer.hpp"
+# include "shared/Log.hpp"
 # include "Socket.hpp"
 
 namespace ws

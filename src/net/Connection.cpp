@@ -10,13 +10,32 @@ namespace ws
 
 		void Connection::send(shared::Buffer buff)
 		{
-			::send(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			ssize_t bytes = buff.size();
+			ssize_t rbytes = 0;
+
+			while (bytes > 0)
+			{
+				rbytes = ::send(this->get_fd(), buff.get_ptr() + bytes, buff.size(), 0);
+				if (rbytes <= 0)
+					break;
+				bytes -= rbytes;
+			}
 		}
 
 		shared::Buffer Connection::recv(size_t size)
 		{
-			shared::Buffer buff(size);
-			::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			char buffer[2048 + 1];
+			shared::Buffer buff;
+			ssize_t rbytes;
+
+			rbytes = ::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			if (rbytes < 0)
+				return buff;
+			
+			if (rbytes == 0)
+				shared::Log::error("net::Connection: trying to recv but connection is closed");
+
+			buff = shared::Buffer(buffer, 2048);
 
 			return buff;
 		}
