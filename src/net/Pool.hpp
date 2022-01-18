@@ -11,7 +11,6 @@
 
 # include "Server.hpp"
 # include "Connection.hpp"
-# include "Context.hpp"
 
 namespace ws
 {

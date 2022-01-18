@@ -25,13 +25,12 @@ namespace ws
 		shared::Buffer Connection::recv(size_t size)
 		{
 			char buffer[2048 + 1];
-			shared::Buffer buff;
+			shared::Buffer buff(size);
 			ssize_t rbytes;
 
-			rbytes = ::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			rbytes = ::recv(this->get_fd(), buff.get_ptr(), size, 0);
 			if (rbytes < 0)
 				return buff;
-			
 			if (rbytes == 0)
 				shared::Log::error("net::Connection: trying to recv but connection is closed");
 

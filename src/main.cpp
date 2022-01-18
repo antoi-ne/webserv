@@ -11,6 +11,7 @@
 #include "net/Server.hpp"
 #include "net/Pool.hpp"
 #include "http/Req.hpp"
+#include "http/Res.hpp"
 
 using namespace ws;
 
@@ -38,8 +39,9 @@ int main(void)
 
 		for (it = ready.begin(); it != ready.end(); it++)
 		{
-			http::Req	request(it->first.recv(1024));
+			http::Res	res;
 			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] ";
+			res.sendRes(it->first);
 		}
 	}
 }
