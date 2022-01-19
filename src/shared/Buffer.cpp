@@ -21,12 +21,6 @@ namespace ws
 
 		Buffer::Buffer(char *buff, size_t size)
 		{
-			this->assign(buff, size);
-		}
-
-		void	Buffer::assign(char* buff, size_t size)
-		{
-//			this->~Buffer();
 			this->_size = size;
 			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, buff, this->_size);
@@ -64,19 +58,9 @@ namespace ws
 			return this->_data;
 		}
 
-		const char * Buffer::get_ptr() const
-		{
-			return this->_data;
-		}
-
 		std::string Buffer::to_string()
 		{
 			return std::string(this->_data, this->_size);
-		}
-
-		void Buffer::join(Buffer buff)
-		{
-			Buffer newb = Buffer(this->size() + buff.size());
 		}
 	}
 }
