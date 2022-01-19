@@ -11,7 +11,6 @@
 
 # include "Server.hpp"
 # include "Connection.hpp"
-# include "Ctx.hpp"
 
 namespace ws
 {
@@ -24,16 +23,14 @@ namespace ws
 			Pool(std::list<Server> srv);
 			~Pool();
 
-			std::list<Ctx> probe();
-
-			void close_con(Connection con);
+			std::list< std::pair<Connection, Server> > probe();
 
 		private:
 
 			fd_set _set;
 			int _fdmax;
 			std::list<Server> _srv;
-			std::list<std::pair<Connection, Server> > _con;
+			std::list< std::pair<Connection, Server> > _con;
 
 		};
 	}

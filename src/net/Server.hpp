@@ -23,9 +23,9 @@ namespace ws
 		{
 		public:
 
-			Server(in_port_t port = 0, int backlog = 5);
+			Server(in_port_t port = 0);
 
-			void listen();
+			void listen(int backlog);
 
 			Connection accept();
 
@@ -34,7 +34,6 @@ namespace ws
 		private:
 
 			in_port_t _port;
-			int _backlog;
 
 		};
 	}

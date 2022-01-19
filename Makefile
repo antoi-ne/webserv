@@ -8,7 +8,7 @@ CXX			= clang++
 
 RM			= rm -f
 
-CXXFLAGS	= -Wall -Wextra -std=c++98 -I ./src
+CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -I ./src
 
 all:		$(NAME)
 
