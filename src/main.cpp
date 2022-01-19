@@ -9,6 +9,7 @@
 
 #include "net/Connection.hpp"
 #include "net/Server.hpp"
+#include "net/Ctx.hpp"
 #include "net/Pool.hpp"
 #include "http/Req.hpp"
 #include "http/Res.hpp"
@@ -18,15 +19,15 @@ using namespace ws;
 
 int main(void)
 {
-	net::Server srv1(9000);
-	net::Server srv2(9001);
+	net::Server srv1(9000, 10);
+	net::Server srv2(9001, 10);
 
 	std::list<net::Server> srvs;
-	std::list<std::pair<net::Connection, net::Server> > ready;
-	std::list<std::pair<net::Connection, net::Server> >::iterator it;
+	std::list<net::Ctx> ready;
+	std::list<net::Ctx>::iterator it;
 
-	srv1.listen(10);
-	srv2.listen(10);
+	srv1.listen();
+	srv2.listen();
 
 	srvs.push_back(srv1);
 	srvs.push_back(srv2);
@@ -39,9 +40,18 @@ int main(void)
 
 		for (it = ready.begin(); it != ready.end(); it++)
 		{
-			http::Res	res;
-			std::cout << "received from " << it->first.get_address() << " on port [" << it->second.get_port() << "] ";
-			res.sendRes(it->first);
+			std::cout << "connection on port " << it->srv.get_port() << " from " << it->con.get_address() << " is ready for "<< (it->rread?"READ ":" ") << (it->rwrite?"WRITE":"") << std::endl;
+			if (it->rread)
+			{
+				std::cout << "received: " << it->con.recv(2048).to_string();
+				if (it->rwrite)
+				{
+					it->con.send(shared::Buffer("Bye!\n"));
+					std::cout << "response sent!" << std::endl;
+				}
+				pool.close_con(it->con);
+				return 0;
+			}
 		}
 	}
-}
+} 
