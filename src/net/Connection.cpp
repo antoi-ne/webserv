@@ -35,7 +35,7 @@ namespace ws
 				delete [] buffer;
 				return buff;
 			}
-
+			
 			if (rbytes == 0)
 				shared::Log::error("net::Connection: trying to recv but connection is closed");
 

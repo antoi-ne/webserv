@@ -11,6 +11,8 @@
 #include "net/Server.hpp"
 #include "net/Ctx.hpp"
 #include "net/Pool.hpp"
+#include "http/Req.hpp"
+#include "http/Res.hpp"
 
 using namespace ws;
 
