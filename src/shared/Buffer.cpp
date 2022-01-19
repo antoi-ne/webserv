@@ -62,10 +62,5 @@ namespace ws
 		{
 			return std::string(this->_data, this->_size);
 		}
-
-		void Buffer::join(Buffer buff)
-		{
-			Buffer newb = Buffer(this->size() + buff.size());
-		}
 	}
 }

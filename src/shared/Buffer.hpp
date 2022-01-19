@@ -26,8 +26,6 @@ namespace ws
 
 			std::string to_string();
 
-			void join(Buffer buff);
-
 		private:
 
 			char * _data;
