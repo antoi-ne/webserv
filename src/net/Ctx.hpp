@@ -12,7 +12,12 @@ namespace ws
 		{
 			Connection con;
 			Server srv;
-			bool read;
+			bool rread;
+			bool rwrite;
+
+			Ctx();
+			Ctx(Connection con, Server srv, bool rread = false, bool rwrite = false);
+			~Ctx();
 		};
 	}
 }

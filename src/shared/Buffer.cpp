@@ -1,4 +1,5 @@
 #include "Buffer.hpp"
+#include <iostream>
 
 namespace ws
 {
@@ -24,10 +25,27 @@ namespace ws
 			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, buff, this->_size);
 		}
+
+		Buffer::Buffer(const Buffer & rhs)
+		{
+			*this = rhs;
+		}
 		
 		Buffer::~Buffer()
 		{
 			delete [] this->_data;
+		}
+
+		Buffer & Buffer::operator=(const Buffer & rhs)
+		{
+			if (this != &rhs)
+			{
+				this->~Buffer();
+				this->_size = rhs._size;
+				this->_data = new char[this->_size + 1]();
+				std::memcpy(this->_data, rhs._data, this->_size);
+			}
+			return *this;
 		}
 
 		size_t Buffer::size()
