@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/18 17:10:31 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/19 15:09:20 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,14 @@
 
 namespace http
 {
+
+	bool	Req::updateBody(ws::shared::Buffer& buff)
+	{
+		if (this->_body.size() + buff.size() <= this->_contentLength)
+			this->_body.join(buff);
+		return this->_body.size() == this->_contentLength;
+	}
+
 	e_method	Req::method(void) const { return this->_method; }
 
 	const std::string&	Req::path(void) const { return this->_path; }
@@ -24,39 +32,48 @@ namespace http
 	{ return this->_header.at(field); }
 
 	Req::Req(ws::shared::Buffer buff)
-	 :	_method(), _path(), _header()
+	 :	_method(), _path(), _header(), _contentLength()
 	{
 		size_t	headerSize = 0;
 
-		this->_getStartLine(this->_getNextHttpLine(buff, headerSize));
+		std::cout << buff.to_string() << std::endl;
+		this->_getStartLine(this->_getHeaderLine(buff, headerSize));
 		this->_getHeader(buff, headerSize);
-		this->_body.assign(buff.get_ptr() + headerSize, buff.size() - headerSize);
-
-		std::cout << "	path: " << this->_path << std::endl;
-		std::cout << "	method: " << this->_method << std::endl;
-		std::cout << "		header: " << std::endl;
-		for (header_m::iterator it = this->_header.begin();
-			it != this->_header.end(); ++it)
-			std::cout << it->first << ":" << it->second << std::endl;
-
-		std::cout << "		body: " << std::endl;
-		std::cout << this->_body.to_string() << std::endl;
+		this->_getBody(buff.get_ptr() + headerSize, buff.size() - headerSize);
 	}
 
-	std::string Req::_getNextHttpLine(const ws::shared::Buffer& buff, size_t& headerSize) const
+	static inline bool _is_CRLF(char c) { return (c == '\r' || c == '\n'); }
+
+	std::string Req::_getHeaderLine(const ws::shared::Buffer& buff, size_t& headerSize) const
 	{
 		const char*		raw = buff.get_ptr();
 		std::string		line;
 		size_t			startSize = headerSize;
 
-		if (headerSize >= buff.size())
+		if (_is_CRLF(raw[headerSize]) || headerSize >= buff.size())
 			return std::string();
-		for (; raw[headerSize] != '\n' && headerSize < buff.size(); ++headerSize)
+		for (; !_is_CRLF(raw[headerSize]) && headerSize < buff.size(); ++headerSize);
 		line = std::string(raw + startSize, headerSize - startSize);
-		for (; raw[headerSize] == '\n' || raw[headerSize] == '\r'; ++headerSize);
+		++headerSize;
+		if (_is_CRLF(raw[headerSize]))
+			++headerSize;
 		if (headerSize == buff.size() && !line[0])
 			return std::string();
 		return line;
+	}
+
+	void	Req::_getBody(char* bodyBuff, size_t bodySize)
+	{ 
+		header_m::iterator it = this->_header.find("Content-Length");
+
+		if (it != this->_header.end())
+		{
+			this->_contentLength = std::stoul(it->second);
+			if (this->_contentLength <= bodySize)
+				this->_body.assign(bodyBuff, bodySize);
+			std::cout << this->_body.to_string();
+		}
+		this->_contentLength = 0;
 	}
 
 	void	Req::_getStartLine(std::string line)
@@ -91,7 +108,7 @@ namespace http
 	{
 		std::string	line;
 
-		while (!(line = this->_getNextHttpLine(buff, headerSize)).empty())
+		while (!(line = this->_getHeaderLine(buff, headerSize)).empty())
 			this->_insertHeaderField(line);
 	}
 

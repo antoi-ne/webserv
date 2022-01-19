@@ -54,7 +54,7 @@ namespace ws
 			return *this;
 		}
 
-		size_t Buffer::size()
+		size_t Buffer::size() const
 		{
 			return this->_size;
 		}

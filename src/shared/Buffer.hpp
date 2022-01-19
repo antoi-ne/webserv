@@ -21,7 +21,7 @@ namespace ws
 
 			Buffer & operator=(const Buffer & rhs);
 
-			size_t size();
+			size_t size() const;
 			char * get_ptr();
 			const char * get_ptr() const;
 

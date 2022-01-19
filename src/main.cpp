@@ -43,10 +43,12 @@ int main(void)
 			std::cout << "connection on port " << it->srv.get_port() << " from " << it->con.get_address() << " is ready for "<< (it->rread?"READ ":" ") << (it->rwrite?"WRITE":"") << std::endl;
 			if (it->rread)
 			{
-				std::cout << "received: " << it->con.recv(2048).to_string();
+				http::Req	request(it->con.recv(2048));
 				if (it->rwrite)
 				{
-					it->con.send(shared::Buffer("Bye!\n"));
+					http::Res	response;
+
+					response.sendRes(it->con);
 					std::cout << "response sent!" << std::endl;
 				}
 				pool.close_con(it->con);
