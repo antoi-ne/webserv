@@ -10,6 +10,10 @@ Parse a config file into a manageable structure.
 
 ### `net`
 Multiplexing abstraction handling multiple tcp servers.
+- `net::Server`: represents a single TCP server listening on a port.
+- `net::Connection`: represents a connection between a server and a client.
+- `net::Pool`: multiplexing server. keeps tracks of current connections on a given list of servers.
+- `net::Ctx`:: represents a `net::Pool` connection ready to read/write.
 
 ### `http`
 Deserializing HTTP requests and serializing HTTP responses.
