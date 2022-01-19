@@ -16,14 +16,15 @@ namespace ws
 			Buffer(size_t size = 0);
 			Buffer(std::string str);
 			Buffer(char *buff, size_t size);
+			Buffer(const Buffer & rhs);
 			~Buffer();
+
+			Buffer & operator=(const Buffer & rhs);
 
 			size_t size();
 			char * get_ptr();
 
 			std::string to_string();
-
-			void join(Buffer buff);
 
 		private:
 
