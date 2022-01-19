@@ -9,7 +9,13 @@ namespace ws
 		{
 		public:
 			Router();
+			Router(void *config);
 			~Router();
+
+			void *process(void *request);
+
+		private:
+			void *_config;
 		};
 	}
 }

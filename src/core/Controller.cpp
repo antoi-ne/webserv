@@ -7,6 +7,9 @@ namespace ws
 		Controller::Controller()
 		{}
 
+		Controller::Controller(void * config)
+		{}
+
 		Controller::~Controller()
 		{}
 	}

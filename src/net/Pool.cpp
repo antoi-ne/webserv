@@ -45,6 +45,7 @@ namespace ws
 				return ready;
 			}
 
+			// connections loop
 			for (cit = this->_con.begin(); cit != this->_con.end(); cit++)
 			{
 				current = Ctx(cit->first, cit->second);
@@ -59,7 +60,7 @@ namespace ws
 					ready.push_back(current);
 			}
 
-			// called AFTER the connections loop to prevent new cons to be checked
+			// server loop; called AFTER the connections loop to prevent new cons to be checked
 			for (sit = this->_srv.begin(); sit != this->_srv.end(); sit++)
 			{
 				if (FD_ISSET(sit->get_fd(), &read_set))
