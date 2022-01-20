@@ -21,7 +21,7 @@ namespace ws
 		{
 		public:
 
-			Pool(std::list<Server> srv);
+			Pool(std::list<Server> srv = std::list<Server>());
 			~Pool();
 
 			std::list<Ctx> probe();

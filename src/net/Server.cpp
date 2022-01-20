@@ -4,8 +4,8 @@ namespace ws
 {
 	namespace net
 	{
-		Server::Server(in_port_t port, int backlog)
-			: _port(port), _backlog(backlog)
+		Server::Server(std::string host, in_port_t port, int backlog)
+			: _host(host), _port(port), _backlog(backlog)
 		{}
 
 		void Server::listen()
@@ -18,7 +18,7 @@ namespace ws
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_flags = AI_PASSIVE;
 
-			if (::getaddrinfo(NULL, std::to_string(this->_port).c_str(), &hints, &servinfo) < 0)
+			if (::getaddrinfo(this->_host.c_str(), std::to_string(this->_port).c_str(), &hints, &servinfo) < 0)
 				shared::Log::fatal("net::Server: syscall getaddrinfo failed");
 
 			for (p = servinfo; p != NULL; p = p->ai_next)
@@ -55,6 +55,11 @@ namespace ws
 			int cs = ::accept(this->_sockfd, NULL, NULL);
 
 			return Connection(cs);
+		}
+
+		std::string Server::get_host()
+		{
+			return this->_host;
 		}
 
 		in_port_t Server::get_port()
