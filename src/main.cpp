@@ -11,6 +11,8 @@
 #include "net/Server.hpp"
 #include "net/Ctx.hpp"
 #include "net/Pool.hpp"
+#include "http/Req.hpp"
+#include "http/Res.hpp"
 
 using namespace ws;
 
@@ -41,7 +43,6 @@ int main(void)
 			std::cout << "connection on port " << it->srv.get_port() << " from " << it->con.get_address() << " is ready for "<< (it->rread?"READ ":" ") << (it->rwrite?"WRITE":"") << std::endl;
 			if (it->rread)
 			{
-				http::Req	request(it->con.recv(2048));
 				if (it->rwrite)
 				{
 					http::Res	response;

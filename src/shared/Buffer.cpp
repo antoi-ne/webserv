@@ -19,7 +19,7 @@ namespace ws
 			std::memcpy(this->_data, str.c_str(), this->_size);
 		}
 
-		Buffer::Buffer(char *buff, size_t size)
+		Buffer::Buffer(const char *buff, size_t size)
 		{
 			this->_size = size;
 			this->_data = new char[this->_size + 1]();
@@ -54,6 +54,11 @@ namespace ws
 		}
 
 		char * Buffer::get_ptr()
+		{
+			return this->_data;
+		}
+
+		const char * Buffer::get_ptr() const
 		{
 			return this->_data;
 		}
