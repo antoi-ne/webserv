@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 10:18:12 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 16:44:36 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 17:19:20 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ enum e_method
 	UNDEF = -1,
 	GET,
 	POST,
-	PUT,
 	DELETE
 };
 

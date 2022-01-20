@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 16:50:20 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 19:03:00 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,13 @@ namespace http
 
 	const std::string&	Req::path(void) const { return this->_path; }
 
-	const std::string&	Req::header(const std::string& field)
+	Req::header_m&	Req::header(void)
+	{ return this->_header; }
+
+	const Req::header_m&	Req::header(void) const
+	{ return this->_header; }
+
+	const std::string&	Req::header(const std::string field)
 	{ return this->_header[field]; }
 
 	const ws::shared::Buffer&	Req::body(void) const
@@ -39,11 +45,11 @@ namespace http
 		this->_buff.join(buff);
 		if (!this->_hasHeader)
 			return this->_checkHeader();
-		return this->_checkBody(buff);
+		return this->_checkBody();
 	}
 
 	// Can be bigger than contentLength
-	bool	Req::_checkBody(ws::shared::Buffer& buff)
+	bool	Req::_checkBody(void)
 	{
 		if (this->_buff.size() >= this->_contentLength)
 			return false;
@@ -83,7 +89,7 @@ namespace http
 
 	bool	Req::_endHeader(void)
 	{
-		this->_contentLength = _setContentLength(this->header("Content-Length"));
+		this->_contentLength = _setContentLength(this->_header["Content-Length"]);
 		if (this->_method == POST
 			&& this->_contentLength > this->_buff.size())
 			return true;
