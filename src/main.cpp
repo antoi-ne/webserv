@@ -29,7 +29,7 @@ int main(void)
 	core::Controller control;
 
 	srv.host = "0.0.0.0";
-	srv.port = 8080;
+	srv.port = 80;
 	srv.root = "./assets/ws1";
 	srv.index = "index.html";
 	srv.server_names.push_back("localhost");

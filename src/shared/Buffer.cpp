@@ -6,6 +6,7 @@ namespace ws
 	namespace shared
 	{
 		Buffer::Buffer(size_t size)
+			: _cursor(0)
 		{
 			this->_size = size;
 			this->_data = new char[this->_size + 1]();
@@ -13,6 +14,7 @@ namespace ws
 		}
 
 		Buffer::Buffer(std::string str)
+			: _cursor(0)
 		{
 			this->_size = str.size();
 			this->_data = new char[this->_size + 1]();
@@ -20,6 +22,7 @@ namespace ws
 		}
 
 		Buffer::Buffer(const char *buff, size_t size)
+			: _cursor(0)
 		{
 			this->_size = size;
 			this->_data = new char[this->_size + 1]();
@@ -27,6 +30,7 @@ namespace ws
 		}
 
 		Buffer::Buffer(const Buffer & rhs)
+			: _cursor(0)
 		{
 			*this = rhs;
 		}
@@ -68,7 +72,7 @@ namespace ws
 			return this->_data + this->_cursor;
 		}
 
-		std::string Buffer::to_string()
+		std::string Buffer::to_string() const
 		{
 			return std::string(this->_data, this->_size);
 		}
