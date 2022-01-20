@@ -7,6 +7,8 @@
 
 #include "shared/Buffer.hpp"
 
+# include "conf/Config.hpp"
+
 #include "net/Connection.hpp"
 #include "net/Server.hpp"
 #include "net/Ctx.hpp"
@@ -14,44 +16,28 @@
 #include "http/Req.hpp"
 #include "http/Res.hpp"
 
+#include "core/Controller.hpp"
+
 using namespace ws;
 
 
 int main(void)
 {
-	net::Server srv1(9000, 10);
-	net::Server srv2(9001, 10);
+	conf::Config cfg;
+	conf::Server srv;
+	conf::Location loc;
+	core::Controller control;
 
-	std::list<net::Server> srvs;
-	std::list<net::Ctx> ready;
-	std::list<net::Ctx>::iterator it;
+	srv.host = "0.0.0.0";
+	srv.port = 8080;
+	srv.root = "./assets/ws1";
+	srv.index = "index.html";
+	srv.server_names.push_back("localhost");
+	srv.locations.clear();
 
-	srv1.listen();
-	srv2.listen();
+	cfg.servers.push_back(srv);
 
-	srvs.push_back(srv1);
-	srvs.push_back(srv2);
+	control = core::Controller(cfg);
 
-	net::Pool pool(srvs);
-
-	for (;;)
-	{
-		ready = pool.probe();
-
-		for (it = ready.begin(); it != ready.end(); it++)
-		{
-			std::cout << "connection on port " << it->srv.get_port() << " from " << it->con.get_address() << " is ready for "<< (it->rread?"READ ":" ") << (it->rwrite?"WRITE":"") << std::endl;
-			if (it->rread)
-			{
-				if (it->rwrite)
-				{
-					http::Res	response;
-
-					response.sendRes(it->con);
-					std::cout << "response sent!" << std::endl;
-				}
-				pool.close_con(it->con);
-			}
-		}
-	}
-} 
+	control.start();
+}

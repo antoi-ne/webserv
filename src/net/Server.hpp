@@ -23,16 +23,18 @@ namespace ws
 		{
 		public:
 
-			Server(in_port_t port = 0, int backlog = 5);
+			Server(std::string host = "localhost", in_port_t port = 0, int backlog = 5);
 
 			void listen();
 
 			Connection accept();
 
+			std::string get_host();
 			in_port_t get_port();
 		
 		private:
 
+			std::string _host;
 			in_port_t _port;
 			int _backlog;
 

@@ -61,5 +61,14 @@ namespace ws
 			return pres;
 		}
 
+		bool Connection::operator<(const Connection& rhs) const
+		{
+			return this->get_fd() < rhs.get_fd();
+		}
+
+		bool Connection::operator==(const Connection& rhs) const
+		{
+			return this->get_fd() == rhs.get_fd();
+		}
 	}
 }

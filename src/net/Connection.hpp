@@ -27,6 +27,9 @@ namespace ws
 
 			std::string get_address();
 
+			bool operator==(const Connection& rhs) const;
+			bool operator<(const Connection& rhs) const;
+
 		};
 	}
 }
