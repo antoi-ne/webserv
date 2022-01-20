@@ -26,7 +26,7 @@ namespace ws
 			char * get_ptr();
 			const char * get_ptr() const;
 
-			std::string to_string();
+			std::string to_string() const;
 
 			Buffer&	advance(size_t n);
 
