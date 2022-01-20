@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 10:49:05 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 14:17:49 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,51 +20,111 @@ namespace http
 
 	const std::string&	Req::path(void) const { return this->_path; }
 
-	const std::string&	Req::header(const std::string& field) const
-	{ return this->_header.at(field); }
+	const std::string&	Req::header(const std::string& field)
+	{ return this->_header[field]; }
 
-	bool	Req::finish(void) const { return !this->_update; }
+	const ws::shared::Buffer&	Req::body(void) const
+	{ return this->_buff; }
 
-	// Take Buffer with at least HTTP start-line
-	Req::Req(ws::shared::Buffer& buff)
-	 :	_method(UNDEF), _path(), _header(), _body(), _contentLength(),
-	 	_update(&Req::_updateHeader)
+	Req::Req(void)
+	 :	_method(UNDEF), _path(), _header(), _buff(),
+	 	_contentLength()
+	{}
+
+	// Get buffer and update request's content
+	bool	Req::update(ws::shared::Buffer& buff)
 	{
-		size_t size = 0;
-
-		this->_getStartLine(this->_getHeaderLine(buff, size));
-		this->_updateHeader(buff.advance(size));
+		if (!this->_hasHeader)
+			return this->_updateHeader(buff);
+		return this->_updateBody(buff);
 	}
 
-	// return the line before the next "\r\n" inside a Buffer 
-	std::string	Req::_getHeaderLine(const ws::shared::Buffer& buff, size_t& headerSize) const
+	// Update body content
+	// Can be bigger than contentLength
+	bool	Req::_updateBody(ws::shared::Buffer& buff)
 	{
-		const char*		raw = buff.get_ptr();
-		std::string		line;
-		size_t			startSize = headerSize;
-
-		for (; raw[headerSize] != '\r' && headerSize < buff.size(); ++headerSize);
-		line = std::string(raw + startSize, headerSize - startSize);
-		if (headerSize == buff.size()) // NO /r/n
-			throw std::exception();
-		++headerSize; // skip /r
-		++headerSize; // skip /n
-		if (headerSize >= buff.size() && !line[0])
-			return std::string();
-		return line;
+		this->_buff.join(buff);
+		if (this->_buff.size() >= this->_contentLength)
+			return false;
+		return true;
 	}
 
-	void	Req::_getStartLine(std::string line)
+	// Update header content
+	bool	Req::_updateHeader(ws::shared::Buffer& buff)
 	{
+		this->_buff.join(buff);
+		return this->_checkHeader();
+	}
+
+	bool	Req::_checkHeader(void)
+	{
+		std::string str = this->_buff.to_string();
+
+		size_t	EOH = str.find("\r\n\r\n");
+		if (EOH != std::string::npos)
+		{
+			this->_setHeader();
+			return this->_endHeader();
+		}
+		return true;
+	}
+
+	void	Req::_setHeader(void)
+	{
+		this->_getStartLine();
+		std::string	line;
+
+		while (!(line = _getNextHeaderLine()).empty())
+			this->_insertHeaderField(line);
+		this->_hasHeader = true;
+	}
+
+	static inline size_t	_setContentLength(const std::string& s)
+	{
+		try {
+			return std::stoul(s);
+		} catch (...) {}
+		return 0;
+	}
+
+	bool	Req::_endHeader(void)
+	{
+		this->_contentLength = _setContentLength(this->header("Content-Length"));
+		if (this->_contentLength > this->_buff.size())
+			return true;
+		return false;
+	}
+
+	void	Req::_getStartLine(void)
+	{
+		std::string	line = _getNextHeaderLine();
+
 		if (line.empty())
 			throw std::exception();
+
 		size_t index = this->_getMethod(line);
 		size_t endPath = line.find(HTTPVER, index);
+
 		if (endPath == std::string::npos)
 			throw std::exception();
+
 		this->_path = line.substr(index, endPath - index);
 		if (this->_path.empty())
 			throw std::exception();
+	}
+
+	// return the line before the next "\r\n" inside a Buffer 
+	std::string	Req::_getNextHeaderLine(void)
+	{
+		std::string		raw = this->_buff.get_ptr();
+		std::string		line;
+		size_t			EOL;
+		
+		EOL = raw.find("\r\n");
+		if (EOL != std::string::npos)
+			line = raw.substr(0, EOL);
+		this->_buff.advance(EOL + 2);
+		return line;
 	}
 
 	static inline bool	_compareMethod(const std::string& line, const std::string& method)
@@ -76,57 +136,11 @@ namespace http
 		std::string	methods[] = METHODS;
 		size_t	i = 0;
 
-		while (!_compareMethod(line, methods[i]))
-		{
-			++i;
-			if (methods[i].empty())
-				throw std::exception();
-		}
+		for (; i < 4 && !_compareMethod(line, methods[i]); ++i)
+		if (i == 4)
+			return 0;
 		this->_method = static_cast<e_method>(i);
 		return methods[i].size();
-	}
-
-	// Get buffer and update request's content
-	// _update = _updateHeader > _update = _updateBody > _update = NULL
-	// _update = _updateHeader > _update = NULL (if no body)
-	bool	Req::update(ws::shared::Buffer& buff)
-	{
-		if (this->_update != NULL)
-		{
-			(this->*_update)(buff);
-			return true;
-		}
-		return false;
-	}
-
-	static inline size_t	_setContentLength(const std::string& s)
-	{
-		return std::stoul(s);
-	}
-
-	void	Req::_endHeader(ws::shared::Buffer& buff)
-	{
-		if ((this->_contentLength = _setContentLength(this->header("Content-Length"))) > 0)
-		{
-			this->_update = &Req::_updateBody;
-			this->_updateBody(buff);
-		}
-		else
-			this->_update = NULL;
-	}
-
-	// Update header content
-	void	Req::_updateHeader(ws::shared::Buffer& buff)
-	{
-		size_t			size;
-		std::string		line;
-
-		while (!(line = this->_getHeaderLine(buff, size)).empty())
-		{
-			if (line[0] == '\r')
-				return _endHeader(buff.advance(size + 2));
-			this->_insertHeaderField(line);
-		}
 	}
 
 	void	Req::_insertHeaderField(std::string& line)
@@ -134,16 +148,8 @@ namespace http
 		size_t	sep = 0;
 
 		for (; sep < line.size() && line[sep] != ':'; ++sep);
-		this->_header.insert(std::pair<std::string, std::string>(line.substr(0, sep), line.substr(sep + 2)));
-	}
-
-	// Update body content
-	// Can be bigger than contentLength
-	void	Req::_updateBody(ws::shared::Buffer& buff)
-	{
-		this->_body.join(buff);
-		if (this->_body.size() >= this->_contentLength)
-			this->_update = NULL;
+		if (line[sep] == ':')
+			this->_header.insert(std::pair<std::string, std::string>(line.substr(0, sep), line.substr(sep + 2)));
 	}
 
 } // namespace http

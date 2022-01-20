@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/19 22:18:55 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 14:13:39 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,30 +22,31 @@ namespace http
 	public:
 		typedef std::map<std::string, std::string>	header_m;
 
-		Req(ws::shared::Buffer& buff);
+		Req(void);
 
 		e_method			method(void) const;
 		const std::string&	path(void) const;
-		const std::string&	header(const std::string& field) const;
+		const std::string&	header(const std::string& field);
 		const ws::shared::Buffer&	body(void) const;
 
-		bool	finish(void) const;
 		bool	update(ws::shared::Buffer& buff);
 
 	private:
 		e_method			_method;
 		std::string			_path;
 		header_m			_header;
-		ws::shared::Buffer	_body;
+		ws::shared::Buffer	_buff;
 		size_t				_contentLength;
-		void				(Req::*_update)(ws::shared::Buffer& buff);	
+		bool				_hasHeader;
 
-		std::string		_getHeaderLine(const ws::shared::Buffer& buff, size_t& headerSize) const;
+		bool			_checkHeader(void);
+		std::string		_getNextHeaderLine(void);
 		size_t			_getMethod(std::string& line);
-		void			_updateBody(ws::shared::Buffer& buff);
-		void			_updateHeader(ws::shared::Buffer& buff);
-		void			_endHeader(ws::shared::Buffer& buff);
-		void			_getStartLine(std::string line);
+		bool			_updateBody(ws::shared::Buffer& buff);
+		bool			_updateHeader(ws::shared::Buffer& buff);
+		bool			_endHeader(void);
+		void			_getStartLine(void);
 		void			_insertHeaderField(std::string& line);
+		void			_setHeader(void);
 	};
 } // namespace http

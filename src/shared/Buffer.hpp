@@ -21,7 +21,8 @@ namespace ws
 
 			Buffer & operator=(const Buffer & rhs);
 
-			size_t size() const;
+			size_t	capacity() const;
+			size_t	size() const;
 			char * get_ptr();
 			const char * get_ptr() const;
 
@@ -35,6 +36,7 @@ namespace ws
 
 			char * _data;
 			size_t _size;
+			size_t _cursor;
 
 		};
 	}
