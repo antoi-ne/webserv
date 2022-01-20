@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 08:35:34 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 10:49:05 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,6 @@ namespace http
 		this->_updateHeader(buff.advance(size));
 	}
 
-	static inline bool _is_CRLF(char c) { return (c == '\r' || c == '\n'); }
-
 	// return the line before the next "\r\n" inside a Buffer 
 	std::string	Req::_getHeaderLine(const ws::shared::Buffer& buff, size_t& headerSize) const
 	{
@@ -45,14 +43,13 @@ namespace http
 		std::string		line;
 		size_t			startSize = headerSize;
 
-		if (_is_CRLF(raw[headerSize]))
-			return std::string();
-		for (; !_is_CRLF(raw[headerSize]) && headerSize < buff.size(); ++headerSize);
+		for (; raw[headerSize] != '\r' && headerSize < buff.size(); ++headerSize);
 		line = std::string(raw + startSize, headerSize - startSize);
-		++headerSize;
-		if (_is_CRLF(raw[headerSize]))
-			++headerSize;
-		if (headerSize == buff.size() && !line[0])
+		if (headerSize == buff.size()) // NO /r/n
+			throw std::exception();
+		++headerSize; // skip /r
+		++headerSize; // skip /n
+		if (headerSize >= buff.size() && !line[0])
 			return std::string();
 		return line;
 	}
@@ -70,23 +67,23 @@ namespace http
 			throw std::exception();
 	}
 
-	static inline bool	_compareMethod(std::string line, std::string method)
+	static inline bool	_compareMethod(const std::string& line, const std::string& method)
 	{ return line.compare(0, method.size(), method) == 0; }
 
 
 	size_t	Req::_getMethod(std::string& line)
 	{
-		char*	methods[] = METHODS;
+		std::string	methods[] = METHODS;
 		size_t	i = 0;
 
 		while (!_compareMethod(line, methods[i]))
 		{
 			++i;
-			if (!methods[i])
+			if (methods[i].empty())
 				throw std::exception();
 		}
 		this->_method = static_cast<e_method>(i);
-		return strlen(methods[i]);
+		return methods[i].size();
 	}
 
 	// Get buffer and update request's content
@@ -125,7 +122,11 @@ namespace http
 		std::string		line;
 
 		while (!(line = this->_getHeaderLine(buff, size)).empty())
+		{
+			if (line[0] == '\r')
+				return _endHeader(buff.advance(size + 2));
 			this->_insertHeaderField(line);
+		}
 	}
 
 	void	Req::_insertHeaderField(std::string& line)
