@@ -51,7 +51,14 @@ namespace ws
 
 		void Controller::_loop()
 		{
-			
+			std::list<net::Ctx> ctxs;
+			std::list<net::Ctx>::iterator it;
+
+			ctxs = this->_pool.probe();
+			for (it = ctxs.begin(); it != ctxs.end(); it++)
+			{
+				
+			}
 		}
 	}
 }

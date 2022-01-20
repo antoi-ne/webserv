@@ -16,7 +16,7 @@ namespace ws
 			::close(this->_sockfd);
 		}
 
-		int Socket::get_fd()
+		int Socket::get_fd() const
 		{
 			return this->_sockfd;
 		}
