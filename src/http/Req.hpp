@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 14:13:39 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 16:48:40 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ namespace http
 
 		Req(void);
 
+		bool				hasHeader(void) const;
 		e_method			method(void) const;
 		const std::string&	path(void) const;
 		const std::string&	header(const std::string& field);
@@ -39,11 +40,10 @@ namespace http
 		size_t				_contentLength;
 		bool				_hasHeader;
 
-		bool			_checkHeader(void);
 		std::string		_getNextHeaderLine(void);
 		size_t			_getMethod(std::string& line);
-		bool			_updateBody(ws::shared::Buffer& buff);
-		bool			_updateHeader(ws::shared::Buffer& buff);
+		bool			_checkBody(ws::shared::Buffer& buff);
+		bool			_checkHeader(void);
 		bool			_endHeader(void);
 		void			_getStartLine(void);
 		void			_insertHeaderField(std::string& line);
