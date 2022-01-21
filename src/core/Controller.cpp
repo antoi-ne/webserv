@@ -55,8 +55,16 @@ namespace ws
 						if (this->_req_cache[it->con].method() == UNDEF)
 							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
 						else
-							this->_res_cache[it->con].push_back(http::Res()/*this->_router.process(this->_req_cache[it->con], std::make_pair(it->srv.get_host(), it->srv.get_port()))*/);
-						this->_req_cache.erase(it->con);
+						{
+							this->_res_cache[it->con].push_back(
+								this->_router.process(
+									this->_req_cache[it->con],
+									std::make_pair(it->srv.get_host(),
+									it->srv.get_port())
+								)
+							);
+						}
+					this->_req_cache.erase(it->con);
 					}
 					else
 						shared::Log::info("request not complete");
@@ -65,7 +73,7 @@ namespace ws
 				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
 				{
 					shared::Log::info("A\n");
-					this->_res_cache[it->con].end()->sendRes(it->con);
+					this->_res_cache[it->con].front().sendRes(it->con);
 					this->_res_cache[it->con].clear();
 					shared::Log::info("B\n");
 				}

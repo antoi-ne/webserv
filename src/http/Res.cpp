@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 19:22:56 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 19:55:33 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,17 +24,17 @@ namespace http
 	{
 		time_t	t = time(0);
 		tm		*ltm = gmtime(&t);
-		char	date_buff[257];
+		char	date_buff[256];
 
-		size_t s = strftime(date_buff, sizeof(date_buff), DATE_FORMAT, ltm);
+		size_t s = strftime(date_buff, 255, DATE_FORMAT, ltm);
 		date_buff[s] = '\0';
-		buff += std::string(date_buff);
+		buff.append(date_buff);
 	}
 
 	void	Res::_defaultRes(std::string& buff) const
 	{
-		buff += " " + this->_statusMsg + "\r\n";
-		buff += "Server: webserv/0.1.0\r\n";
+		buff.append(this->_statusMsg + "\r\n");
+		buff.append("Server: webserv/0.1.0\r\n");
 		this->_getDate(buff);
 	}
 
@@ -43,14 +43,10 @@ namespace http
 		std::string	buff(HTTPVER);
 
 		this->_defaultRes(buff);
-		std::cout << "s: " << buff << std::endl;
-		buff += "Content-Type: ";
-		buff += this->_contentType;
-		buff += "\r\n";
-		buff += "Content-Length: " + std::to_string(this->_contentLength) + "\r\n";
-		buff += "Connection: keep-alive\r\n";
-		buff += "Accept-Ranges: bytes\r\n";
-		std::cout << "buff = " << this->_contentType << std::endl;
+		buff.append("Content-Type: " + this->_contentType + "\r\n");
+		buff.append("Content-Length: " + std::to_string(this->_contentLength) + "\r\n");
+		buff.append("Connection: keep-alive\r\n");
+		buff.append("Accept-Ranges: bytes\r\n\r\n");
 		conn.send(buff);
 	}
 
