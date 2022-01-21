@@ -4,6 +4,7 @@
 # include <map>
 # include <vector>
 # include <string>
+# include <utility>
 
 namespace ws
 {
@@ -32,8 +33,6 @@ namespace ws
 
 		struct Server
 		{
-			std::string host;
-			uint16_t port;
 			std::vector<std::string> server_names;
 			std::string root;
 			std::string index;
@@ -48,8 +47,10 @@ namespace ws
 
 		struct Config
 		{
-			std::vector<Server> servers;
+			std::map<std::pair< std::string, uint16_t>, std::vector<Server> > servers;
 		};
+
+		typedef std::map<std::pair< std::string, uint16_t>, std::vector<Server> > server_map;
 	}
 }
 

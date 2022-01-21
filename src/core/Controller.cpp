@@ -8,26 +8,10 @@ namespace ws
 		Controller::Controller(conf::Config config)
 			: _config(config), _srv(), _pool(), _req_cache(), _res_cache()
 		{
-			std::vector<conf::Server>::iterator it;
-			std::list<net::Server>::iterator itn;
-			net::Server srv;
-			bool duplicate = false;
+			conf::server_map::iterator it;
 
-			for (it = this->_config.servers.begin(); it != this->_config.servers.end(); it++)
-			{
-				for (itn = this->_srv.begin(); itn != this->_srv.end(); itn++)
-				{
-					if (itn->get_host() == it->host && itn->get_port() == it->port)
-					{
-						duplicate = true;
-						break;
-					}
-				}
-				if (duplicate)
-					break;
-				srv = net::Server(it->host, it->port, 20);
-				this->_srv.push_back(srv);
-			}
+			for (it = config.servers.begin(); it != config.servers.end(); it++)
+				this->_srv.push_back(net::Server(it->first.first, it->first.second));
 		}
 
 		Controller::~Controller()
@@ -61,7 +45,6 @@ namespace ws
 				if (it->rread)
 				{
 					shared::Buffer buff = it->con.recv(4096);
-					// shared::Log::info(buff.to_string());
 					shared::Log::info("received data");
 					if (this->_req_cache[it->con].update(buff) == false)
 					{

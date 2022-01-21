@@ -28,14 +28,12 @@ int main(void)
 	conf::Location loc;
 	core::Controller control;
 
-	srv.host = "0.0.0.0";
-	srv.port = 80;
 	srv.root = "./assets/ws1";
 	srv.index = "index.html";
 	srv.server_names.push_back("localhost");
 	srv.locations.clear();
 
-	cfg.servers.push_back(srv);
+	cfg.servers[std::make_pair("0.0.0.0", 80U)].push_back(srv);
 
 	control = core::Controller(cfg);
 
