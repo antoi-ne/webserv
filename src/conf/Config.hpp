@@ -4,6 +4,7 @@
 # include <map>
 # include <vector>
 # include <string>
+# include <utility>
 # include "../http/method.h"
 # include "../http/CI_Less.hpp"
 
@@ -48,6 +49,8 @@ namespace ws
 		{
 			server_map servers;
 		};
+
+		typedef std::map<std::pair< std::string, uint16_t>, std::vector<Server> > server_map;
 	}
 }
 
