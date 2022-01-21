@@ -39,9 +39,12 @@ namespace ws
 			std::vector<Location> locations;
 		};
 
+		typedef std::pair<std::string, uint16_t>			host_port;
+		typedef std::map<host_port, std::vector<Server> >	server_map;
+
 		struct Config
 		{
-			std::map<std::pair< std::string, uint16_t>, std::vector<Server> > servers;
+			server_map servers;
 		};
 
 		typedef std::map<std::pair< std::string, uint16_t>, std::vector<Server> > server_map;
