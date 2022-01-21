@@ -4,24 +4,18 @@
 # include <map>
 # include <vector>
 # include <string>
+# include "../http/method.h"
 
 namespace ws
 {
 	namespace conf
 	{
-		enum Methods
-		{
-			GET,
-			POST,
-			DELETE
-		};
-
 		struct Location
 		{
 			std::string route; // path of the location
 			std::string root;
 			std::string index;
-			std::vector<Methods> accepted_methods;
+			std::vector<e_method> accepted_methods;
 			bool autoindex; // false by default
 			int max_body_size; // negative means not defined
 			std::map<unsigned int,std::string> error_pages;

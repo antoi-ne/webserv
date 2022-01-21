@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/19 13:32:10 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/20 16:45:39 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ namespace http
 
 	void	Res::_defaultRes(std::string& buff) const
 	{
-		buff += std::to_string(this->_status) + " " + this->_statusMsg + "\r\n";
+		buff += " " + std::to_string(this->_status) + " " + this->_statusMsg + "\r\n";
 		buff += "Server: webserv/0.1.0\r\n";
 		this->_getDate(buff);
 	}
