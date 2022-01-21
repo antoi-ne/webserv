@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 16:45:39 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 11:07:02 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ namespace http
 {
 
 	Res::Res(void)
-	 : _status(200), _statusMsg("OK"), _contentType("text/html"), _contentLength(0)
+	 : _statusMsg(STATUS200), _contentType("text/html"), _contentLength(0)
 	{}
 
 	void Res::_getDate(std::string& buff) const
@@ -32,7 +32,7 @@ namespace http
 
 	void	Res::_defaultRes(std::string& buff) const
 	{
-		buff += " " + std::to_string(this->_status) + " " + this->_statusMsg + "\r\n";
+		buff += " " + this->_statusMsg + "\r\n";
 		buff += "Server: webserv/0.1.0\r\n";
 		this->_getDate(buff);
 	}
@@ -48,4 +48,7 @@ namespace http
 		buff += "Accept-Ranges: bytes\r\n";
 		conn.send(buff);
 	}
+
+	void	Res::setStatus(std::string& statusMsg)
+	{ this->_statusMsg = statusMsg; }
 }

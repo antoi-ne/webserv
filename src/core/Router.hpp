@@ -3,6 +3,7 @@
 # include "../conf/Config.hpp"
 # include "../http/Req.hpp"
 # include "../http/Res.hpp"
+# include "../http/CI_Less.hpp"
 
 namespace ws
 {
@@ -11,17 +12,17 @@ namespace ws
 		class Router
 		{
 		public:
-			typedef std::vector<conf::Server> Server_lst; 
+			typedef std::vector<conf::Server>	serv_lst;
 
 			Router(conf::Config& _config);
 
-			http::Res	process(http::Req& request, const std::string& host, u_int16_t port);
-
+			http::Res	process(http::Req& request, const conf::host_port& host);
 
 		private:
 			conf::Config&	_config;
 
-			Server_lst		_portFilter(Server_lst& servers);
+			const conf::Server*	_getServ(http::Req& request, const conf::host_port& host) const;
+			const conf::Server* _getServerName(const std::string& host, const serv_lst& servLst) const;
 		};
 	}
 }

@@ -26,8 +26,6 @@ namespace ws
 
 		struct Server
 		{
-			std::string host;
-			uint16_t port;
 			std::vector<std::string> server_names;
 			std::string root;
 			std::string index;
@@ -40,9 +38,12 @@ namespace ws
 			std::vector<Location> locations;
 		};
 
+		typedef std::pair<std::string, uint16_t>			host_port;
+		typedef std::map<host_port, std::vector<Server> >	server_map;
+
 		struct Config
 		{
-			std::vector<Server> servers;
+			server_map servers;
 		};
 	}
 }
