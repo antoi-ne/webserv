@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 13:00:56 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 14:27:12 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ namespace ws
 		Router::Router(conf::Config& conf) : _config(conf) {}
 
 		bool	_findPath(void)
-		{return true;}
+		{ return true; }
 
 		http::Res	Router::process(http::Req& request, const conf::host_port& host)
 		{
@@ -32,10 +32,11 @@ namespace ws
 				return response;
 			}
 
-			std::string	path = this->_getRealPath(request.path(), *serv);
+			const conf::Location	loc = this->_getLocation(request.path(), *serv);
+			std::string				root;
+			std::string				index;
 
-			if (path.empty() || !_findPath())
-				response.setStatus(STATUS404);
+			if (loc.root.empty())
 
 			return response;
 		}
@@ -63,13 +64,20 @@ namespace ws
 			return servLst.begin().base();
 		}
 
-		const std::string&	Router::_getRealPath(const std::string& reqPath, const conf::Server& serv) const
+		const conf::Location&	Router::_getLocation(const std::string& reqPath, const conf::Server& serv) const
 		{
-			conf::location_map::const_iterator	it = serv.locations.find(reqPath);
+			std::string	path = reqPath;
+			conf::location_map::const_iterator	it = serv.locations.find(path);
 
+			while (it == serv.locations.end() && !path.empty())
+			{
+				size_t	lastDir = path.find_last_of('/');
+				path = path.substr(0, path.size() - lastDir - 1);
+				it = serv.locations.find(path);
+			}
 			if (it == serv.locations.end())
-				return std::string();
-			return it->first;
+				return it->second;
+			return it->second;
 		}
 	}
 }

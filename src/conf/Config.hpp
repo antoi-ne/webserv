@@ -35,7 +35,7 @@ namespace ws
 			std::string index;
 			bool autoindex;
 			int max_body_size;
-			std::map<unsigned int,std::string> error_pages;
+			std::map<unsigned int, std::string> error_pages;
 			std::string upload_path;
 			std::string return_path;
 			int return_code;
