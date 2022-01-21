@@ -6,7 +6,7 @@ namespace ws
 	{
 
 		Controller::Controller(conf::Config config)
-			: _config(config), _srv(), _pool(), _req_cache(), _res_cache()
+			: _config(config), _srv(), _pool(), _req_cache(), _res_cache(), _router(config)
 		{
 			conf::server_map::iterator it;
 
@@ -37,13 +37,15 @@ namespace ws
 		{
 			std::list<net::Ctx> ctxs;
 			std::list<net::Ctx>::iterator it;
+			shared::Buffer buff;
+
 
 			ctxs = this->_pool.probe();
 			for (it = ctxs.begin(); it != ctxs.end(); it++)
 			{
-				if (it->rread)
+				if (it->rread) // new request fragment received
 				{
-					shared::Buffer buff = it->con.recv(4096);
+					buff = it->con.recv(4096);
 					shared::Log::info("received data");
 					if (this->_req_cache[it->con].update(buff) == false)
 					{
@@ -51,16 +53,20 @@ namespace ws
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (this->_req_cache[it->con].method() == UNDEF)
-						{
-							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello WORLD!"));
-						}
+							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
 						else
-							it->con.send(std::string("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello world!"));
+							this->_res_cache[it->con].push_back(this->_router.process(this->_req_cache[it->con], std::make_pair(it->srv.get_host(), it->srv.get_port())));
 						this->_req_cache.erase(it->con);
 						this->_pool.close_con(it->con);
 					}
 					else
 						shared::Log::info("request not complete");
+				}
+
+				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
+				{
+					this->_res_cache[it->con].begin()->sendRes(it->con);
+					this->_res_cache[it->con].clear();
 				}
 			}
 		}

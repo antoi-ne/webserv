@@ -26,7 +26,6 @@ int main(void)
 	conf::Config cfg;
 	conf::Server srv;
 	conf::Location loc;
-	core::Controller control;
 
 	srv.root = "./assets/ws1";
 	srv.index = "index.html";
@@ -35,7 +34,7 @@ int main(void)
 
 	cfg.servers[std::make_pair("0.0.0.0", 80U)].push_back(srv);
 
-	control = core::Controller(cfg);
+	core::Controller control = core::Controller(cfg);
 
 	control.start();
 }
