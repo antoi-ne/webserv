@@ -23,6 +23,7 @@ namespace ws
 
 			const conf::Server*	_getServ(http::Req& request, const conf::host_port& host) const;
 			const conf::Server* _getServerName(const std::string& host, const serv_lst& servLst) const;
+			const std::string&	_getRealPath(const std::string& reqPath, const conf::Server& serv) const;
 		};
 	}
 }
