@@ -11,6 +11,7 @@
 # include "net/Pool.hpp"
 # include "http/Req.hpp"
 # include "http/Res.hpp"
+# include "core/Router.hpp"
 
 namespace ws
 {
@@ -29,7 +30,8 @@ namespace ws
 			std::list<net::Server> _srv;
 			net::Pool _pool;
 			std::map<net::Connection, http::Req> _req_cache;
-			std::map<net::Connection, http::Res> _res_cache;
+			std::map< net::Connection, std::vector<http::Res> > _res_cache;
+			core::Router _router;
 
 			void _loop();
 		};
