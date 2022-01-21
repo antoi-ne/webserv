@@ -49,14 +49,14 @@ namespace ws
 		{
 			struct sockaddr_in addr;
 			socklen_t addr_len = sizeof(addr);
-			char pres[INET6_ADDRSTRLEN];
+			char pres[INET_ADDRSTRLEN];
 			int ret;
 
 			ret = getpeername(this->get_fd(), (struct sockaddr *) &addr, &addr_len);
 			if (ret < 0)
 				return "";
 
-			inet_ntop(addr.sin_family, &addr, pres, INET6_ADDRSTRLEN);
+			inet_ntop(addr.sin_family, &addr, pres, INET_ADDRSTRLEN);
 
 			return pres;
 		}
