@@ -6,13 +6,14 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/20 19:02:46 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 10:00:13 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 #include "../shared/Buffer.hpp"
 #include "method.h"
+#include "CI_Less.hpp"
 #include <map>
 
 namespace http
@@ -20,7 +21,7 @@ namespace http
 	class Req
 	{
 	public:
-		typedef std::map<std::string, std::string>	header_m;
+		typedef std::map<std::string, std::string, CI_Less>	header_m;
 
 		Req(void);
 
