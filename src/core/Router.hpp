@@ -1,5 +1,8 @@
 #ifndef WS_CORE_ROUTER_HPP
-#define WS_CORE_ROUTER_HPP
+# define WS_CORE_ROUTER_HPP
+# include "../conf/Config.hpp"
+# include "../http/Req.hpp"
+# include "../http/Res.hpp"
 
 namespace ws
 {
@@ -8,14 +11,17 @@ namespace ws
 		class Router
 		{
 		public:
-			Router();
-			Router(void *config);
-			~Router();
+			typedef std::vector<conf::Server> Server_lst; 
 
-			void *process(void *request);
+			Router(conf::Config& _config);
+
+			http::Res	process(http::Req& request, const std::string& host, u_int16_t port);
+
 
 		private:
-			void *_config;
+			conf::Config&	_config;
+
+			Server_lst		_portFilter(Server_lst& servers);
 		};
 	}
 }
