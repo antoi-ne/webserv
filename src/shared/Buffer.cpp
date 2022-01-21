@@ -84,7 +84,7 @@ namespace ws
 		}
 
 
-		void	Buffer::join(Buffer& buff)
+		void	Buffer::join(const Buffer& buff)
 		{
 			size_t	newSize = this->_size + buff.size();
 			char*	tmp = new char[newSize + 1]();

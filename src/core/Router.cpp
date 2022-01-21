@@ -6,11 +6,15 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 14:27:12 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 18:09:42 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace ws
 {
@@ -18,41 +22,58 @@ namespace ws
 	{
 		Router::Router(conf::Config& conf) : _config(conf) {}
 
-		bool	_findPath(void)
-		{ return true; }
+		shared::Buffer	_getFile(const std::string& path)
+		{
+			char				_buff[1024];
+			std::ifstream		file(path);
+			shared::Buffer		buff;
 
-		http::Res	Router::process(http::Req& request, const conf::host_port& host)
+			if (file)
+			{
+				while (file.read(_buff, 1024) && !file.eof())
+					buff.join(ws::shared::Buffer(_buff, 1024));
+				file.close();
+			}
+			return buff;
+		}
+
+		http::Res
+		Router::process(http::Req& request, const conf::host_port& host)
 		{
 			http::Res			response;
-			const conf::Server*	serv = this->_getServ(request, host);
-
+			std::string			path;
+			shared::Buffer		fileBuff;
+			const conf::Server*	serv;
+			
+			serv = this->_getServ(request.header(), host);
 			if (!serv)
 			{
 				response.setStatus(STATUS444);
 				return response;
 			}
-
-			const conf::Location	loc = this->_getLocation(request.path(), *serv);
-			std::string				root;
-			std::string				index;
-
-			if (loc.root.empty())
-
+			path = _getLocalPath(request.path(), *serv);
+			if (path.empty()
+				|| !(fileBuff = _getFile(path)).size())
+				response.setStatus(STATUS404);
+			if (request.method() == POST)
+				response.setStatus(STATUS201);
 			return response;
 		}
 
-		const conf::Server*	Router::_getServ(http::Req& request, const conf::host_port& host) const
+		const conf::Server*
+		Router::_getServ(http::Req::header_m& header, const conf::host_port& host) const
 		{
 			conf::server_map::iterator it = this->_config.servers.find(host);
 
 			if (it == this->_config.servers.end() || it->second.empty())
 				return nullptr;
-			return _getServerName(request.header("host"), it->second);
+			return _getServerName(header["host"], it->second);
 		}
 
-		const conf::Server* Router::_getServerName(const std::string& host, const serv_lst& servLst) const
+		const conf::Server*
+		Router::_getServerName(const std::string& host, const serv_lst& servLst) const
 		{
-			if (servLst.size() > 1)
+			if (servLst.size() > 1 && !host.empty())
 			{
 				CI_Less	ci;
 
@@ -64,9 +85,32 @@ namespace ws
 			return servLst.begin().base();
 		}
 
-		const conf::Location&	Router::_getLocation(const std::string& reqPath, const conf::Server& serv) const
+		std::string
+		Router::_getLocalPath(const std::string& uri, const conf::Server& serv) const
 		{
-			std::string	path = reqPath;
+			const conf::Location*	loc;
+			std::string				root;
+			std::string				path;
+			struct stat				info;
+
+			loc = this->_getLocation(uri, serv);
+			root = !loc || loc->root.empty() ? serv.root : loc->root;
+			path = root + uri;
+			if (stat(path.c_str(), &info) != 0)
+				return std::string();
+			if(!S_ISDIR(info.st_mode))
+			{
+				if (path.back() != '/')
+					path += "/";
+				path += !loc || loc->index.empty() ? serv.index : loc->index;
+			}
+			return path;
+		}
+
+		const conf::Location*
+		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
+		{
+			std::string	path = uri;
 			conf::location_map::const_iterator	it = serv.locations.find(path);
 
 			while (it == serv.locations.end() && !path.empty())
@@ -75,9 +119,9 @@ namespace ws
 				path = path.substr(0, path.size() - lastDir - 1);
 				it = serv.locations.find(path);
 			}
-			if (it == serv.locations.end())
-				return it->second;
-			return it->second;
+			if (path.empty())
+				return NULL;
+			return std::addressof(it->second);
 		}
 	}
 }

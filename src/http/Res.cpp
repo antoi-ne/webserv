@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 11:07:02 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/21 16:40:58 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,6 @@ namespace http
 		conn.send(buff);
 	}
 
-	void	Res::setStatus(std::string& statusMsg)
+	void	Res::setStatus(const std::string& statusMsg)
 	{ this->_statusMsg = statusMsg; }
 }
