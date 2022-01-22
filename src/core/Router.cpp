@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 12:29:00 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 14:23:13 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,10 @@ namespace ws
 			}
 			else
 				response.setStatus(STATUS444);
-			fileBuff = _getFile(path);
+			if ((fileBuff = _getFile(path)).size())
+				response.body().join(fileBuff);
+			else
+				response.setStatus(STATUS404);
 			return response;
 		}
 

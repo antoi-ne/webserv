@@ -6,30 +6,28 @@ namespace ws
 	namespace shared
 	{
 		Buffer::Buffer(size_t size)
-			: _size(size), _cursor(0)
+			: _data(), _size(size), _cursor(0)
 		{
 			this->_data = new char[this->_size + 1]();
-			std::fill_n(this->_data, this->_size, 0);
+			std::memset(this->_data, 0, this->_size);
 		}
 
 		Buffer::Buffer(std::string str)
-			: _cursor(0)
+			: _data(), _size(str.size()), _cursor(0)
 		{
-			this->_size = str.size();
 			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, str.c_str(), this->_size);
 		}
 
 		Buffer::Buffer(const char *buff, size_t size)
-			: _cursor(0)
+			: _data(), _size(size), _cursor(0)
 		{
-			this->_size = size;
 			this->_data = new char[this->_size + 1]();
 			std::memcpy(this->_data, buff, this->_size);
 		}
 
 		Buffer::Buffer(const Buffer & rhs)
-			: _cursor(0)
+			: _data(), _size(), _cursor(0)
 		{
 			*this = rhs;
 		}
@@ -43,7 +41,7 @@ namespace ws
 		{
 			if (this != &rhs)
 			{
-				this->~Buffer();
+				delete [] this->_data;
 				this->_size = rhs.size();
 				this->_data = new char[this->_size + 1]();
 				std::memcpy(this->_data, rhs.get_ptr(), this->_size);
