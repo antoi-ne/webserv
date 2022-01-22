@@ -48,10 +48,12 @@ namespace ws
 					shared::Log::info("received data from " + it->con.get_address());
 					if (this->_req_cache[it->con].update(buff) == false)
 					{
+						const http::Req&	req = this->_req_cache[it->con];
+
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
-						if (this->_req_cache[it->con].method() == UNDEF)
+						if (req.method() == UNDEF || req.path().empty())
 							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
 						else
 						{
@@ -71,7 +73,7 @@ namespace ws
 				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
 				{
 					this->_res_cache[it->con].front().sendRes(it->con);
-					this->_res_cache[it->con].clear();
+					this->_res_cache[it->con].erase(this->_res_cache[it->con].begin());
 				}
 			}
 		}

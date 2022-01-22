@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 10:00:13 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 15:01:32 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ namespace http
 		bool			_checkBody(void);
 		bool			_checkHeader(void);
 		bool			_endHeader(void);
-		void			_getStartLine(void);
+		bool			_getStartLine(void);
 		void			_insertHeaderField(std::string& line);
 		void			_setHeader(void);
 	};

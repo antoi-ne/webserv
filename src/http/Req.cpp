@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 09:39:54 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 15:59:36 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,11 +71,13 @@ namespace http
 
 	void	Req::_setHeader(void)
 	{
-		this->_getStartLine();
-		std::string	line;
+		if (this->_getStartLine())
+		{
+			std::string	line;
 
-		while (!(line = _getNextHeaderLine()).empty())
-			this->_insertHeaderField(line);
+			while (!(line = _getNextHeaderLine()).empty())
+				this->_insertHeaderField(line);
+		}
 		this->_hasHeader = true;
 	}
 
@@ -96,24 +98,28 @@ namespace http
 		return false;
 	}
 
-	void	Req::_getStartLine(void)
+	bool	Req::_getStartLine(void)
 	{
 		std::string	line = _getNextHeaderLine();
 
-		if (line.empty())
-			throw std::exception();
-
-		size_t index = this->_getMethod(line);
-
-		size_t endPath = line.find(HTTPVER, index);
-
-		if (endPath == std::string::npos)
-			throw std::exception();
-		--endPath;
-
-		this->_path = line.substr(index, endPath - index);
-		if (this->_path.empty())
-			throw std::exception();
+		if (!line.empty())
+		{
+			size_t index = this->_getMethod(line);
+			if (index) // if not failed method -> UNDEF
+			{
+				size_t endPath = line.find(HTTPVER, index);
+				if (endPath != std::string::npos) // if fail not good version path empty
+				{
+					while (line[index] == ' ')
+						++index;
+					while (line[endPath - 1] == ' ' && endPath > index)
+						--endPath;
+					this->_path = line.substr(index, endPath - index);
+					return !this->_path.empty();
+				}
+			}
+		}
+		return false;
 	}
 
 	// return the line before the next "\r\n" inside a Buffer 
@@ -139,7 +145,8 @@ namespace http
 		std::string	methods[] = METHODS;
 		size_t	i = 0;
 
-		for (; i < N_METHOD && !_compareMethod(line, methods[i]); ++i)
+		while (i < N_METHOD && !_compareMethod(line, methods[i]))
+			++i;
 		if (i == N_METHOD)
 		{
 			this->_method = UNDEF;
@@ -155,7 +162,7 @@ namespace http
 
 		for (; sep < line.size() && line[sep] != ':'; ++sep);
 		if (line[sep] == ':')
-			this->_header.insert(std::pair<std::string, std::string>(line.substr(0, sep), line.substr(sep + 2)));
+			this->_header.insert(std::make_pair(line.substr(0, sep), line.substr(sep + 2)));
 	}
 
 } // namespace http
