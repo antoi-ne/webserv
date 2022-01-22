@@ -6,21 +6,21 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 20:15:04 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 12:29:00 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
-#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fstream>
 
 namespace ws
 {
 	namespace core
 	{
-		Router::Router(conf::Config& conf) : _config(conf) {}
+		Router::Router(const conf::Config& conf) : _config(conf) {}
 
 		shared::Buffer	_getFile(const std::string& path)
 		{
@@ -45,26 +45,24 @@ namespace ws
 			shared::Buffer		fileBuff;
 			const conf::Server*	serv;
 			
-			return response;
-			serv = this->_getServ(request.header(), host);
-			if (!serv)
+			if ((serv = this->_getServ(request.header(), host)))
 			{
-				response.setStatus(STATUS444);
-				return response;
+				path = _getLocalPath(request.path(), *serv);
+				if (path.empty())
+					response.setStatus(STATUS404);
+				if (request.method() == POST)
+					response.setStatus(STATUS201);
 			}
-			path = _getLocalPath(request.path(), *serv);
-			if (path.empty()
-				|| !(fileBuff = _getFile(path)).size())
-				response.setStatus(STATUS404);
-			if (request.method() == POST)
-				response.setStatus(STATUS201);
+			else
+				response.setStatus(STATUS444);
+			fileBuff = _getFile(path);
 			return response;
 		}
 
 		const conf::Server*
 		Router::_getServ(http::Req::header_m& header, const conf::host_port& host) const
 		{
-			conf::server_map::iterator it = this->_config.servers.find(host);
+			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
 			if (it == this->_config.servers.end() || it->second.empty())
 				return nullptr;
@@ -90,19 +88,19 @@ namespace ws
 		Router::_getLocalPath(const std::string& uri, const conf::Server& serv) const
 		{
 			const conf::Location*	loc;
-			std::string				root;
 			std::string				path;
 			struct stat				info;
 
 			loc = this->_getLocation(uri, serv);
-			root = !loc || loc->root.empty() ? serv.root : loc->root;
-			path = root + uri;
+			path = !loc || loc->root.empty() ? serv.root : loc->root;
+			path += uri;
+			if (path.back() == '/') // Maybe if '/' force dir?
+				path.pop_back();
 			if (stat(path.c_str(), &info) != 0)
 				return std::string();
-			if(!S_ISDIR(info.st_mode))
+			if (S_ISDIR(info.st_mode))
 			{
-				if (path.back() != '/')
-					path += "/";
+				path += "/";
 				path += !loc || loc->index.empty() ? serv.index : loc->index;
 			}
 			return path;

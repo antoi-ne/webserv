@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 19:55:33 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 12:29:19 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ namespace http
 {
 
 	Res::Res(void)
-	 : _statusMsg(STATUS200), _contentType("text/html"), _contentLength(0)
+	 : _statusMsg(STATUS200), _contentType("text/html")
 	{}
 
 	void Res::_getDate(std::string& buff) const
@@ -44,7 +44,7 @@ namespace http
 
 		this->_defaultRes(buff);
 		buff.append("Content-Type: " + this->_contentType + "\r\n");
-		buff.append("Content-Length: " + std::to_string(this->_contentLength) + "\r\n");
+		//buff.append("Content-Length: " + std::to_string(this->_body.size()) + "\r\n");
 		buff.append("Connection: keep-alive\r\n");
 		buff.append("Accept-Ranges: bytes\r\n\r\n");
 		conn.send(buff);
@@ -52,4 +52,13 @@ namespace http
 
 	void	Res::setStatus(const std::string& statusMsg)
 	{ this->_statusMsg = statusMsg; }
+
+	void	Res::setContentType(const std::string& contentType)
+	{ this->_contentType = contentType; }
+
+//	void	Res::setContentLength(size_t contentLength)
+//	{ this->_contentLength = contentLength; }
+
+//	ws::shared::Buffer&	Res::body(void)
+//	{ return this->_body; }
 }

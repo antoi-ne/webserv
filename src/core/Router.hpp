@@ -14,12 +14,12 @@ namespace ws
 		public:
 			typedef std::vector<conf::Server>	serv_lst;
 
-			Router(conf::Config& _config);
+			Router(const conf::Config& _config);
 
 			http::Res	process(http::Req& request, const conf::host_port& host);
 
 		private:
-			conf::Config&	_config;
+			const conf::Config&	_config;
 
 			const conf::Server*		_getServ(http::Req::header_m& header, const conf::host_port& host) const;
 			const conf::Server*		_getServerName(const std::string& host, const serv_lst& servLst) const;

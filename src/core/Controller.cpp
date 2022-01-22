@@ -5,11 +5,10 @@ namespace ws
 	namespace core
 	{
 
-		Controller::Controller(conf::Config config)
+		Controller::Controller(const conf::Config& config)
 			: _config(config), _srv(), _pool(), _req_cache(), _res_cache(), _router(config)
 		{
-			conf::server_map::iterator it;
-
+			conf::server_map::const_iterator it;
 			for (it = config.servers.begin(); it != config.servers.end(); it++)
 				this->_srv.push_back(net::Server(it->first.first, it->first.second));
 		}
@@ -49,20 +48,19 @@ namespace ws
 					shared::Log::info("received data from " + it->con.get_address());
 					if (this->_req_cache[it->con].update(buff) == false)
 					{
-						shared::Log::info(this->_req_cache[it->con].body().get_ptr());
+						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (this->_req_cache[it->con].method() == UNDEF)
 							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
 						else
 						{
-							this->_res_cache[it->con].push_back(
-								this->_router.process(
-									this->_req_cache[it->con],
-									std::make_pair(it->srv.get_host(),
-									it->srv.get_port())
-								)
+							const http::Res res = this->_router.process(
+								this->_req_cache[it->con],
+								std::make_pair(it->srv.get_host(),
+								it->srv.get_port())
 							);
+							this->_res_cache[it->con].push_back(res);
 						}
 					this->_req_cache.erase(it->con);
 					}
@@ -72,10 +70,8 @@ namespace ws
 
 				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
 				{
-					shared::Log::info("A\n");
 					this->_res_cache[it->con].front().sendRes(it->con);
 					this->_res_cache[it->con].clear();
-					shared::Log::info("B\n");
 				}
 			}
 		}

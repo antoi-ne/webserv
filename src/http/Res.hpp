@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 16:51:04 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/22 12:28:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,8 @@ namespace http
 	class Res
 	{
 	private:
-		std::string		_statusMsg;
-		std::string		_contentType;
-		size_t			_contentLength;
+		std::string			_statusMsg;
+		std::string			_contentType;
 
 		void	_defaultRes(std::string& buff) const;
 		void	_getDate(std::string& buff) const;
@@ -35,5 +34,9 @@ namespace http
 		void	sendRes(ws::net::Connection& conn) const;
 
 		void	setStatus(const std::string& statusMsg);
+		void	setContentType(const std::string& contentType);
+
+//		ws::shared::Buffer&	body(void);
+
 	};
 }

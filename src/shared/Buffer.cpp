@@ -6,9 +6,8 @@ namespace ws
 	namespace shared
 	{
 		Buffer::Buffer(size_t size)
-			: _cursor(0)
+			: _size(size), _cursor(0)
 		{
-			this->_size = size;
 			this->_data = new char[this->_size + 1]();
 			std::fill_n(this->_data, this->_size, 0);
 		}
@@ -45,9 +44,9 @@ namespace ws
 			if (this != &rhs)
 			{
 				this->~Buffer();
-				this->_size = rhs._size;
+				this->_size = rhs.size();
 				this->_data = new char[this->_size + 1]();
-				std::memcpy(this->_data, rhs._data, this->_size);
+				std::memcpy(this->_data, rhs.get_ptr(), this->_size);
 			}
 			return *this;
 		}
@@ -74,7 +73,7 @@ namespace ws
 
 		std::string Buffer::to_string() const
 		{
-			return std::string(this->_data, this->_size);
+			return std::string(this->_data + this->_cursor, this->_size - this->_cursor);
 		}
 
 		Buffer&	Buffer::advance(size_t n)
@@ -86,14 +85,12 @@ namespace ws
 
 		void	Buffer::join(const Buffer& buff)
 		{
-			size_t	newSize = this->_size + buff.size();
-			char*	tmp = new char[newSize + 1]();
-			std::memcpy(tmp, this->_data, this->_size);
-			std::memcpy(tmp + this->_size, buff.get_ptr(), buff.size());
-			tmp[newSize] = 0;
-			this->~Buffer();
-			this->_size = newSize;
-			this->_data = tmp;
+			size_t	newSize = this->size() + buff.size();
+			char*	tmp = new char[newSize]();
+
+			std::memcpy(tmp, this->get_ptr(), this->size());
+			std::memcpy(tmp + this->size(), buff.get_ptr(), buff.size());
+			*this = Buffer(tmp, newSize);
 		}
 	}
 }
