@@ -8,7 +8,7 @@ CXX			= clang++
 
 RM			= rm -f
 
-CXXFLAGS	= -Wall -Wextra -Werror -std=c++98 -I ./src
+CXXFLAGS	= -fsanitize=address -g -Wall -Wextra -Werror -std=c++98 -I ./src
 
 all:		$(NAME)
 

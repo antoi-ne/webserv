@@ -8,7 +8,7 @@ namespace ws
 			: Socket(fd)
 		{}
 
-		void Connection::send(shared::Buffer buff)
+		bool Connection::send(shared::Buffer buff)
 		{
 			ssize_t bytes = buff.size();
 			ssize_t rbytes = 0;
@@ -17,12 +17,13 @@ namespace ws
 			{
 				rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
 				if (rbytes <= 0)
-					break;
+					return false;
 				bytes -= rbytes;
 			}
+			return true;
 		}
 
-		shared::Buffer Connection::recv(size_t size)
+		shared::Option<shared::Buffer> Connection::recv(size_t size)
 		{
 			char *buffer;
 			shared::Buffer buff;
@@ -30,36 +31,26 @@ namespace ws
 
 			buffer = new char[size + 1]();
 			rbytes = ::recv(this->get_fd(), buffer, size, 0);
-			if (rbytes < 0)
+			if (rbytes <= 0)
 			{
 				delete [] buffer;
-				return buff;
+				return shared::Option<shared::Buffer>();
 			}
-
-			if (rbytes == 0)
-				shared::Log::error("net::Connection: trying to recv but connection is closed");
 
 			buff = shared::Buffer(buffer, rbytes);
 
 			delete [] buffer;
-			return buff;
+			return shared::Option<shared::Buffer>(buff);
 		}
 
-		std::string Connection::get_address()
+		bool Connection::operator<(const Connection& rhs) const
 		{
-			struct sockaddr_in addr;
-			socklen_t addr_len = sizeof(addr);
-			char pres[INET6_ADDRSTRLEN];
-			int ret;
-
-			ret = getpeername(this->get_fd(), (struct sockaddr *) &addr, &addr_len);
-			if (ret < 0)
-				return "";
-
-			inet_ntop(addr.sin_family, &addr, pres, INET6_ADDRSTRLEN);
-
-			return pres;
+			return this->get_fd() < rhs.get_fd();
 		}
 
+		bool Connection::operator==(const Connection& rhs) const
+		{
+			return this->get_fd() == rhs.get_fd();
+		}
 	}
 }

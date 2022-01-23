@@ -69,7 +69,6 @@ namespace ws
 					{
 						if ((con = sit->accept()).get_fd() <= 0)
 							break;
-						shared::Log::info("net::Pool new connection");
 						this->_con.push_back(std::make_pair(con, *sit));
 						FD_SET(con.get_fd(), &this->_set);
 						if (con.get_fd() > this->_fdmax)

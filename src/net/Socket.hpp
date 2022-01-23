@@ -14,7 +14,7 @@ namespace ws
 			Socket(int fd = -1);
 			virtual ~Socket();
 
-			int get_fd();
+			int get_fd() const;
 
 			void close();
 

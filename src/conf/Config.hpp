@@ -4,24 +4,19 @@
 # include <map>
 # include <vector>
 # include <string>
+# include <utility>
+# include "../http/method.h"
+# include "../http/CI_Less.hpp"
 
 namespace ws
 {
 	namespace conf
 	{
-		enum Methods
-		{
-			GET,
-			POST,
-			DELETE
-		};
-
 		struct Location
 		{
-			std::string route; // path of the location
 			std::string root;
 			std::string index;
-			std::vector<Methods> accepted_methods;
+			std::vector<e_method> accepted_methods;
 			bool autoindex; // false by default
 			int max_body_size; // negative means not defined
 			std::map<unsigned int,std::string> error_pages;
@@ -30,26 +25,32 @@ namespace ws
 			int return_code; // negative means no return code
 		};
 
+		// first route (path of the location) -> Location obj
+		typedef std::map<std::string, Location, CI_Less>	location_map;
+
 		struct Server
 		{
-			std::string host;
-			uint16_t port;
 			std::vector<std::string> server_names;
 			std::string root;
 			std::string index;
 			bool autoindex;
 			int max_body_size;
-			std::map<unsigned int,std::string> error_pages;
+			std::map<unsigned int, std::string> error_pages;
 			std::string upload_path;
 			std::string return_path;
 			int return_code;
-			std::vector<Location> locations;
+			location_map locations;
 		};
+
+		typedef std::pair<std::string, uint16_t>			host_port;
+		typedef std::map<host_port, std::vector<Server> >	server_map;
 
 		struct Config
 		{
-			std::vector<Server> servers;
+			server_map servers;
 		};
+
+		typedef std::map<std::pair< std::string, uint16_t>, std::vector<Server> > server_map;
 	}
 }
 
