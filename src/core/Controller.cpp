@@ -50,17 +50,20 @@ namespace ws
 					{
 						this->_pool.close_con(it->con);
 						this->_req_cache.erase(it->con);
+						shared::Log::info("connection closed by client");
 						continue;
 					}
 					shared::Log::info("received data");
-					if (this->_req_cache[it->con].update(buff) == false)
+					if (this->_req_cache[it->con].update(opt.value()) == false)
 					{
 						const http::Req& req = this->_req_cache[it->con];
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (req.method() == UNDEF || req.path().empty())
+						{
 							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
+						}
 						else
 						{
 							const http::Res res = this->_router.process(
@@ -70,7 +73,7 @@ namespace ws
 							);
 							this->_res_cache[it->con].push_back(res);
 						}
-					this->_req_cache.erase(it->con);
+						this->_req_cache.erase(it->con);
 					}
 					else
 						shared::Log::info("request not complete");
