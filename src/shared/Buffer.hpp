@@ -14,7 +14,7 @@ namespace ws
 		public:
 
 			Buffer(size_t size = 0);
-			Buffer(std::string str);
+			Buffer(const std::string str);
 			Buffer(const char *buff, size_t size);
 			Buffer(const Buffer & rhs);
 			~Buffer();
@@ -23,6 +23,7 @@ namespace ws
 
 			size_t	capacity() const;
 			size_t	size() const;
+			size_t	find(const char* s) const;
 			char * get_ptr();
 			const char * get_ptr() const;
 
@@ -30,7 +31,7 @@ namespace ws
 
 			Buffer&	advance(size_t n);
 
-			void	join(Buffer& buff);
+			void	join(const Buffer& buff);
 
 		private:
 

@@ -20,7 +20,7 @@ namespace ws
 		class Controller
 		{
 		public:
-			Controller(conf::Config config = conf::Config());
+			Controller(const conf::Config& config);
 			~Controller();
 
 			void start();

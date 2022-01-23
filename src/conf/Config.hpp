@@ -6,6 +6,7 @@
 # include <string>
 # include <utility>
 # include "../http/method.h"
+# include "../http/CI_Less.hpp"
 
 namespace ws
 {
@@ -13,7 +14,6 @@ namespace ws
 	{
 		struct Location
 		{
-			std::string route; // path of the location
 			std::string root;
 			std::string index;
 			std::vector<e_method> accepted_methods;
@@ -25,6 +25,9 @@ namespace ws
 			int return_code; // negative means no return code
 		};
 
+		// first route (path of the location) -> Location obj
+		typedef std::map<std::string, Location, CI_Less>	location_map;
+
 		struct Server
 		{
 			std::vector<std::string> server_names;
@@ -32,11 +35,11 @@ namespace ws
 			std::string index;
 			bool autoindex;
 			int max_body_size;
-			std::map<unsigned int,std::string> error_pages;
+			std::map<unsigned int, std::string> error_pages;
 			std::string upload_path;
 			std::string return_path;
 			int return_code;
-			std::vector<Location> locations;
+			location_map locations;
 		};
 
 		typedef std::pair<std::string, uint16_t>			host_port;

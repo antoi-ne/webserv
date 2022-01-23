@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/21 10:11:01 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 10:15:51y vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,44 @@ namespace http
 	// Get buffer and update request's content
 	bool	Req::update(ws::shared::Buffer& buff)
 	{
+		if (this->_method == UNDEF)
+			return this->_checkStartLine(buff);
 		this->_buff.join(buff);
 		if (!this->_hasHeader)
 			return this->_checkHeader();
 		return this->_checkBody();
+	}
+
+	static size_t	_skipCRLF(ws::shared::Buffer& buff)
+	{
+		const char*	ptr = buff.get_ptr();
+		size_t i;
+
+		for (i = 0; i < buff.size() && (ptr[i] == '\r' || ptr[i] == '\n'); ++i);
+		return i;
+	}
+
+	bool	Req::_checkStartLine(ws::shared::Buffer& buff)
+	{
+		size_t	endLine;
+
+		if (!this->_buff.size())
+		{
+			size_t	i = _skipCRLF(buff);
+			if (i == buff.size())
+				return true;
+			buff.advance(i);
+		}
+		this->_buff.join(buff);
+		if (std::string::npos != (endLine = this->_buff.find("\r\n")))
+		{
+			this->_getStartLine(endLine);
+			std::cout << "* " << endLine << std::endl;
+			std::cout << "* " << this->_buff.size() << std::endl;
+			this->_buff.advance(endLine);
+			return this->_checkHeader();
+		}
+		return true;
 	}
 
 	// Can be bigger than contentLength
@@ -58,10 +92,7 @@ namespace http
 
 	bool	Req::_checkHeader(void)
 	{
-		std::string str = this->_buff.to_string();
-
-		size_t	EOH = str.find("\r\n\r\n");
-		if (EOH != std::string::npos)
+		if (this->_buff.find("\r\n\r\n") != std::string::npos)
 		{
 			this->_setHeader();
 			return this->_endHeader();
@@ -71,7 +102,6 @@ namespace http
 
 	void	Req::_setHeader(void)
 	{
-		this->_getStartLine();
 		std::string	line;
 
 		while (!(line = _getNextHeaderLine()).empty())
@@ -96,23 +126,26 @@ namespace http
 		return false;
 	}
 
-	void	Req::_getStartLine(void)
+	void	Req::_getStartLine(size_t endLine)
 	{
-		std::string	line = _getNextHeaderLine();
+		std::string	line(this->_buff.get_ptr(), endLine);
 
-		if (line.empty())
-			throw std::exception();
-
-		size_t index = this->_getMethod(line);
-
-		size_t endPath = line.find(HTTPVER, index);
-
-		if (endPath == std::string::npos)
-			throw std::exception();
-
-		this->_path = line.substr(index, endPath - index);
-		if (this->_path.empty())
-			throw std::exception();
+		if (!line.empty())
+		{
+			size_t index = this->_getMethod(line);
+			if (index) // if not failed method -> UNDEF
+			{
+				size_t endPath = line.find(HTTPVER, index);
+				if (endPath != std::string::npos) // if fail not good version path empty
+				{
+					while (line[index] == ' ')
+						++index;
+					while (line[endPath - 1] == ' ' && endPath > index)
+						--endPath;
+					this->_path = line.substr(index, endPath - index);
+				}
+			}
+		}
 	}
 
 	// return the line before the next "\r\n" inside a Buffer 
@@ -138,7 +171,8 @@ namespace http
 		std::string	methods[] = METHODS;
 		size_t	i = 0;
 
-		for (; i < N_METHOD && !_compareMethod(line, methods[i]); ++i)
+		while (i < N_METHOD && !_compareMethod(line, methods[i]))
+			++i;
 		if (i == N_METHOD)
 		{
 			this->_method = UNDEF;
@@ -150,11 +184,18 @@ namespace http
 
 	void	Req::_insertHeaderField(std::string& line)
 	{
-		size_t	sep = 0;
+		size_t	i = 0;
+		size_t	keyEnd = 0;
 
-		for (; sep < line.size() && line[sep] != ':'; ++sep);
-		if (line[sep] == ':')
-			this->_header.insert(std::pair<std::string, std::string>(line.substr(0, sep), line.substr(sep + 2)));
+		for (; i < line.size() && line[i] != ' ' && line[i] != ':'; ++i);
+		keyEnd = i;
+		for (; i < line.size() && line[i] != ':'; ++i);
+		if (i < line.size())
+		{
+			++i;
+			for (; i < line.size() && line[i] == ' '; ++i);
+			this->_header.insert(std::make_pair(line.substr(0, keyEnd), line.substr(i)));
+		}
 	}
 
 } // namespace http
