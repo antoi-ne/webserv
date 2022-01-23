@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/23 10:13:30 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 16:27:14 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,14 +62,20 @@ namespace ws
 
 		shared::Buffer	_getFile(const std::string& path)
 		{
-			char				_buff[1024];
 			std::ifstream		file(path);
 			shared::Buffer		buff;
 
 			if (file)
 			{
-				while (file.read(_buff, 1024) && !file.eof())
-					buff.join(ws::shared::Buffer(_buff, 1024));
+				char	_buff[2048];
+				size_t	len;
+
+				while (!file.eof())
+				{
+					file.read(_buff, 2048);
+					len = file.gcount();
+					buff.join(ws::shared::Buffer(_buff, len));
+				}
 				file.close();
 			}
 			return buff;

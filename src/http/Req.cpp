@@ -73,9 +73,8 @@ namespace http
 		this->_buff.join(buff);
 		if (std::string::npos != (endLine = this->_buff.find("\r\n")))
 		{
-			this->_getStartLine(endLine);
-			std::cout << "* " << endLine << std::endl;
-			std::cout << "* " << this->_buff.size() << std::endl;
+			if (!this->_getStartLine(endLine))
+				return false;
 			this->_buff.advance(endLine);
 			return this->_checkHeader();
 		}
@@ -126,7 +125,7 @@ namespace http
 		return false;
 	}
 
-	void	Req::_getStartLine(size_t endLine)
+	bool	Req::_getStartLine(size_t endLine)
 	{
 		std::string	line(this->_buff.get_ptr(), endLine);
 
@@ -143,9 +142,11 @@ namespace http
 					while (line[endPath - 1] == ' ' && endPath > index)
 						--endPath;
 					this->_path = line.substr(index, endPath - index);
+					return !this->_path.empty();
 				}
 			}
 		}
+		return false;
 	}
 
 	// return the line before the next "\r\n" inside a Buffer 
@@ -187,9 +188,8 @@ namespace http
 		size_t	i = 0;
 		size_t	keyEnd = 0;
 
-		for (; i < line.size() && line[i] != ' ' && line[i] != ':'; ++i);
-		keyEnd = i;
 		for (; i < line.size() && line[i] != ':'; ++i);
+		keyEnd = i;
 		if (i < line.size())
 		{
 			++i;
