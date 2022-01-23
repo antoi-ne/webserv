@@ -5,6 +5,13 @@ namespace ws
 {
 	namespace shared
 	{
+		Buffer::Buffer()
+			: _data(), _size(0), _cursor(0)
+		{
+			this->_data = new char[this->_size + 1]();
+			std::memset(this->_data, 0, this->_size);
+		}
+
 		Buffer::Buffer(size_t size)
 			: _data(), _size(size), _cursor(0)
 		{

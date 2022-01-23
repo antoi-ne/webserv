@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 14:33:54 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 16:28:04 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,12 @@ namespace http
 	 : _statusMsg(STATUS200), _contentType("text/html"), _body()
 	{}
 
-	void	Res::sendRes(ws::net::Connection& conn) const
+	ws::shared::Buffer Res::get_res()
 	{
 		time_t	t = time(0);
 		tm		*ltm = gmtime(&t);
 		char	date_buff[256];
+		ws::shared::Buffer buff;
 
 		size_t s = strftime(date_buff, 255, DATE_FORMAT, ltm);
 		date_buff[s] = '\0';
@@ -48,9 +49,12 @@ namespace http
 			"keep-alive",
 			"bytes"
 		);
-		conn.send(ws::shared::Buffer(_buff, size));
+
+		buff = ws::shared::Buffer(_buff, size);
 		if (this->_body.size())
-			conn.send(this->_body);
+			buff.join(this->_body);
+
+		return buff;
 	}
 
 	void	Res::setStatus(const std::string& statusMsg)

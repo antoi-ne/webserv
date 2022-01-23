@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 14:26:53 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 16:14:01 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ namespace http
 	public:
 		Res(void);
 
-		void	sendRes(ws::net::Connection& conn) const;
+		ws::shared::Buffer	get_res();
 
 		void	setStatus(const std::string& statusMsg);
 		void	setContentType(const std::string& contentType);

@@ -37,6 +37,7 @@ namespace ws
 			std::list<net::Ctx> ctxs;
 			std::list<net::Ctx>::iterator it;
 			shared::Buffer buff;
+			shared::Option<shared::Buffer> opt;
 
 
 			ctxs = this->_pool.probe();
@@ -44,12 +45,17 @@ namespace ws
 			{
 				if (it->rread) // new request fragment received
 				{
-					buff = it->con.recv(4096);
-					shared::Log::info("received data from " + it->con.get_address());
+					opt = it->con.recv(4096);
+					if (opt.null())
+					{
+						this->_pool.close_con(it->con);
+						this->_req_cache.erase(it->con);
+						continue;
+					}
+					shared::Log::info("received data");
 					if (this->_req_cache[it->con].update(buff) == false)
 					{
-						const http::Req&	req = this->_req_cache[it->con];
-
+						const http::Req& req = this->_req_cache[it->con];
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
@@ -72,7 +78,9 @@ namespace ws
 
 				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
 				{
-					this->_res_cache[it->con].front().sendRes(it->con);
+					buff = this->_res_cache[it->con].front().get_res();
+					if (!it->con.send(buff))
+						this->_pool.close_con(it->con);
 					this->_res_cache[it->con].erase(this->_res_cache[it->con].begin());
 				}
 			}

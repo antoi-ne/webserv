@@ -7,6 +7,8 @@
 # include <utility>
 
 # include "shared/Log.hpp"
+# include "shared/Buffer.hpp"
+# include "shared/Option.hpp"
 # include "conf/Config.hpp"
 # include "net/Pool.hpp"
 # include "http/Req.hpp"
