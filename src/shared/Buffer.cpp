@@ -82,19 +82,16 @@ namespace ws
 		
 		size_t	Buffer::find(const char* s) const
 		{
+			std::cout << "v " << std::endl;
+			std::cout << this->_cursor << std::endl;
 			const char*	ptr = this->get_ptr();
 			
 			for (size_t	i = 0, j = 0; i < this->size(); ++i)
 			{
-				char c = ptr[i];
-				if (c == s[j])
+				if (ptr[i] == s[j])
 				{
-					std::cout << "bb" << std::endl;
 					if (!s[++j])
-					{
-						std::cout << "cc" << std::endl;
 						return (i - j) + 1;
-					}
 				}
 				else
 					j = 0;
@@ -110,9 +107,11 @@ namespace ws
 
 			std::memcpy(tmp, this->get_ptr(), this->size());
 			std::memcpy(tmp + this->size(), buff.get_ptr(), buff.size());
+			tmp[newSize] = 0;
 			delete [] this->_data;
 			this->_data = tmp;
 			this->_size = newSize;
+			this->_cursor = 0;
 		}
 	}
 }
