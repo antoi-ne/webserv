@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 14:23:13 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 10:13:30 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,43 +22,16 @@ namespace ws
 	{
 		Router::Router(const conf::Config& conf) : _config(conf) {}
 
-		shared::Buffer	_getFile(const std::string& path)
-		{
-			char				_buff[1024];
-			std::ifstream		file(path);
-			shared::Buffer		buff;
-
-			if (file)
-			{
-				while (file.read(_buff, 1024) && !file.eof())
-					buff.join(ws::shared::Buffer(_buff, 1024));
-				file.close();
-			}
-			return buff;
-		}
-
 		http::Res
-		Router::process(http::Req& request, const conf::host_port& host)
+		Router::process(http::Req& request, const conf::host_port& host) const
 		{
 			http::Res			response;
-			std::string			path;
-			shared::Buffer		fileBuff;
 			const conf::Server*	serv;
 			
 			if ((serv = this->_getServ(request.header(), host)))
-			{
-				path = _getLocalPath(request.path(), *serv);
-				if (path.empty())
-					response.setStatus(STATUS404);
-				if (request.method() == POST)
-					response.setStatus(STATUS201);
-			}
+				this->_processServ(response, request, *serv);
 			else
 				response.setStatus(STATUS444);
-			if ((fileBuff = _getFile(path)).size())
-				response.body().join(fileBuff);
-			else
-				response.setStatus(STATUS404);
 			return response;
 		}
 
@@ -87,26 +60,39 @@ namespace ws
 			return servLst.begin().base();
 		}
 
-		std::string
-		Router::_getLocalPath(const std::string& uri, const conf::Server& serv) const
+		shared::Buffer	_getFile(const std::string& path)
+		{
+			char				_buff[1024];
+			std::ifstream		file(path);
+			shared::Buffer		buff;
+
+			if (file)
+			{
+				while (file.read(_buff, 1024) && !file.eof())
+					buff.join(ws::shared::Buffer(_buff, 1024));
+				file.close();
+			}
+			return buff;
+		}
+
+		void
+		Router::_processServ(
+			http::Res& response,
+			const http::Req& request,
+			const conf::Server& serv) const
 		{
 			const conf::Location*	loc;
 			std::string				path;
-			struct stat				info;
+			shared::Buffer			fileBuff;
 
-			loc = this->_getLocation(uri, serv);
-			path = !loc || loc->root.empty() ? serv.root : loc->root;
-			path += uri;
-			if (path.back() == '/') // Maybe if '/' force dir?
-				path.pop_back();
-			if (stat(path.c_str(), &info) != 0)
-				return std::string();
-			if (S_ISDIR(info.st_mode))
-			{
-				path += "/";
-				path += !loc || loc->index.empty() ? serv.index : loc->index;
-			}
-			return path;
+			loc = this->_getLocation(request.path(), serv);
+			path = _getLocalPath(request.path(), serv, loc);
+			if (path.empty() || !(fileBuff = _getFile(path)).size())
+				response.setStatus(STATUS404);
+			if (request.method() == POST)
+				response.setStatus(STATUS201);
+			response.body().join(fileBuff);
+			if (loc) (void)true; // check accepted method
 		}
 
 		const conf::Location*
@@ -124,6 +110,29 @@ namespace ws
 			if (path.empty())
 				return NULL;
 			return std::addressof(it->second);
+		}
+
+		std::string
+		Router::_getLocalPath(
+			const std::string& uri,
+			const conf::Server& serv,
+			const conf::Location* loc) const
+		{
+			std::string				path;
+			struct stat				info;
+
+			path = !loc || loc->root.empty() ? serv.root : loc->root;
+			path += uri;
+			if (path.back() == '/') // Maybe if '/' force dir?
+				path.pop_back();
+			if (stat(path.c_str(), &info) != 0)
+				return std::string();
+			if (S_ISDIR(info.st_mode))
+			{
+				path += "/";
+				path += !loc || loc->index.empty() ? serv.index : loc->index;
+			}
+			return path;
 		}
 	}
 }

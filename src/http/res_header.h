@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   res_header.h                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:21:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 13:57:12 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 12:01:25 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,9 @@
 # include "method.h"
 # define SERVER "webserv/0.1.0"
 # define DATE_FORMAT "%a, %d %b %Y %H:%M:%S GMT"
-# define STATUS200 " 200 OK"
-# define STATUS201 " 201 CREATED"
-# define STATUS400 " 400 Bad Request"
-# define STATUS404 " 404 Not Found"
-# define STATUS444 " 444 Wrong"
+# define STATUS200 "200 OK"
+# define STATUS201 "201 CREATED"
+# define STATUS400 "400 Bad Request"
+# define STATUS404 "404 Not Found"
+# define STATUS444 "444 Wrong"
 #endif

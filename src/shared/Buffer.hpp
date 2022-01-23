@@ -23,6 +23,7 @@ namespace ws
 
 			size_t	capacity() const;
 			size_t	size() const;
+			size_t	find(const char* s) const;
 			char * get_ptr();
 			const char * get_ptr() const;
 

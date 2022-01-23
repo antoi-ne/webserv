@@ -79,16 +79,40 @@ namespace ws
 			this->_cursor += n;
 			return *this;
 		}
+		
+		size_t	Buffer::find(const char* s) const
+		{
+			const char*	ptr = this->get_ptr();
+			
+			for (size_t	i = 0, j = 0; i < this->size(); ++i)
+			{
+				char c = ptr[i];
+				if (c == s[j])
+				{
+					std::cout << "bb" << std::endl;
+					if (!s[++j])
+					{
+						std::cout << "cc" << std::endl;
+						return (i - j) + 1;
+					}
+				}
+				else
+					j = 0;
+			}
+			return std::string::npos;
+		}
 
 
 		void	Buffer::join(const Buffer& buff)
 		{
 			size_t	newSize = this->size() + buff.size();
-			char*	tmp = new char[newSize]();
+			char*	tmp = new char[newSize + 1]();
 
 			std::memcpy(tmp, this->get_ptr(), this->size());
 			std::memcpy(tmp + this->size(), buff.get_ptr(), buff.size());
-			*this = Buffer(tmp, newSize);
+			delete [] this->_data;
+			this->_data = tmp;
+			this->_size = newSize;
 		}
 	}
 }

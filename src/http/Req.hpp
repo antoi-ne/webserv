@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/22 15:01:32 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/23 12:25:09 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,11 @@ namespace http
 
 		std::string		_getNextHeaderLine(void);
 		size_t			_getMethod(std::string& line);
+		bool			_checkStartLine(ws::shared::Buffer& buff);
 		bool			_checkBody(void);
 		bool			_checkHeader(void);
 		bool			_endHeader(void);
-		bool			_getStartLine(void);
+		void			_getStartLine(size_t endLine);
 		void			_insertHeaderField(std::string& line);
 		void			_setHeader(void);
 	};
