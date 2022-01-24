@@ -38,6 +38,7 @@ namespace ws
 			std::list<net::Ctx>::iterator it;
 			shared::Buffer buff;
 			shared::Option<shared::Buffer> opt;
+			http::Res resf;
 
 
 			ctxs = this->_pool.probe();
@@ -60,9 +61,11 @@ namespace ws
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						shared::Log::info("completed request");
 						std::cout << this->_req_cache[it->con].method() << std::endl;
-						if (req.method() == UNDEF || req.path().empty())
+						if (req.method() != UNDEF || req.path().empty())
 						{
-							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
+							resf.setStatus(STATUS400);
+							resf.body().join(std::string("Bad Request\r\n"));
+							this->_res_cache[it->con].push_back(resf);
 						}
 						else
 						{
