@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/23 15:30:33 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/24 18:00:10 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,16 +41,17 @@ namespace http
 		header_m			_header;
 		ws::shared::Buffer	_buff;
 		size_t				_contentLength;
-		bool				_hasHeader;
+		bool				_headerFinish;
+		bool				(Req::*_check_line)(size_t endLine);
 
-		std::string		_getNextHeaderLine(void);
 		size_t			_getMethod(std::string& line);
-		bool			_checkStartLine(ws::shared::Buffer& buff);
-		bool			_checkBody(void);
-		bool			_checkHeader(void);
-		bool			_endHeader(void);
+		bool			_checkStartLine(size_t endLine);
+		bool			_skipStartCRLF(void);
+		bool			_checkHeader(size_t endLine);
 		bool			_getStartLine(size_t endLine);
-		void			_insertHeaderField(std::string& line);
-		void			_setHeader(void);
+		bool			_setHeader(size_t endLine);
+		bool			_updateIfCRLF(void);
+		bool			_isNotFinish(void) const;
+		bool			_failed(void);
 	};
 } // namespace http
