@@ -22,7 +22,7 @@ namespace ws
 
 			Connection(int fd = -1);
 
-			bool send(shared::Buffer buff);
+			ssize_t send(shared::Buffer buff);
 
 			shared::Option<shared::Buffer> recv(size_t size);
 

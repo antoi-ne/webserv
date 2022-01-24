@@ -38,6 +38,7 @@ namespace ws
 			std::list<net::Ctx>::iterator it;
 			shared::Buffer buff;
 			shared::Option<shared::Buffer> opt;
+			http::Res resf;
 
 
 			ctxs = this->_pool.probe();
@@ -62,16 +63,18 @@ namespace ws
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (req.method() == UNDEF || req.path().empty())
 						{
-							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
+							resf.setStatus(STATUS400);
+							resf.body().join(std::string("Bad Request\r\n"));
+							this->_res_cache[it->con] = resf.get_res();
 						}
 						else
 						{
-							const http::Res res = this->_router.process(
+							http::Res res = this->_router.process(
 								this->_req_cache[it->con],
 								std::make_pair(it->srv.get_host(),
 								it->srv.get_port())
 							);
-							this->_res_cache[it->con].push_back(res);
+							this->_res_cache[it->con] = res.get_res();
 						}
 						this->_req_cache.erase(it->con);
 					}
@@ -79,12 +82,22 @@ namespace ws
 						shared::Log::info("request not complete");
 				}
 
-				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
+				if (it->rwrite && this->_res_cache[it->con].size() != 0) // ready to receive response if any response is in the cache
 				{
-					buff = this->_res_cache[it->con].front().get_res();
-					if (!it->con.send(buff))
+					ssize_t rbytes = it->con.send(this->_res_cache[it->con]);
+					if (rbytes == 0)
+					{
+						this->_res_cache[it->con] = shared::Buffer();
 						this->_pool.close_con(it->con);
-					this->_res_cache[it->con].erase(this->_res_cache[it->con].begin());
+					}
+					if (rbytes < 0)
+						continue;
+					this->_res_cache[it->con].advance(rbytes);
+					if (this->_res_cache[it->con].size() == 0)
+					{
+						this->_res_cache[it->con] = shared::Buffer();
+						this->_pool.close_con(it->con);
+					}
 				}
 			}
 		}
