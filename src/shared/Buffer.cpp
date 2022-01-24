@@ -49,10 +49,10 @@ namespace ws
 			if (this != &rhs)
 			{
 				delete [] this->_data;
-				this->_size = rhs._size;
-				this->_cursor = rhs._cursor;
+				this->_size = rhs.size();
+				this->_cursor = 0;
 				this->_data = new char[this->_size + 1]();
-				std::memcpy(this->_data, rhs._data, this->_size);
+				std::memcpy(this->_data, rhs.get_ptr(), this->_size);
 			}
 			return *this;
 		}
