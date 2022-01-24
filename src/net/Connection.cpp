@@ -8,19 +8,13 @@ namespace ws
 			: Socket(fd)
 		{}
 
-		bool Connection::send(shared::Buffer buff)
+		ssize_t Connection::send(shared::Buffer buff)
 		{
 			ssize_t bytes = buff.size();
 			ssize_t rbytes = 0;
 
-			while (bytes > 0)
-			{
-				rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
-				if (rbytes <= 0)
-					return false;
-				bytes -= rbytes;
-			}
-			return true;
+			rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
+			return rbytes;
 		}
 
 		shared::Option<shared::Buffer> Connection::recv(size_t size)

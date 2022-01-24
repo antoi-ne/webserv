@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/23 16:27:14 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/24 15:09:41 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,15 @@ namespace ws
 			if (request.method() == POST)
 				response.setStatus(STATUS201);
 			response.body().join(fileBuff);
-			if (loc) (void)true; // check accepted method
+			if (loc)
+			{
+				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), POST) != loc->accepted_methods.end())
+				{
+					
+				}
+				else
+					response.setStatus(STATUS405);
+			} // check accepted method
 		}
 
 		const conf::Location*
