@@ -49,10 +49,10 @@ namespace ws
 			if (this != &rhs)
 			{
 				delete [] this->_data;
-				this->_size = rhs._size;
-				this->_cursor = rhs._cursor;
+				this->_size = rhs.size();
+				this->_cursor = 0;
 				this->_data = new char[this->_size + 1]();
-				std::memcpy(this->_data, rhs._data, this->_size);
+				std::memcpy(this->_data, rhs.get_ptr(), this->_size);
 			}
 			return *this;
 		}
@@ -85,13 +85,29 @@ namespace ws
 		Buffer&	Buffer::advance(size_t n)
 		{
 			this->_cursor += n;
+			if (this->_cursor >= this->_size)
+			{
+				delete [] this->_data;
+				this->_data = NULL;
+				this->_size = this->_cursor = 0;
+			}
 			return *this;
+		}
+
+		size_t	Buffer::find(const char c) const
+		{
+			const char*	ptr = this->get_ptr();
+			
+			for (size_t	i = 0; i < this->size(); ++i)
+			{
+				if (ptr[i] == c)
+					return i;
+			}
+			return std::string::npos;
 		}
 		
 		size_t	Buffer::find(const char* s) const
 		{
-			std::cout << "v " << std::endl;
-			std::cout << this->_cursor << std::endl;
 			const char*	ptr = this->get_ptr();
 			
 			for (size_t	i = 0, j = 0; i < this->size(); ++i)
@@ -121,5 +137,8 @@ namespace ws
 			this->_size = newSize;
 			this->_cursor = 0;
 		}
+
+		const char&	Buffer::operator[](size_t index)
+		{ return *(this->get_ptr() + index); }
 	}
 }

@@ -25,6 +25,7 @@ namespace ws
 			size_t	capacity() const;
 			size_t	size() const;
 			size_t	find(const char* s) const;
+			size_t	find(const char c) const;
 			char * get_ptr();
 			const char * get_ptr() const;
 
@@ -33,6 +34,8 @@ namespace ws
 			Buffer&	advance(size_t n);
 
 			void	join(const Buffer& buff);
+
+			const char&	operator[](size_t index);
 
 		private:
 
