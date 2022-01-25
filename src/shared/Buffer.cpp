@@ -19,7 +19,7 @@ namespace ws
 			std::memset(this->_data, 0, this->_size);
 		}
 
-		Buffer::Buffer(std::string str)
+		Buffer::Buffer(const std::string& str)
 			: _data(), _size(str.size()), _cursor(0)
 		{
 			this->_data = new char[this->_size + 1]();

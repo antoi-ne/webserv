@@ -15,7 +15,7 @@ namespace ws
 
 			Buffer();
 			Buffer(size_t size);
-			Buffer(const std::string str);
+			Buffer(const std::string& str);
 			Buffer(const char *buff, size_t size);
 			Buffer(const Buffer & rhs);
 			~Buffer();

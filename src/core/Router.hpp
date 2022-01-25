@@ -26,7 +26,14 @@ namespace ws
 			const conf::Server*		_getServ(http::Req::header_m& header, const conf::host_port& host) const;
 			const conf::Server*		_getServerName(const std::string& host, const serv_lst& servLst) const;
 			const conf::Location*	_getLocation(const std::string& uri, const conf::Server& serv) const;
-			std::string				_getLocalPath(const std::string& uri, const conf::Server& serv, const conf::Location* loc) const;
+			std::string				_getLocalPath(const std::string& uri, const conf::ServConfig& serv) const;
+			bool					_checkAcceptedMethod(const conf::Location* loc, e_method method) const;
+			bool					_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const;
+			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
+
+			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
+			
+			const std::string&		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
 		};
 	}
 }

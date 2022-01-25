@@ -71,10 +71,6 @@ namespace http
 				return false;
 			this->_buff.advance(endLine + 1);
 			this->_check_line = &Req::_checkHeader;
-			std::cout << "method: " << this->_method << std::endl;
-			std::cout << "path: " << this->_path << std::endl;
-			if (this->_buff.get_ptr())
-				std::cout << "next: " << this->_buff.get_ptr() << std::endl;
 		}
 		return true;
 	}

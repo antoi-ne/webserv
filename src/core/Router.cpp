@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/24 15:09:41 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/01/25 16:30:28 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ namespace ws
 			if ((serv = this->_getServ(request.header(), host)))
 				this->_processServ(response, request, *serv);
 			else
-				response.setStatus(STATUS444);
+				this->_setError(response, *serv, STATUS444, 444);
 			return response;
 		}
 
@@ -81,6 +81,45 @@ namespace ws
 			return buff;
 		}
 
+		bool	Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
+		{
+			if (loc)
+			{
+				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
+					return true;
+			}
+			else
+				return method == GET;
+			return false;
+		}
+
+		bool	Router::_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const
+		{
+			if (serv.max_body_size != -1)
+				return bodySize <= static_cast<size_t>(serv.max_body_size);
+			return true;
+		}
+
+		void
+		Router::_setError(
+			http::Res& response,
+			const conf::ServConfig& serv,
+			const char* str,
+			const uint16_t code) const
+		{
+			response.setStatus(str);
+			response.body().join(shared::Buffer(this->_findErrorPage(serv, code)));
+		}
+
+		const std::string&
+		Router::_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const
+		{
+			conf::ErrorPages::const_iterator it = serv.error_pages.find(code);
+
+		//	if (it != serv.error_pages.end())
+			return *it->second;
+		}
+
 		void
 		Router::_processServ(
 			http::Res& response,
@@ -89,24 +128,24 @@ namespace ws
 		{
 			const conf::Location*	loc;
 			std::string				path;
-			shared::Buffer			fileBuff;
+			shared::Buffer			body;
+			conf::ServConfig		mainConf;
 
-			loc = this->_getLocation(request.path(), serv);
-			path = _getLocalPath(request.path(), serv, loc);
-			if (path.empty() || !(fileBuff = _getFile(path)).size())
-				response.setStatus(STATUS404);
-			if (request.method() == POST)
+			if ((loc = this->_getLocation(request.path(), serv)))
+				mainConf = *loc;
+			else
+				mainConf = serv;
+			path = _getLocalPath(request.path(), mainConf);
+			if (path.empty() || !(body = _getFile(path)).size())
+				return this->_setError(response, mainConf, STATUS404, 404);
+			else if (!this->_checkAcceptedMethod(loc, request.method()))
+				return this->_setError(response, mainConf, STATUS405, 405);
+			else if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+				return this->_setError(response, mainConf, STATUS413, 413);
+			else if (request.method() == POST)
 				response.setStatus(STATUS201);
-			response.body().join(fileBuff);
-			if (loc)
-			{
-				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), POST) != loc->accepted_methods.end())
-				{
-					
-				}
-				else
-					response.setStatus(STATUS405);
-			} // check accepted method
+			else
+				response.body().join(body);
 		}
 
 		const conf::Location*
@@ -129,13 +168,12 @@ namespace ws
 		std::string
 		Router::_getLocalPath(
 			const std::string& uri,
-			const conf::Server& serv,
-			const conf::Location* loc) const
+			const conf::ServConfig& serv) const
 		{
 			std::string				path;
 			struct stat				info;
 
-			path = !loc || loc->root.empty() ? serv.root : loc->root;
+			path = serv.root;
 			path += uri;
 			if (path.back() == '/') // Maybe if '/' force dir?
 				path.pop_back();
@@ -144,7 +182,7 @@ namespace ws
 			if (S_ISDIR(info.st_mode))
 			{
 				path += "/";
-				path += !loc || loc->index.empty() ? serv.index : loc->index;
+				path += serv.index;
 			}
 			return path;
 		}
