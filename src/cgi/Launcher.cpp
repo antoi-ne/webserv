@@ -4,13 +4,28 @@ namespace ws
 {
 	namespace cgi
 	{
-		Launcher::Launcher(http::Req req, conf::Location loc)
+		Launcher::Launcher(http::Req req, conf::Server srv, conf::Location loc)
 			: _req(req), _loc(loc)
 		{
 			if (::pipe(this->_in))
 				throw std::runtime_error("syscall fork failed");
 			if (::pipe(this->_out))
 				throw std::runtime_error("syscall fork failed");
+			
+			if (loc.cgi_path[0] == '/')
+				this->_cgi = loc.cgi_path;
+			else
+			{
+				char * wd;
+				if (wd = ::getcwd(NULL, 0))
+					throw std::runtime_error("syscall getcwd failed");
+				this->_cgi = std::string(wd) + loc.cgi_path;
+			}
+
+			if (loc.root.size() == 0)
+				this->_script = srv.root + req.path();
+			else
+				this->_script = loc.root + req.path();
 		}
 
 		Launcher::~Launcher()

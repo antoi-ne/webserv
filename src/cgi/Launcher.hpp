@@ -19,7 +19,7 @@ namespace ws
 		{
 		public:
 
-			Launcher(http::Req req, conf::Location loc);
+			Launcher(http::Req req, conf::Server srv, conf::Location loc);
 
 			~Launcher();
 
@@ -31,6 +31,8 @@ namespace ws
 			conf::Location _loc;
 			int _in[2];
 			int _out[2];
+			std::string _cgi;
+			std::string _script;
 
 			bool _subprocess();
 		};
