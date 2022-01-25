@@ -2,9 +2,13 @@
 # define WS_CGI_LAUNCHER_HPP
 
 # include <string>
+# include <cstdio>
+# include <unistd.h>
+# include <exception>
 
 # include "http/Req.hpp"
 # include "http/Res.hpp"
+# include "shared/Log.hpp"
 
 namespace ws
 {
@@ -14,9 +18,19 @@ namespace ws
 		{
 		public:
 
-			static http::Res run(http::Req, std::string script, std::string file);
+			Launcher(http::Req req);
+
+			~Launcher();
+
+			http::Res run();
 
 		private:
+
+			http::Req _req;
+			int _in[2];
+			int _out[2];
+
+			bool _subprocess();
 		};
 	}
 }
