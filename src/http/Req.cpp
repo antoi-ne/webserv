@@ -50,7 +50,6 @@ namespace http
 		return this->_isNotFinish();
 	}
 
-
 	bool	Req::_updateIfCRLF(void)
 	{
 		size_t endLine = this->_buff.find('\n');
@@ -72,6 +71,10 @@ namespace http
 				return false;
 			this->_buff.advance(endLine + 1);
 			this->_check_line = &Req::_checkHeader;
+			std::cout << "method: " << this->_method << std::endl;
+			std::cout << "path: " << this->_path << std::endl;
+			if (this->_buff.get_ptr())
+				std::cout << "next: " << this->_buff.get_ptr() << std::endl;
 		}
 		return true;
 	}
@@ -98,27 +101,46 @@ namespace http
 
 	bool	Req::_getStartLine(size_t endLine)
 	{
-		std::string	line(this->_buff.get_ptr(), endLine);
-
-		if (!line.empty())
+		if (endLine)
 		{
-			size_t index = this->_getMethod(line);
+			size_t index = this->_getMethod(endLine);
 			if (index) // if not failed method -> UNDEF
 			{
-				size_t endPath = line.find(HTTPVER, index);
+				size_t endPath = this->_buff.find(HTTPVER, endLine);
 				if (endPath != std::string::npos) // if fail not good version path empty
-				{
-					// TODO Check some char in Path
-					while (line[index] == ' ')
-						++index;
-					while (line[endPath - 1] == ' ' && endPath > index)
-						--endPath;
-					this->_path = line.substr(index, endPath - index);
-					return !this->_path.empty();
-				}
+					return this->_getPath(index, endPath);
 			}
 		}
 		return false;
+	}
+
+	bool	Req::_getPath(size_t index, size_t endPath)
+	{
+		size_t	_maybeEndPath;
+
+		while (this->_buff[index] == ' ')
+			++index;
+		if ((_maybeEndPath = this->_checkPathValidity(index, endPath)))
+		{
+			while (this->_buff[--endPath] == ' ');
+			++endPath;
+			if (endPath == _maybeEndPath)
+				this->_path = std::string(this->_buff.get_ptr() + index, endPath - index);
+		}
+		return !this->_path.empty();
+	}
+
+	static inline bool	_acceptedChar(const char c)
+	{ return (c > 32 && c < 127); }
+
+	size_t	Req::_checkPathValidity(size_t index, size_t endPath)
+	{
+		if (this->_buff[index] != '/')
+			return 0;
+		for (; index < endPath; ++index)
+			if (!_acceptedChar(this->_buff[index]))
+				break ;
+		return index;
 	}
 
 	static inline size_t	_setContentLength(const std::string& s)
@@ -145,9 +167,6 @@ namespace http
 		return true;
 	}
 
-	static inline bool	_acceptedChar(const char c)
-	{ return (c > 32 && c < 127); }
-
 	bool	Req::_failed(void)
 	{
 		this->_method = UNDEF;
@@ -173,20 +192,16 @@ namespace http
 		return true;
 	}
 
-	static inline bool	_compareMethod(const std::string& line, const std::string& method)
-	{ return line.compare(0, method.size(), method) == 0; }
-
-	size_t	Req::_getMethod(std::string& line)
+	size_t	Req::_getMethod(size_t endLine)
 	{
 		std::string	methods[] = METHODS;
 		size_t	i = 0;
-
-		while (!_compareMethod(line, methods[i]))
-		{
-			if (i == N_METHOD)
-				return this->_failed();
+		
+		while (i < N_METHOD
+			&& this->_buff.find(methods[i].c_str(), endLine) == std::string::npos)
 			++i;
-		}
+		if (i >= N_METHOD)
+			return this->_failed();
 		this->_method = static_cast<e_method>(i);
 		return methods[i].size();
 	}
