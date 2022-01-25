@@ -123,6 +123,25 @@ namespace ws
 			return std::string::npos;
 		}
 
+		size_t	Buffer::find(const char* s, size_t until) const
+		{
+			const char*	ptr = this->get_ptr();
+			
+			if (until <= this->size())
+			{
+				for (size_t	i = 0, j = 0; i < until; ++i)
+				{
+					if (ptr[i] == s[j])
+					{
+						if (!s[++j])
+							return (i - j) + 1;
+					}
+					else
+						j = 0;
+				}
+			}
+			return std::string::npos;
+		}
 
 		void	Buffer::join(const Buffer& buff)
 		{

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/24 18:00:10 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/25 12:32:44 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,10 @@ namespace http
 		bool				_headerFinish;
 		bool				(Req::*_check_line)(size_t endLine);
 
-		size_t			_getMethod(std::string& line);
+		size_t			_getMethod(size_t endLine);
+		bool			_getPath(size_t index, size_t endPath);
 		bool			_checkStartLine(size_t endLine);
+		size_t			_checkPathValidity(size_t index, size_t endPath);
 		bool			_skipStartCRLF(void);
 		bool			_checkHeader(size_t endLine);
 		bool			_getStartLine(size_t endLine);
