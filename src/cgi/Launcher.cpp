@@ -4,11 +4,13 @@ namespace ws
 {
 	namespace cgi
 	{
-		Launcher::Launcher(http::Req req)
-			: _req(req)
+		Launcher::Launcher(http::Req req, conf::Location loc)
+			: _req(req), _loc(loc)
 		{
-			this->_in = tmpfile();
-			this->_out = tmpfile();
+			if (::pipe(this->_in))
+				throw std::runtime_error("syscall fork failed");
+			if (::pipe(this->_out))
+				throw std::runtime_error("syscall fork failed");
 		}
 
 		Launcher::~Launcher()
@@ -60,9 +62,8 @@ namespace ws
 				}
 				if (ret < 0)
 					throw std::runtime_error("syscall read failed");
-
-				
 			}
+			return true;
 		}
 
 	}

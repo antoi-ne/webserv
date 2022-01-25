@@ -9,6 +9,7 @@
 # include "http/Req.hpp"
 # include "http/Res.hpp"
 # include "shared/Log.hpp"
+# include "conf/Config.hpp"
 
 namespace ws
 {
@@ -18,7 +19,7 @@ namespace ws
 		{
 		public:
 
-			Launcher(http::Req req);
+			Launcher(http::Req req, conf::Location loc);
 
 			~Launcher();
 
@@ -27,6 +28,7 @@ namespace ws
 		private:
 
 			http::Req _req;
+			conf::Location _loc;
 			int _in[2];
 			int _out[2];
 

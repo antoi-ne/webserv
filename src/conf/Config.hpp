@@ -23,6 +23,7 @@ namespace ws
 			std::string upload_path; // empty string means no upload path
 			std::string return_path; // empty string means no return path
 			int return_code; // negative means no return code
+			std::string cgi_path;
 		};
 
 		// first route (path of the location) -> Location obj
