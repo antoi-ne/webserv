@@ -17,6 +17,12 @@ namespace ws
 			this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 			this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
 			this->_env["SERVER_PORT"] = std::to_string(port);
+			this->_env["PATH_INFO"] = script;
+			this->_env["PATH_TRANSLATED"] = script;
+			this->_env["SCRIPT_NAME"] = req.path();
+			this->_env["CONTENT_TYPE"] = req.header("Content-Type");
+			this->_env["CONTENT_LENGTH"] = req.header("Content-Length");
+
 			switch (req.method())
 			{
 				case GET:
@@ -60,6 +66,7 @@ namespace ws
 			char ** args;
 			char *script;
 			size_t i = 0;
+			shared::Buffer buff;
 
 			envp = new char*[this->_env.size() + 1]();
 			for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
@@ -79,7 +86,8 @@ namespace ws
 			if ((script = strdup(this->_script.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
 
-			this->_subprocess(script, args, envp);
+			buff = this->_subprocess(script, args, envp);
+			// TODO: parse buff into http::Res
 			return res;
 		}
 
