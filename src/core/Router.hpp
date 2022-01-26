@@ -33,7 +33,7 @@ namespace ws
 
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
 			
-			const std::string&		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
+			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
 		};
 	}
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/25 16:30:28 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/26 09:16:29 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,11 +25,13 @@ namespace ws
 		http::Res
 		Router::process(http::Req& request, const conf::host_port& host) const
 		{
-			http::Res			response;
-			const conf::Server*	serv;
+			http::Res				response;
+			const conf::Server*		serv;
 			
 			if ((serv = this->_getServ(request.header(), host)))
+			{
 				this->_processServ(response, request, *serv);
+			}
 			else
 				this->_setError(response, *serv, STATUS444, 444);
 			return response;
@@ -74,7 +76,7 @@ namespace ws
 				{
 					file.read(_buff, 2048);
 					len = file.gcount();
-					buff.join(ws::shared::Buffer(_buff, len));
+					buff.join(shared::Buffer(_buff, len));
 				}
 				file.close();
 			}
@@ -107,17 +109,22 @@ namespace ws
 			const char* str,
 			const uint16_t code) const
 		{
+			const std::string*	errorPage;
+
 			response.setStatus(str);
-			response.body().join(shared::Buffer(this->_findErrorPage(serv, code)));
+			errorPage = this->_findErrorPage(serv, code);
+			if (errorPage != NULL)
+				response.body().join(*errorPage);
 		}
 
-		const std::string&
+		const std::string*
 		Router::_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const
 		{
 			conf::ErrorPages::const_iterator it = serv.error_pages.find(code);
 
-		//	if (it != serv.error_pages.end())
-			return *it->second;
+			if (it == serv.error_pages.end())
+				return NULL;
+			return it->second;
 		}
 
 		void
@@ -136,16 +143,30 @@ namespace ws
 			else
 				mainConf = serv;
 			path = _getLocalPath(request.path(), mainConf);
-			if (path.empty() || !(body = _getFile(path)).size())
+			if (path.empty())
+			{
 				return this->_setError(response, mainConf, STATUS404, 404);
-			else if (!this->_checkAcceptedMethod(loc, request.method()))
-				return this->_setError(response, mainConf, STATUS405, 405);
-			else if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-				return this->_setError(response, mainConf, STATUS413, 413);
-			else if (request.method() == POST)
-				response.setStatus(STATUS201);
+			}
+			if (path.back() != '/')
+			{
+ 				if (!(body = _getFile(path)).size())
+					return this->_setError(response, mainConf, STATUS403, 403);
+			}
 			else
-				response.body().join(body);
+			{
+				// Make autoindex
+			}
+			if (!this->_checkAcceptedMethod(loc, request.method()))
+			{
+				return this->_setError(response, mainConf, STATUS405, 405);
+			}
+			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+			{
+				return this->_setError(response, mainConf, STATUS413, 413);
+			}
+			if (request.method() == POST)
+				response.setStatus(STATUS201);
+			response.body().join(body);
 		}
 
 		const conf::Location*
@@ -170,19 +191,20 @@ namespace ws
 			const std::string& uri,
 			const conf::ServConfig& serv) const
 		{
-			std::string				path;
-			struct stat				info;
+			std::string	path;
+			struct stat	info;
 
 			path = serv.root;
 			path += uri;
-			if (path.back() == '/') // Maybe if '/' force dir?
+			if (path.back() == '/')
 				path.pop_back();
 			if (stat(path.c_str(), &info) != 0)
 				return std::string();
 			if (S_ISDIR(info.st_mode))
 			{
-				path += "/";
-				path += serv.index;
+				path.push_back('/');
+				if (!serv.autoindex)
+					path.append(serv.index);
 			}
 			return path;
 		}
