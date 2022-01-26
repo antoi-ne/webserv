@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/26 11:24:44 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/26 13:31:15 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fstream>
-#include <dirent.h>
 
 namespace ws
 {
@@ -64,46 +63,6 @@ namespace ws
 			return servLst.begin().base();
 		}
 
-		shared::Buffer	_getFile(const std::string& path)
-		{
-			std::ifstream		file(path);
-			shared::Buffer		buff;
-
-			if (file)
-			{
-				char	_buff[2048];
-				size_t	len;
-
-				while (!file.eof())
-				{
-					file.read(_buff, 2048);
-					len = file.gcount();
-					buff.join(shared::Buffer(_buff, len));
-				}
-				file.close();
-			}
-			return buff;
-		}
-
-		bool	Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
-		{
-			if (loc)
-			{
-				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
-					return true;
-			}
-			else
-				return method == GET;
-			return false;
-		}
-
-		bool	Router::_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const
-		{
-			if (serv.max_body_size != -1)
-				return bodySize <= static_cast<size_t>(serv.max_body_size);
-			return true;
-		}
-
 		void
 		Router::_setError(
 			http::Res& response,
@@ -129,54 +88,6 @@ namespace ws
 			return it->second;
 		}
 
-		const std::vector<struct dirent>
-		_getDirList(DIR* dirp)
-		{
-			std::vector<struct dirent>	v;
-    		struct dirent*				dp;
-
-    		while ((dp = readdir(dirp)) != NULL)
-				v.push_back(*dp);
-			return v;
-		}
-
-		shared::Buffer
-		Router::_getBody(const std::string& path) const
-		{
-			if (path.back() == '/')
-			{
-				// IndexOf on case
-    			DIR* dirp = opendir(path.c_str());
-				if (dirp)
-				{
-					char	_buff[512];
-					size_t	size;
-
-					size = sprintf(_buff, INDEX_OF1, path.c_str(), path.c_str());
-
-					shared::Buffer	buff(INDEX_OF1);
-
-					const std::vector<struct dirent>	dirList = _getDirList(dirp);
-
-    				closedir(dirp);
-
-					for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
-					{
-						if (it->d_type == DT_DIR)
-							size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
-						else
-							size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name, it->d_reclen);
-						buff.join(shared::Buffer(_buff, size));
-					}
-
-					buff.join(shared::Buffer(INDEX_OF2));
-					return buff;
-				}
-				return shared::Buffer();
-			}
-			return _getFile(path);
-		}
-
 		void
 		Router::_processServ(
 			http::Res& response,
@@ -197,7 +108,7 @@ namespace ws
 			{
 				return this->_setError(response, mainConf, STATUS404, 404);
 			}
- 			if (!(body = this->_getBody(path)).size())
+ 			if (!(body = this->_getBody(path, request.path())).size())
 				return this->_setError(response, mainConf, STATUS403, 403);
 			if (!this->_checkAcceptedMethod(loc, request.method()))
 			{
@@ -250,6 +161,101 @@ namespace ws
 					path.append(serv.index);
 			}
 			return path;
+		}
+
+		shared::Buffer
+		Router::_getBody(const std::string& path, const std::string& uri) const
+		{
+			if (path.back() == '/') // autoindex on case
+			{
+				shared::Buffer	buff;
+    			DIR* dirp = opendir(path.c_str());
+				if (dirp)
+				{
+					buff = this->_getAutoIndexPage(dirp, uri);
+					closedir(dirp);
+				}
+				return buff;
+			}
+			return this->_getFile(path);
+		}
+
+		shared::Buffer
+		Router::_getAutoIndexPage(DIR* dirp ,const std::string& uri) const
+		{
+			char	_buff[512];
+			size_t	size;
+
+			size = sprintf(_buff, INDEX_OF1, uri.c_str(), uri.c_str());
+
+			shared::Buffer	buff(_buff, size);
+
+			const std::vector<struct dirent>	dirList = this->_getDirList(dirp);
+
+			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
+			{
+				if (it->d_type == DT_DIR)
+					size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
+				else
+					size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name);
+				buff.join(shared::Buffer(_buff, size));
+			}
+			buff.join(shared::Buffer(INDEX_OF2));
+			return buff;
+		}
+
+		const std::vector<struct dirent>
+		Router::_getDirList(DIR* dirp) const
+		{
+			std::vector<struct dirent>	v;
+    		struct dirent*				dp;
+
+    		while ((dp = readdir(dirp)) != NULL)
+				v.push_back(*dp);
+			return v;
+		}
+
+		shared::Buffer
+		Router::_getFile(const std::string& path) const
+		{
+			std::ifstream		file(path);
+			shared::Buffer		buff;
+
+			if (file)
+			{
+				char	_buff[2048];
+				size_t	len;
+
+				while (!file.eof())
+				{
+					file.read(_buff, 2048);
+					len = file.gcount();
+					buff.join(shared::Buffer(_buff, len));
+				}
+				file.close();
+			}
+			return buff;
+		}
+
+		bool
+		Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
+		{
+			if (loc)
+			{
+				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
+					return true;
+			}
+			else
+				return method == GET;
+			return false;
+		}
+
+		bool
+		Router::_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const
+		{
+			if (serv.max_body_size != -1)
+				return bodySize <= static_cast<size_t>(serv.max_body_size);
+			return true;
 		}
 	}
 }
