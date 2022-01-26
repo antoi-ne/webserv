@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/26 13:31:15 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/26 16:42:04 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,36 @@ namespace ws
 		}
 
 		void
+		_writeFile(const std::string& path, const shared::Buffer& buff)
+		{
+			std::ofstream	file(path);
+
+			if (file)
+			{
+				file << buff.get_ptr();
+				file.close();
+			}
+		}
+
+		void
+		_upload(
+			const std::string& uri,
+			const std::string& upload_path,
+			const shared::Buffer& buff)
+		{
+			std::string	path;
+
+			if (upload_path.size())
+			{
+				size_t	lastDir = uri.find_last_of('/');
+
+				path = upload_path;
+				path += uri.substr(0, uri.size() - lastDir - 1);
+				_writeFile(path, buff);
+			}
+		}
+
+		void
 		Router::_processServ(
 			http::Res& response,
 			const http::Req& request,
@@ -103,23 +133,20 @@ namespace ws
 				mainConf = *loc;
 			else
 				mainConf = serv;
+			if (request.method() == POST)
+			{
+				response.setStatus(STATUS201);
+				return _upload(request.path(), mainConf.upload_path, request.body());
+			}
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
-			{
 				return this->_setError(response, mainConf, STATUS404, 404);
-			}
  			if (!(body = this->_getBody(path, request.path())).size())
 				return this->_setError(response, mainConf, STATUS403, 403);
 			if (!this->_checkAcceptedMethod(loc, request.method()))
-			{
 				return this->_setError(response, mainConf, STATUS405, 405);
-			}
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-			{
 				return this->_setError(response, mainConf, STATUS413, 413);
-			}
-			if (request.method() == POST)
-				response.setStatus(STATUS201);
 			response.body().join(body);
 		}
 
