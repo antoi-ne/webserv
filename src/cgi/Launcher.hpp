@@ -5,6 +5,9 @@
 # include <cstdio>
 # include <unistd.h>
 # include <exception>
+# include <map>
+# include <algorithm>
+# include <string>
 
 # include "http/Req.hpp"
 # include "http/Res.hpp"
@@ -19,7 +22,7 @@ namespace ws
 		{
 		public:
 
-			Launcher(http::Req req, conf::Server srv, conf::Location loc);
+			Launcher(http::Req req, std::string host, in_port_t port, std::string cgi, std::string script);
 
 			~Launcher();
 
@@ -33,8 +36,9 @@ namespace ws
 			int _out[2];
 			std::string _cgi;
 			std::string _script;
+			std::map<std::string, std::string> _env;
 
-			bool _subprocess();
+			shared::Buffer _subprocess(std::string script, char **args, char **envp);
 		};
 	}
 }
