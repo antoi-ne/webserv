@@ -30,7 +30,7 @@ namespace ws
 			bool					_checkAcceptedMethod(const conf::Location* loc, e_method method) const;
 			bool					_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const;
 			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
-
+			shared::Buffer			_getBody(const std::string& path) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
 			
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;

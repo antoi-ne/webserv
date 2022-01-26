@@ -6,15 +6,17 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/26 09:16:29 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/26 11:24:44 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
+#include "index_of.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fstream>
+#include <dirent.h>
 
 namespace ws
 {
@@ -127,6 +129,54 @@ namespace ws
 			return it->second;
 		}
 
+		const std::vector<struct dirent>
+		_getDirList(DIR* dirp)
+		{
+			std::vector<struct dirent>	v;
+    		struct dirent*				dp;
+
+    		while ((dp = readdir(dirp)) != NULL)
+				v.push_back(*dp);
+			return v;
+		}
+
+		shared::Buffer
+		Router::_getBody(const std::string& path) const
+		{
+			if (path.back() == '/')
+			{
+				// IndexOf on case
+    			DIR* dirp = opendir(path.c_str());
+				if (dirp)
+				{
+					char	_buff[512];
+					size_t	size;
+
+					size = sprintf(_buff, INDEX_OF1, path.c_str(), path.c_str());
+
+					shared::Buffer	buff(INDEX_OF1);
+
+					const std::vector<struct dirent>	dirList = _getDirList(dirp);
+
+    				closedir(dirp);
+
+					for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
+					{
+						if (it->d_type == DT_DIR)
+							size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
+						else
+							size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name, it->d_reclen);
+						buff.join(shared::Buffer(_buff, size));
+					}
+
+					buff.join(shared::Buffer(INDEX_OF2));
+					return buff;
+				}
+				return shared::Buffer();
+			}
+			return _getFile(path);
+		}
+
 		void
 		Router::_processServ(
 			http::Res& response,
@@ -147,15 +197,8 @@ namespace ws
 			{
 				return this->_setError(response, mainConf, STATUS404, 404);
 			}
-			if (path.back() != '/')
-			{
- 				if (!(body = _getFile(path)).size())
-					return this->_setError(response, mainConf, STATUS403, 403);
-			}
-			else
-			{
-				// Make autoindex
-			}
+ 			if (!(body = this->_getBody(path)).size())
+				return this->_setError(response, mainConf, STATUS403, 403);
 			if (!this->_checkAcceptedMethod(loc, request.method()))
 			{
 				return this->_setError(response, mainConf, STATUS405, 405);
