@@ -22,6 +22,7 @@ namespace ws
 		{
 		public:
 
+			// cgi: full path in cgi_pass; script: full physical path of the script to execute
 			Launcher(http::Req req, std::string host, in_port_t port, std::string cgi, std::string script);
 
 			~Launcher();
