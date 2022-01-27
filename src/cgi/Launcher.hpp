@@ -39,7 +39,7 @@ namespace ws
 			std::string _script;
 			std::map<std::string, std::string> _env;
 
-			shared::Buffer _subprocess(std::string script, char **args, char **envp);
+			shared::Buffer _subprocess(char * script, char **args, char **envp);
 		};
 	}
 }

@@ -94,12 +94,19 @@ namespace ws
 
 			::close(this->_in[1]);
 
+			for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
+			{
+				std::cout << it->first << " = " << it->second << std::endl;
+			}
+
 			buff = this->_subprocess(script, args, envp);
 			// TODO: parse buff into http::Res
+			shared::Log::info("x: " + buff.to_string());
+
 			return res;
 		}
 
-		shared::Buffer Launcher::_subprocess(std::string script, char **args, char **envp)
+		shared::Buffer Launcher::_subprocess(char *script, char **args, char **envp)
 		{
 			pid_t pid;
 			int ret;
@@ -112,12 +119,12 @@ namespace ws
 			{
 				::close(this->_in[1]);
 				::close(this->_out[0]);
-				if (dup2(this->_in[0], STDIN_FILENO) != 0)
+				if (dup2(this->_in[0], STDIN_FILENO) < 0)
 					shared::Log::fatal("syscall dup2 failed");
-				if (dup2(this->_out[1], STDOUT_FILENO) != 0)
+				if (dup2(this->_out[1], STDOUT_FILENO) < 0)
 					shared::Log::fatal("syscall dup2 failed");
 
-				if (::execve(script.c_str(), args, envp) != 0)
+				if (::execve(script, args, envp) != 0)
 					shared::Log::fatal("execve failed");
 			}
 			else
