@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/27 12:46:46 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/27 14:02:50 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ namespace ws
 		}
 
 		bool	
-		_writeFile(const std::string& path, const shared::Buffer& buff)
+		Router::_writeFile(const std::string& path, const shared::Buffer& buff) const
 		{
 			std::ofstream	file(path);
 
@@ -100,20 +100,6 @@ namespace ws
 				return true;
 			}
 			return false;
-		}
-
-		bool	
-		_upload(
-			const std::string& uri,
-			const std::string& upload_path,
-			const shared::Buffer& buff)
-		{
-			std::string	path;
-			size_t	lastDir = uri.find_last_of('/');
-
-			path = upload_path;
-			path += uri.substr(lastDir);
-			return _writeFile(path, buff);
 		}
 
 		void
@@ -133,7 +119,10 @@ namespace ws
 				&& mainConf.upload_path.size())
 			{
 				response.setStatus(STATUS201);
-				if (!_upload(request.path(), mainConf.upload_path, request.body()))
+				if (!this->_writeFile(
+					mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
+					request.body()
+					))
 					this->_setError(response, mainConf, STATUS403, 403);
 				return ;
 			}

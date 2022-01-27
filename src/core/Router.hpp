@@ -36,6 +36,8 @@ namespace ws
 			shared::Buffer			_getBody(const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
 			
+
+			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
 			shared::Buffer			_getAutoIndexPage(DIR* dirp ,const std::string& uri) const;
 		};
