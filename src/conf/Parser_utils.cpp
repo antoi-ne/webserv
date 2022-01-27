@@ -1,5 +1,6 @@
 #include "Config.hpp"
 #include "Parser.hpp"
+#include "parser_attr.cpp"
 
 namespace ws
 {
@@ -43,16 +44,17 @@ namespace ws
         }
 
 
-        Server server_attr(std::fstream fd){
+        int  mapping_servers(std::map<host_port, std::vector<Server> > config, std::ifstream fd){
             std::string line;
-            Server      ret;
-            while (fd.getline(line) && line[0] == ' ')
+            host_port   tmp;
+
+            while (getline(fd, line) && line[0] == ' ')
             {
                 line.erase(0, 1);
                 if (line.compare(1, 10, "location:\n"))
-                    ret.locations.push_back(loc_attr(fd));
+                    
                 if (line.compare(1, 7, "listen:"))
-                    //ret.host = p_listen(line, ret);
+                    map_servers(line, config);
                 if (line.compare(1, 12, "server_name:"))
                     //ret.server_names = p_server_names(line);
                 if (line.compare(1, 5, "root:"))
