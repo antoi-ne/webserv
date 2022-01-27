@@ -187,13 +187,13 @@ namespace http
 			++i;
 		if (i == 0 || (this->_buff[i] != ':' && endLine - i > 1)) // currently accept any unaccepted char before \n at end normal \n or \r\n
 			return this->_failed();
-		keyEnd = i;
+		keyEnd = i++;
 		for (; i < endLine && this->_buff[i] <= ' '; ++i); // not sure skip space before value
-		std::cout << "key: " << (this->_header.insert(
+		this->_header.insert(
 			std::make_pair(
 				std::string(this->_buff.get_ptr(), keyEnd),
 				std::string(this->_buff.get_ptr() + i, endLine - i)
-			)).first->first) << std::endl;
+		));
 		return true;
 	}
 

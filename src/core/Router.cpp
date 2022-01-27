@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/26 16:42:04 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/27 11:58:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,15 +107,11 @@ namespace ws
 			const shared::Buffer& buff)
 		{
 			std::string	path;
+			size_t	lastDir = uri.find_last_of('/');
 
-			if (upload_path.size())
-			{
-				size_t	lastDir = uri.find_last_of('/');
-
-				path = upload_path;
-				path += uri.substr(0, uri.size() - lastDir - 1);
-				_writeFile(path, buff);
-			}
+			path = upload_path;
+			path += uri.substr(lastDir);
+			_writeFile(path, buff);
 		}
 
 		void
@@ -129,11 +125,10 @@ namespace ws
 			shared::Buffer			body;
 			conf::ServConfig		mainConf;
 
-			if ((loc = this->_getLocation(request.path(), serv)))
-				mainConf = *loc;
-			else
-				mainConf = serv;
-			if (request.method() == POST)
+			loc = this->_getLocation(request.path(), serv);
+			mainConf = loc ? static_cast<conf::ServConfig>(*loc) : static_cast<conf::ServConfig>(serv);
+			if (request.method() == POST
+				&& mainConf.upload_path.size())
 			{
 				response.setStatus(STATUS201);
 				return _upload(request.path(), mainConf.upload_path, request.body());
@@ -153,18 +148,16 @@ namespace ws
 		const conf::Location*
 		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
 		{
-			std::string	path = uri;
-			conf::location_map::const_iterator	it = serv.locations.find(path);
+			size_t	res;
 
-			while (it == serv.locations.end() && !path.empty())
+			for (conf::location_v::const_iterator it = serv.locations.begin();
+				it != serv.locations.end(); ++it)
 			{
-				size_t	lastDir = path.find_last_of('/');
-				path = path.substr(0, path.size() - lastDir - 1);
-				it = serv.locations.find(path);
+				res = uri.find(it->route);
+				if (res == 0)
+					return it.base();
 			}
-			if (path.empty())
-				return NULL;
-			return std::addressof(it->second);
+			return NULL;
 		}
 
 		std::string
@@ -176,7 +169,7 @@ namespace ws
 			struct stat	info;
 
 			path = serv.root;
-			path += uri;
+			path += (uri.c_str() + serv.route.size());
 			if (path.back() == '/')
 				path.pop_back();
 			if (stat(path.c_str(), &info) != 0)
@@ -185,7 +178,11 @@ namespace ws
 			{
 				path.push_back('/');
 				if (!serv.autoindex)
+				{
 					path.append(serv.index);
+					if (stat(path.c_str(), &info) != 0)
+						return std::string();
+				}
 			}
 			return path;
 		}
