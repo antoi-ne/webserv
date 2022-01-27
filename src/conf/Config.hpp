@@ -16,6 +16,7 @@ namespace ws
 
 		struct ServConfig 
 		{
+			std::string	route;
 			std::string root;
 			std::string index;
 			bool autoindex; // false by default
@@ -28,16 +29,16 @@ namespace ws
 
 		struct Location : public ServConfig 
 		{
-			std::vector<e_method> accepted_methods;
+			std::vector<e_method>	accepted_methods;
 		};
 
 		// first route (path of the location) -> Location obj
-		typedef std::map<std::string, Location, CI_Less>	location_map;
+		typedef std::vector<Location>	location_v;
 
 		struct Server : public ServConfig
 		{
 			std::vector<std::string>	server_names;
-			location_map 				locations;
+			location_v 					locations;
 		};
 
 		typedef std::pair<std::string, uint16_t>			host_port;

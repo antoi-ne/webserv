@@ -49,10 +49,10 @@ namespace ws
 			if (this != &rhs)
 			{
 				delete [] this->_data;
-				this->_size = rhs.size();
-				this->_cursor = 0;
+				this->_size = rhs._size;
+				this->_cursor = rhs._cursor;
 				this->_data = new char[this->_size + 1]();
-				std::memcpy(this->_data, rhs.get_ptr(), this->_size);
+				std::memcpy(this->_data, rhs._data, this->_size);
 			}
 			return *this;
 		}
@@ -85,12 +85,12 @@ namespace ws
 		Buffer&	Buffer::advance(size_t n)
 		{
 			this->_cursor += n;
-			if (this->_cursor >= this->_size)
-			{
-				delete [] this->_data;
-				this->_data = NULL;
-				this->_size = this->_cursor = 0;
-			}
+			return *this;
+		}
+
+		Buffer&	Buffer::resetCursor(void)
+		{
+			this->_cursor = 0;
 			return *this;
 		}
 
@@ -145,16 +145,15 @@ namespace ws
 
 		void	Buffer::join(const Buffer& buff)
 		{
-			size_t	newSize = this->size() + buff.size();
+			size_t	newSize = this->_size + buff.size();
 			char*	tmp = new char[newSize + 1]();
 
-			std::memcpy(tmp, this->get_ptr(), this->size());
-			std::memcpy(tmp + this->size(), buff.get_ptr(), buff.size());
+			std::memcpy(tmp, this->_data, this->_size);
+			std::memcpy(tmp + this->_size, buff.get_ptr(), buff.size());
 			tmp[newSize] = 0;
 			delete [] this->_data;
 			this->_data = tmp;
 			this->_size = newSize;
-			this->_cursor = 0;
 		}
 
 		const char&	Buffer::operator[](size_t index)
