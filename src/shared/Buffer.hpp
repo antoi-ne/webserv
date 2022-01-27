@@ -13,22 +13,36 @@ namespace ws
 		{
 		public:
 
-			Buffer(size_t size = 0);
-			Buffer(std::string str);
-			Buffer(char *buff, size_t size);
+			Buffer();
+			Buffer(size_t size);
+			Buffer(const std::string& str);
+			Buffer(const char *buff, size_t size);
+			Buffer(const Buffer & rhs);
 			~Buffer();
 
-			size_t size();
+			Buffer & operator=(const Buffer & rhs);
+
+			size_t	capacity() const;
+			size_t	size() const;
+			size_t	find(const char c) const;
+			size_t	find(const char* s) const;
+			size_t	find(const char* c, size_t until) const;
 			char * get_ptr();
+			const char * get_ptr() const;
 
-			std::string to_string();
+			std::string to_string() const;
 
-			void join(Buffer buff);
+			Buffer&	advance(size_t n);
+
+			void	join(const Buffer& buff);
+
+			const char&	operator[](size_t index);
 
 		private:
 
 			char * _data;
 			size_t _size;
+			size_t _cursor;
 
 		};
 	}

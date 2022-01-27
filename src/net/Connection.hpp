@@ -8,6 +8,8 @@
 # include "arpa/inet.h"
 
 # include "shared/Buffer.hpp"
+# include "shared/Option.hpp"
+# include "shared/Log.hpp"
 # include "Socket.hpp"
 
 namespace ws
@@ -20,11 +22,12 @@ namespace ws
 
 			Connection(int fd = -1);
 
-			void send(shared::Buffer buff);
+			ssize_t send(shared::Buffer buff);
 
-			shared::Buffer recv(size_t size);
+			shared::Option<shared::Buffer> recv(size_t size);
 
-			std::string get_address();
+			bool operator==(const Connection& rhs) const;
+			bool operator<(const Connection& rhs) const;
 
 		};
 	}

@@ -8,34 +8,43 @@ namespace ws
 			: Socket(fd)
 		{}
 
-		void Connection::send(shared::Buffer buff)
+		ssize_t Connection::send(shared::Buffer buff)
 		{
-			::send(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			ssize_t bytes = buff.size();
+			ssize_t rbytes = 0;
+
+			rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
+			return rbytes;
 		}
 
-		shared::Buffer Connection::recv(size_t size)
+		shared::Option<shared::Buffer> Connection::recv(size_t size)
 		{
-			shared::Buffer buff(size);
-			::recv(this->get_fd(), buff.get_ptr(), buff.size(), 0);
+			char *buffer;
+			shared::Buffer buff;
+			ssize_t rbytes;
 
-			return buff;
+			buffer = new char[size + 1]();
+			rbytes = ::recv(this->get_fd(), buffer, size, 0);
+			if (rbytes <= 0)
+			{
+				delete [] buffer;
+				return shared::Option<shared::Buffer>();
+			}
+
+			buff = shared::Buffer(buffer, rbytes);
+
+			delete [] buffer;
+			return shared::Option<shared::Buffer>(buff);
 		}
 
-		std::string Connection::get_address()
+		bool Connection::operator<(const Connection& rhs) const
 		{
-			struct sockaddr_in addr;
-			socklen_t addr_len = sizeof(addr);
-			char pres[INET6_ADDRSTRLEN];
-			int ret;
-
-			ret = getpeername(this->get_fd(), (struct sockaddr *) &addr, &addr_len);
-			if (ret < 0)
-				return "";
-
-			inet_ntop(addr.sin_family, &addr, pres, INET6_ADDRSTRLEN);
-
-			return pres;
+			return this->get_fd() < rhs.get_fd();
 		}
 
+		bool Connection::operator==(const Connection& rhs) const
+		{
+			return this->get_fd() == rhs.get_fd();
+		}
 	}
 }
