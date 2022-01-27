@@ -40,7 +40,16 @@ namespace http
 	{}
 
 	bool	Req::_isNotFinish(void) const
-	{ return !(this->_headerFinish && (this->_method != POST || this->_contentLength <= this->_buff.size())); }
+	{
+		if (this->_headerFinish)
+		{
+			if (this->_method == POST)
+				if (this->_contentLength > this->_buff.size())
+					return true;
+			return false;
+		}
+		return true;
+	}
 
 	bool	Req::update(ws::shared::Buffer& buff)
 	{
@@ -71,10 +80,6 @@ namespace http
 				return false;
 			this->_buff.advance(endLine + 1);
 			this->_check_line = &Req::_checkHeader;
-			std::cout << "method: " << this->_method << std::endl;
-			std::cout << "path: " << this->_path << std::endl;
-			if (this->_buff.get_ptr())
-				std::cout << "next: " << this->_buff.get_ptr() << std::endl;
 		}
 		return true;
 	}
@@ -178,17 +183,17 @@ namespace http
 		size_t	i = 0;
 		size_t	keyEnd = 0;
 
-		for (; i < endLine && this->_buff[i] != ':' && _acceptedChar(this->_buff[i]); ++i);
+		while (i < endLine && this->_buff[i] != ':' && _acceptedChar(this->_buff[i]))
+			++i;
 		if (i == 0 || (this->_buff[i] != ':' && endLine - i > 1)) // currently accept any unaccepted char before \n at end normal \n or \r\n
 			return this->_failed();
-		keyEnd = i;
+		keyEnd = i++;
 		for (; i < endLine && this->_buff[i] <= ' '; ++i); // not sure skip space before value
 		this->_header.insert(
 			std::make_pair(
 				std::string(this->_buff.get_ptr(), keyEnd),
 				std::string(this->_buff.get_ptr() + i, endLine - i)
-			)
-		);
+		));
 		return true;
 	}
 

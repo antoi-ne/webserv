@@ -15,7 +15,7 @@ namespace ws
 
 			Buffer();
 			Buffer(size_t size);
-			Buffer(const std::string str);
+			Buffer(const std::string& str);
 			Buffer(const char *buff, size_t size);
 			Buffer(const Buffer & rhs);
 			~Buffer();
@@ -33,6 +33,7 @@ namespace ws
 			std::string to_string() const;
 
 			Buffer&	advance(size_t n);
+			Buffer&	resetCursor(void);
 
 			void	join(const Buffer& buff);
 

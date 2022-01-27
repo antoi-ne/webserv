@@ -12,35 +12,33 @@ namespace ws
 {
 	namespace conf
 	{
-		struct Location
+		typedef std::map<unsigned int, const std::string*> ErrorPages;
+
+		struct ServConfig 
 		{
+			std::string	route;
 			std::string root;
 			std::string index;
-			std::vector<e_method> accepted_methods;
 			bool autoindex; // false by default
 			int max_body_size; // negative means not defined
-			std::map<unsigned int,std::string> error_pages;
+			ErrorPages error_pages;
 			std::string upload_path; // empty string means no upload path
 			std::string return_path; // empty string means no return path
-			int return_code; // negative means no return code
-			std::string cgi_path;
+			int return_code;
+		};
+
+		struct Location : public ServConfig 
+		{
+			std::vector<e_method>	accepted_methods;
 		};
 
 		// first route (path of the location) -> Location obj
-		typedef std::map<std::string, Location, CI_Less>	location_map;
+		typedef std::vector<Location>	location_v;
 
-		struct Server
+		struct Server : public ServConfig
 		{
-			std::vector<std::string> server_names;
-			std::string root;
-			std::string index;
-			bool autoindex;
-			int max_body_size;
-			std::map<unsigned int, std::string> error_pages;
-			std::string upload_path;
-			std::string return_path;
-			int return_code;
-			location_map locations;
+			std::vector<std::string>	server_names;
+			location_v 					locations;
 		};
 
 		typedef std::pair<std::string, uint16_t>			host_port;

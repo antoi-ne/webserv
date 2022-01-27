@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/24 15:09:41 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/01/27 11:58:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
+#include "index_of.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -25,13 +26,15 @@ namespace ws
 		http::Res
 		Router::process(http::Req& request, const conf::host_port& host) const
 		{
-			http::Res			response;
-			const conf::Server*	serv;
+			http::Res				response;
+			const conf::Server*		serv;
 			
 			if ((serv = this->_getServ(request.header(), host)))
+			{
 				this->_processServ(response, request, *serv);
+			}
 			else
-				response.setStatus(STATUS444);
+				this->_setError(response, *serv, STATUS444, 444);
 			return response;
 		}
 
@@ -60,7 +63,184 @@ namespace ws
 			return servLst.begin().base();
 		}
 
-		shared::Buffer	_getFile(const std::string& path)
+		void
+		Router::_setError(
+			http::Res& response,
+			const conf::ServConfig& serv,
+			const char* str,
+			const uint16_t code) const
+		{
+			const std::string*	errorPage;
+
+			response.setStatus(str);
+			errorPage = this->_findErrorPage(serv, code);
+			if (errorPage != NULL)
+				response.body().join(*errorPage);
+		}
+
+		const std::string*
+		Router::_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const
+		{
+			conf::ErrorPages::const_iterator it = serv.error_pages.find(code);
+
+			if (it == serv.error_pages.end())
+				return NULL;
+			return it->second;
+		}
+
+		void
+		_writeFile(const std::string& path, const shared::Buffer& buff)
+		{
+			std::ofstream	file(path);
+
+			if (file)
+			{
+				file << buff.get_ptr();
+				file.close();
+			}
+		}
+
+		void
+		_upload(
+			const std::string& uri,
+			const std::string& upload_path,
+			const shared::Buffer& buff)
+		{
+			std::string	path;
+			size_t	lastDir = uri.find_last_of('/');
+
+			path = upload_path;
+			path += uri.substr(lastDir);
+			_writeFile(path, buff);
+		}
+
+		void
+		Router::_processServ(
+			http::Res& response,
+			const http::Req& request,
+			const conf::Server& serv) const
+		{
+			const conf::Location*	loc;
+			std::string				path;
+			shared::Buffer			body;
+			conf::ServConfig		mainConf;
+
+			loc = this->_getLocation(request.path(), serv);
+			mainConf = loc ? static_cast<conf::ServConfig>(*loc) : static_cast<conf::ServConfig>(serv);
+			if (request.method() == POST
+				&& mainConf.upload_path.size())
+			{
+				response.setStatus(STATUS201);
+				return _upload(request.path(), mainConf.upload_path, request.body());
+			}
+			path = _getLocalPath(request.path(), mainConf);
+			if (path.empty())
+				return this->_setError(response, mainConf, STATUS404, 404);
+ 			if (!(body = this->_getBody(path, request.path())).size())
+				return this->_setError(response, mainConf, STATUS403, 403);
+			if (!this->_checkAcceptedMethod(loc, request.method()))
+				return this->_setError(response, mainConf, STATUS405, 405);
+			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+				return this->_setError(response, mainConf, STATUS413, 413);
+			response.body().join(body);
+		}
+
+		const conf::Location*
+		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
+		{
+			size_t	res;
+
+			for (conf::location_v::const_iterator it = serv.locations.begin();
+				it != serv.locations.end(); ++it)
+			{
+				res = uri.find(it->route);
+				if (res == 0)
+					return it.base();
+			}
+			return NULL;
+		}
+
+		std::string
+		Router::_getLocalPath(
+			const std::string& uri,
+			const conf::ServConfig& serv) const
+		{
+			std::string	path;
+			struct stat	info;
+
+			path = serv.root;
+			path += (uri.c_str() + serv.route.size());
+			if (path.back() == '/')
+				path.pop_back();
+			if (stat(path.c_str(), &info) != 0)
+				return std::string();
+			if (S_ISDIR(info.st_mode))
+			{
+				path.push_back('/');
+				if (!serv.autoindex)
+				{
+					path.append(serv.index);
+					if (stat(path.c_str(), &info) != 0)
+						return std::string();
+				}
+			}
+			return path;
+		}
+
+		shared::Buffer
+		Router::_getBody(const std::string& path, const std::string& uri) const
+		{
+			if (path.back() == '/') // autoindex on case
+			{
+				shared::Buffer	buff;
+    			DIR* dirp = opendir(path.c_str());
+				if (dirp)
+				{
+					buff = this->_getAutoIndexPage(dirp, uri);
+					closedir(dirp);
+				}
+				return buff;
+			}
+			return this->_getFile(path);
+		}
+
+		shared::Buffer
+		Router::_getAutoIndexPage(DIR* dirp ,const std::string& uri) const
+		{
+			char	_buff[512];
+			size_t	size;
+
+			size = sprintf(_buff, INDEX_OF1, uri.c_str(), uri.c_str());
+
+			shared::Buffer	buff(_buff, size);
+
+			const std::vector<struct dirent>	dirList = this->_getDirList(dirp);
+
+			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
+			{
+				if (it->d_type == DT_DIR)
+					size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
+				else
+					size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name);
+				buff.join(shared::Buffer(_buff, size));
+			}
+			buff.join(shared::Buffer(INDEX_OF2));
+			return buff;
+		}
+
+		const std::vector<struct dirent>
+		Router::_getDirList(DIR* dirp) const
+		{
+			std::vector<struct dirent>	v;
+    		struct dirent*				dp;
+
+    		while ((dp = readdir(dirp)) != NULL)
+				v.push_back(*dp);
+			return v;
+		}
+
+		shared::Buffer
+		Router::_getFile(const std::string& path) const
 		{
 			std::ifstream		file(path);
 			shared::Buffer		buff;
@@ -74,79 +254,32 @@ namespace ws
 				{
 					file.read(_buff, 2048);
 					len = file.gcount();
-					buff.join(ws::shared::Buffer(_buff, len));
+					buff.join(shared::Buffer(_buff, len));
 				}
 				file.close();
 			}
 			return buff;
 		}
 
-		void
-		Router::_processServ(
-			http::Res& response,
-			const http::Req& request,
-			const conf::Server& serv) const
+		bool
+		Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
 		{
-			const conf::Location*	loc;
-			std::string				path;
-			shared::Buffer			fileBuff;
-
-			loc = this->_getLocation(request.path(), serv);
-			path = _getLocalPath(request.path(), serv, loc);
-			if (path.empty() || !(fileBuff = _getFile(path)).size())
-				response.setStatus(STATUS404);
-			if (request.method() == POST)
-				response.setStatus(STATUS201);
-			response.body().join(fileBuff);
 			if (loc)
 			{
-				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), POST) != loc->accepted_methods.end())
-				{
-					
-				}
-				else
-					response.setStatus(STATUS405);
-			} // check accepted method
+				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
+					return true;
+			}
+			else
+				return method == GET;
+			return false;
 		}
 
-		const conf::Location*
-		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
+		bool
+		Router::_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const
 		{
-			std::string	path = uri;
-			conf::location_map::const_iterator	it = serv.locations.find(path);
-
-			while (it == serv.locations.end() && !path.empty())
-			{
-				size_t	lastDir = path.find_last_of('/');
-				path = path.substr(0, path.size() - lastDir - 1);
-				it = serv.locations.find(path);
-			}
-			if (path.empty())
-				return NULL;
-			return std::addressof(it->second);
-		}
-
-		std::string
-		Router::_getLocalPath(
-			const std::string& uri,
-			const conf::Server& serv,
-			const conf::Location* loc) const
-		{
-			std::string				path;
-			struct stat				info;
-
-			path = !loc || loc->root.empty() ? serv.root : loc->root;
-			path += uri;
-			if (path.back() == '/') // Maybe if '/' force dir?
-				path.pop_back();
-			if (stat(path.c_str(), &info) != 0)
-				return std::string();
-			if (S_ISDIR(info.st_mode))
-			{
-				path += "/";
-				path += !loc || loc->index.empty() ? serv.index : loc->index;
-			}
-			return path;
+			if (serv.max_body_size != -1)
+				return bodySize <= static_cast<size_t>(serv.max_body_size);
+			return true;
 		}
 	}
 }
