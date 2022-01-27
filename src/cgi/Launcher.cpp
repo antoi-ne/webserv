@@ -86,6 +86,8 @@ namespace ws
 			if ((script = strdup(this->_script.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
 
+			shared::Buffer raw_req = this->_req.body();
+
 			buff = this->_subprocess(script, args, envp);
 			// TODO: parse buff into http::Res
 			return res;
@@ -102,6 +104,8 @@ namespace ws
 				throw std::runtime_error("syscall fork failed");
 			else if (pid == 0)
 			{
+				::close(this->_in[1]);
+				::close(this->_out[0]);
 				if (dup2(this->_in[0], STDIN_FILENO) != 0)
 					shared::Log::fatal("syscall dup2 failed");
 				if (dup2(this->_out[1], STDOUT_FILENO) != 0)
@@ -113,7 +117,6 @@ namespace ws
 			else
 			{
 				char buff[2048 + 1] = {0};
-
 				waitpid(pid, &ret, 0);
 				ret = WEXITSTATUS(ret);
 
