@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/27 12:21:03 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/27 12:46:46 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ namespace ws
 			return it->second;
 		}
 
-		void
+		bool	
 		_writeFile(const std::string& path, const shared::Buffer& buff)
 		{
 			std::ofstream	file(path);
@@ -97,10 +97,12 @@ namespace ws
 			{
 				file << buff.get_ptr();
 				file.close();
+				return true;
 			}
+			return false;
 		}
 
-		void
+		bool	
 		_upload(
 			const std::string& uri,
 			const std::string& upload_path,
@@ -111,7 +113,7 @@ namespace ws
 
 			path = upload_path;
 			path += uri.substr(lastDir);
-			_writeFile(path, buff);
+			return _writeFile(path, buff);
 		}
 
 		void
@@ -127,11 +129,13 @@ namespace ws
 
 			loc = this->_getLocation(request.path(), serv);
 			mainConf = loc ? static_cast<conf::ServConfig>(*loc) : static_cast<conf::ServConfig>(serv);
-			if (request.method() == POST
+			if ((request.method() == POST || request.method() == PUT)
 				&& mainConf.upload_path.size())
 			{
 				response.setStatus(STATUS201);
-				return _upload(request.path(), mainConf.upload_path, request.body());
+				if (!_upload(request.path(), mainConf.upload_path, request.body()))
+					this->_setError(response, mainConf, STATUS403, 403);
+				return ;
 			}
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
