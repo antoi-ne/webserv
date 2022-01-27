@@ -146,7 +146,8 @@ namespace http
 		if (this->_buff[index] != '/')
 			return 0;
 		for (; index < endPath; ++index)
-			if (!_acceptedChar(this->_buff[index]))
+			if (!_acceptedChar(this->_buff[index])
+			|| (index && this->_buff[index - 1] == '.' && this->_buff[index] == '.')) // protect /../../
 				break ;
 		return index;
 	}
