@@ -87,6 +87,12 @@ namespace ws
 				throw std::runtime_error("strdup failed");
 
 			shared::Buffer raw_req = this->_req.body();
+			raw_req.resetCursor();
+
+			if (::write(this->_in[1], raw_req.get_ptr(), raw_req.size()) < (ssize_t)raw_req.size())
+				throw std::runtime_error("syscall write failed");
+
+			::close(this->_in[1]);
 
 			buff = this->_subprocess(script, args, envp);
 			// TODO: parse buff into http::Res
@@ -116,6 +122,8 @@ namespace ws
 			}
 			else
 			{
+				::close(this->_out[1]);
+				::close(this->_in[0]);
 				char buff[2048 + 1] = {0};
 				waitpid(pid, &ret, 0);
 				ret = WEXITSTATUS(ret);
@@ -130,6 +138,8 @@ namespace ws
 				}
 				if (ret < 0)
 					throw std::runtime_error("syscall read failed");
+
+				::close(this->_out[0]);
 			}
 			return buffer;
 		}
