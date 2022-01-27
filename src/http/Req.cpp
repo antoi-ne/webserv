@@ -112,8 +112,11 @@ namespace http
 			if (index) // if not failed method -> UNDEF
 			{
 				size_t endPath = this->_buff.find(HTTPVER, endLine);
-				if (endPath != std::string::npos) // if fail not good version path empty
-					return this->_getPath(index, endPath);
+				if (endPath != std::string::npos)
+					if (endPath + 8 == endLine
+						|| (endPath + 9 == endLine
+							&& this->_buff[endPath + 8] == '\r'))
+						return this->_getPath(index, endPath);
 			}
 		}
 		return false;

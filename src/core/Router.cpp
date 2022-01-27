@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/27 11:58:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/27 12:21:03 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -219,9 +219,9 @@ namespace ws
 			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
 			{
 				if (it->d_type == DT_DIR)
-					size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
+					size = sprintf(_buff, DIR_TEMP, uri.c_str(), it->d_name, it->d_name);
 				else
-					size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name);
+					size = sprintf(_buff, FILE_TEMP, uri.c_str(), it->d_name, it->d_name);
 				buff.join(shared::Buffer(_buff, size));
 			}
 			buff.join(shared::Buffer(INDEX_OF2));
