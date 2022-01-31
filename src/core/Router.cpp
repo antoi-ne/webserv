@@ -6,12 +6,13 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/27 14:02:50 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/31 16:22:43 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
 #include "index_of.h"
+#include "../cgi/Launcher.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -21,6 +22,8 @@ namespace ws
 {
 	namespace core
 	{
+		bool	_hasBody(e_method method) { return method == POST || method == PUT; }
+
 		Router::Router(const conf::Config& conf) : _config(conf) {}
 
 		http::Res
@@ -28,10 +31,14 @@ namespace ws
 		{
 			http::Res				response;
 			const conf::Server*		serv;
+			const conf::Location*	loc;
 			
 			if ((serv = this->_getServ(request.header(), host)))
 			{
-				this->_processServ(response, request, *serv);
+				if ((loc = this->_getLocation(request.path(), *serv)))
+					this->_processServ(response, request, *loc, host);
+				else
+					this->_processServ(response, request, *serv, host);
 			}
 			else
 				this->_setError(response, *serv, STATUS444, 444);
@@ -103,36 +110,44 @@ namespace ws
 		}
 
 		void
+		Router::_upload(
+			const conf::ServConfig& mainConf,
+			const http::Req& request,
+			http::Res& response) const
+		{
+			if (!this->_writeFile(
+				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
+				request.body()
+			))
+				return this->_setError(response, mainConf, STATUS403, 403);
+			response.setStatus(STATUS201);
+		}
+
+		void
 		Router::_processServ(
 			http::Res& response,
 			const http::Req& request,
-			const conf::Server& serv) const
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
 		{
-			const conf::Location*	loc;
 			std::string				path;
 			shared::Buffer			body;
-			conf::ServConfig		mainConf;
 
-			loc = this->_getLocation(request.path(), serv);
-			mainConf = loc ? static_cast<conf::ServConfig>(*loc) : static_cast<conf::ServConfig>(serv);
-			if ((request.method() == POST || request.method() == PUT)
-				&& mainConf.upload_path.size())
+			if (_hasBody(request.method()) && mainConf.upload_path.size())
+				return this->_upload(mainConf, request, response);
+			if (mainConf.cgi_ext.size())
 			{
-				response.setStatus(STATUS201);
-				if (!this->_writeFile(
-					mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
-					request.body()
-					))
-					this->_setError(response, mainConf, STATUS403, 403);
+				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, mainConf.cgi_ext).run();
 				return ;
 			}
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
 				return this->_setError(response, mainConf, STATUS404, 404);
+			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
+				== mainConf.accepted_methods.end())
+				return this->_setError(response, mainConf, STATUS405, 405);
  			if (!(body = this->_getBody(path, request.path())).size())
 				return this->_setError(response, mainConf, STATUS403, 403);
-			if (!this->_checkAcceptedMethod(loc, request.method()))
-				return this->_setError(response, mainConf, STATUS405, 405);
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
 				return this->_setError(response, mainConf, STATUS413, 413);
 			response.body().join(body);
@@ -148,7 +163,9 @@ namespace ws
 			{
 				res = uri.find(it->route);
 				if (res == 0)
-					return it.base();
+					if (!it->cgi_ext.size()
+					|| uri.find_last_of(it->cgi_ext) == uri.size() - it->cgi_ext.size())
+						return it.base();
 			}
 			return NULL;
 		}
@@ -252,19 +269,6 @@ namespace ws
 				file.close();
 			}
 			return buff;
-		}
-
-		bool
-		Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
-		{
-			if (loc)
-			{
-				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
-					return true;
-			}
-			else
-				return method == GET;
-			return false;
 		}
 
 		bool

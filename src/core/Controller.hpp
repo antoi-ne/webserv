@@ -14,6 +14,7 @@
 # include "http/Req.hpp"
 # include "http/Res.hpp"
 # include "core/Router.hpp"
+# include "cgi/Launcher.hpp"
 
 namespace ws
 {
