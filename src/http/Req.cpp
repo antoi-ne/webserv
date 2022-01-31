@@ -16,6 +16,8 @@
 
 namespace http
 { 
+	bool	_hasBody(e_method method) { method == POST || method == PUT; }
+
 	bool	Req::hasHeader(void) const { return this->_headerFinish; }
 
 	e_method	Req::method(void) const { return this->_method; }
@@ -43,7 +45,7 @@ namespace http
 	{
 		if (this->_headerFinish)
 		{
-			if (this->_method == POST)
+			if (_hasBody(this->_method))
 				if (this->_contentLength > this->_buff.size())
 					return true;
 			return false;
@@ -160,14 +162,28 @@ namespace http
 		return 0;
 	}
 
+	bool	Req::_checkChunkedBody(size_t endLine)
+	{
+		if (!endLine)
+		if (this->_buff[endLine - 1])
+	}
+
+	void	Req::_endHeader(void)
+	{
+		this->_headerFinish = true;
+		this->_contentLength = _setContentLength(this->_header["Content-Length"]);
+		this->_check_line = NULL;
+	}
+
 	// TODO Check host
 	bool	Req::_checkHeader(size_t endLine)
 	{
 		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
 		{
-			this->_headerFinish = true;
-			this->_contentLength = _setContentLength(this->_header["Content-Length"]);
-			this->_check_line = NULL;
+			if (_hasBody(this->_method) && this->_header["transfer-encoding"] == "chunked")
+				this->_check_line = &Req::_checkChunkedBody;
+			else
+				this->_endHeader();
 		}
 		else
 			if (!this->_setHeader(endLine))
