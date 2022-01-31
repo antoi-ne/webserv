@@ -139,8 +139,8 @@ namespace ws
 				waitpid(pid, &ret, 0);
 				ret = WEXITSTATUS(ret);
 
-				// if (ret != 0)
-				// 	throw std::runtime_error("cgi script failed");
+				if (ret != 0)
+					throw std::runtime_error("cgi script failed");
 
 				while (::read(this->_out[0], buff, 2048) > 0)
 				{
