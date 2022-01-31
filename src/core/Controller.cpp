@@ -66,8 +66,6 @@ namespace ws
 						}
 						else
 						{
-							cgi::Launcher cgil(req, "217.0.0.1", 80U, "/Users/ancoulon/Documents/42/projects/webserv/scripts/cgi_tester", "/Users/ancoulon/Documents/42/projects/webserv/assets/YoupiBanane/youpi.bla");
-							cgil.run();
 							http::Res res = this->_router.process(
 								this->_req_cache[it->con],
 								std::make_pair(it->srv.get_host(),

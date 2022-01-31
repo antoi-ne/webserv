@@ -12,6 +12,9 @@ namespace ws
 			if (::pipe(this->_out))
 				throw std::runtime_error("syscall pipe failed");
 
+			(void)host;
+			(void)port;
+
 			this->_env["SERVER_SOFTWARE"] = "webserv/0.1";
 			this->_env["SERVER_NAME"] = host;
 			this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
@@ -83,7 +86,7 @@ namespace ws
 				throw std::runtime_error("strdup failed");
 			args[2] = NULL;
 
-			if ((script = strdup(this->_script.c_str())) == NULL)
+			if ((script = strdup(this->_cgi.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
 
 			shared::Buffer raw_req = this->_req.body();
@@ -101,7 +104,6 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 			// TODO: parse buff into http::Res
-			shared::Log::info("x: " + buff.to_string());
 
 			return res;
 		}
@@ -112,17 +114,19 @@ namespace ws
 			int ret;
 			shared::Buffer buffer;
 
+			std::cout << "script: " << script << std::endl;
+
 			pid = ::fork();
 			if (pid < 0)
 				throw std::runtime_error("syscall fork failed");
 			else if (pid == 0)
 			{
-				::close(this->_in[1]);
 				::close(this->_out[0]);
 				if (dup2(this->_in[0], STDIN_FILENO) < 0)
 					shared::Log::fatal("syscall dup2 failed");
 				if (dup2(this->_out[1], STDOUT_FILENO) < 0)
 					shared::Log::fatal("syscall dup2 failed");
+
 
 				if (::execve(script, args, envp) != 0)
 					shared::Log::fatal("execve failed");
@@ -135,11 +139,12 @@ namespace ws
 				waitpid(pid, &ret, 0);
 				ret = WEXITSTATUS(ret);
 
-				if (ret != 0)
-					throw std::runtime_error("cgi script failed");
+				// if (ret != 0)
+				// 	throw std::runtime_error("cgi script failed");
 
 				while (::read(this->_out[0], buff, 2048) > 0)
 				{
+					std::cout << "out: " << buff << std::endl;
 					buffer.join(std::string(buff));
 					std::memset(buff, 0, 2049);
 				}
