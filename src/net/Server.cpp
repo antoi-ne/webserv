@@ -54,7 +54,7 @@ namespace ws
 		{
 			int cs = ::accept(this->_sockfd, NULL, NULL);
 
-			return Connection(cs);
+			return Connection(cs, std::time(0));
 		}
 
 		std::string Server::get_host()

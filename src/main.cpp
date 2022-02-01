@@ -23,9 +23,6 @@ using namespace ws;
 
 int main(void)
 {
-
-	net::Socket sock = net::Connection();
-
 	conf::Config cfg;
 	conf::Server srv;
 	conf::Location loc;
@@ -34,6 +31,7 @@ int main(void)
 	srv.index = "index.html";
 	srv.server_names.push_back("localhost");
 	srv.locations.clear();
+	srv.accepted_methods.push_back(GET);
 
 	cfg.servers[std::make_pair("0.0.0.0", 80U)].push_back(srv);
 
