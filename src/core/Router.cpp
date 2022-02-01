@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/31 16:22:43 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/01 14:07:21 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,9 +36,9 @@ namespace ws
 			if ((serv = this->_getServ(request.header(), host)))
 			{
 				if ((loc = this->_getLocation(request.path(), *serv)))
-					this->_processServ(response, request, *loc, host);
+					this->_processServ(request, response, *loc, host);
 				else
-					this->_processServ(response, request, *serv, host);
+					this->_processServ(request, response, *serv, host);
 			}
 			else
 				this->_setError(response, *serv, STATUS444, 444);
@@ -70,6 +70,23 @@ namespace ws
 			return servLst.begin().base();
 		}
 
+		const conf::Location*
+		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
+		{
+			size_t	res;
+
+			for (conf::location_v::const_iterator it = serv.locations.begin();
+				it != serv.locations.end(); ++it)
+			{
+				res = uri.find(it->route);
+				if (res == 0)
+					if (!it->cgi_ext.size()
+					|| uri.find_last_of(it->cgi_ext) == uri.size() - it->cgi_ext.size())
+						return it.base();
+			}
+			return NULL;
+		}
+
 		void
 		Router::_setError(
 			http::Res& response,
@@ -95,6 +112,35 @@ namespace ws
 			return it->second;
 		}
 
+		void
+		Router::_processServ(
+			const http::Req& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
+		{
+			if (_hasBody(request.method()) && mainConf.upload_path.size())
+				this->_upload(request, response, mainConf);
+			else if (mainConf.cgi_ext.size())
+				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, mainConf.cgi_ext).run();
+			else
+				this->_renderPage(request, response, mainConf);
+		}
+
+		void
+		Router::_upload(
+			const http::Req& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf) const
+		{
+			if (!this->_writeFile(
+				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
+				request.body()
+			))
+				return this->_setError(response, mainConf, STATUS403, 403);
+			response.setStatus(STATUS201);
+		}
+
 		bool	
 		Router::_writeFile(const std::string& path, const shared::Buffer& buff) const
 		{
@@ -110,36 +156,14 @@ namespace ws
 		}
 
 		void
-		Router::_upload(
-			const conf::ServConfig& mainConf,
+		Router::_renderPage(
 			const http::Req& request,
-			http::Res& response) const
-		{
-			if (!this->_writeFile(
-				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
-				request.body()
-			))
-				return this->_setError(response, mainConf, STATUS403, 403);
-			response.setStatus(STATUS201);
-		}
-
-		void
-		Router::_processServ(
 			http::Res& response,
-			const http::Req& request,
-			const conf::ServConfig& mainConf,
-			const conf::host_port& host) const
+			const conf::ServConfig& mainConf) const
 		{
 			std::string				path;
 			shared::Buffer			body;
 
-			if (_hasBody(request.method()) && mainConf.upload_path.size())
-				return this->_upload(mainConf, request, response);
-			if (mainConf.cgi_ext.size())
-			{
-				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, mainConf.cgi_ext).run();
-				return ;
-			}
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
 				return this->_setError(response, mainConf, STATUS404, 404);
@@ -151,23 +175,6 @@ namespace ws
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
 				return this->_setError(response, mainConf, STATUS413, 413);
 			response.body().join(body);
-		}
-
-		const conf::Location*
-		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
-		{
-			size_t	res;
-
-			for (conf::location_v::const_iterator it = serv.locations.begin();
-				it != serv.locations.end(); ++it)
-			{
-				res = uri.find(it->route);
-				if (res == 0)
-					if (!it->cgi_ext.size()
-					|| uri.find_last_of(it->cgi_ext) == uri.size() - it->cgi_ext.size())
-						return it.base();
-			}
-			return NULL;
 		}
 
 		std::string

@@ -1,34 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Res.hpp                                            :+:      :+:    :+:   */
+/*   ResParser.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 13:40:11 by vneirinc         ###   ########.fr       */
+/*   Created: 2022/02/01 13:43:01 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/02/01 14:01:34 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "Message.hpp"
-#include "res_header.h"
+#include "Parser.hpp"
+#include "../Res.hpp"
 
 namespace http
 {
-	class Res : public Message
+	class ResParser : public Parser
 	{
 	private:
-		std::string			_statusMsg;
-		std::string			_contentType;
-
+		http::Res&	_res;
+		
 	public:
-		Res(void);
-
-		ws::shared::Buffer	get_res();
-
-		void	setStatus(const std::string& statusMsg);
-		void	setContentType(const std::string& contentType);
-
+		ResParser(http::Res& res);
+	private:
+		virtual bool	_checkFirstLine(size_t endLine);
 	};
-}
+	
+} // namespace htpp
