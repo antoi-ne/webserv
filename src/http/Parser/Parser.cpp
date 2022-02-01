@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 14:43:23 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/01 16:42:58 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ namespace http
 		if (this->_headerFinish)
 		{
 			if (this->_msg.contentLength() != std::string::npos
-			&&  this->_buff.size() >= this->_msg.contentLength())
+				&& this->_buff.size() >= this->_msg.contentLength())
 				return false;
 			if (this->_msg.header()["transfer-encoding"] == "chunked")
 				return false;

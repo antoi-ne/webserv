@@ -105,6 +105,9 @@ namespace ws
 			}
 			return std::string::npos;
 		}
+
+		size_t	Buffer::find(const std::string& s) const
+		{ return this->find(s.c_str()); }
 		
 		size_t	Buffer::find(const char* s) const
 		{
