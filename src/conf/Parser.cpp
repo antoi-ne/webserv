@@ -6,14 +6,16 @@ namespace ws
 	{
 		Parser::Parser(std::string file_path)
 		{
-			Config config;
 			std::ifstream   fd(file_path);
     		try {
 				std::string     line;
 				while (std::getline(fd, line) != NULL)
 				{
+					std::cout << line << std::endl;
 					if (line == "server:")
-						config.servers.push_back(server_attr(fd));
+					{
+						mapping_servers(this->config.servers, fd);
+					}
 				}
 			}
 			catch(int oui){
@@ -28,6 +30,7 @@ namespace ws
 
 		Config Parser::to_config()
 		{
+			return(this->config);
 		}
 	}
 }
