@@ -55,8 +55,6 @@ namespace ws
 					}
 					if (this->_req_cache[it->con].update(opt.value()) == false)
 					{
-						cgi::Launcher cgil(this->_req_cache[it->con], "127.0.0.1", 80, "/usr/local/bin/python3", "/Users/ancoulon/Documents/42/projects/webserv/scripts/hello.py");
-						cgil.run();
 						const http::Req& req = this->_req_cache[it->con];
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						std::cout << this->_req_cache[it->con].method() << std::endl;
