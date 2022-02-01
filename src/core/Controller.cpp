@@ -52,9 +52,9 @@ namespace ws
 						this->_req_cache.erase(it->con);
 						continue;
 					}
-					if (this->_req_cache[it->con].update(opt.value()) == false)
+					Req& req = this->_req_cache[it->con];
+					if (req.update(opt.value()) == false)
 					{
-						const http::Req& req = this->_req_cache[it->con];
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (req.method() == UNDEF || req.path().empty())

@@ -6,12 +6,13 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/27 11:58:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/01 14:07:21 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Router.hpp"
 #include "index_of.h"
+#include "../cgi/Launcher.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -21,6 +22,8 @@ namespace ws
 {
 	namespace core
 	{
+		bool	_hasBody(e_method method) { return method == POST || method == PUT; }
+
 		Router::Router(const conf::Config& conf) : _config(conf) {}
 
 		http::Res
@@ -28,10 +31,14 @@ namespace ws
 		{
 			http::Res				response;
 			const conf::Server*		serv;
+			const conf::Location*	loc;
 			
 			if ((serv = this->_getServ(request.header(), host)))
 			{
-				this->_processServ(response, request, *serv);
+				if ((loc = this->_getLocation(request.path(), *serv)))
+					this->_processServ(request, response, *loc, host);
+				else
+					this->_processServ(request, response, *serv, host);
 			}
 			else
 				this->_setError(response, *serv, STATUS444, 444);
@@ -63,6 +70,23 @@ namespace ws
 			return servLst.begin().base();
 		}
 
+		const conf::Location*
+		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
+		{
+			size_t	res;
+
+			for (conf::location_v::const_iterator it = serv.locations.begin();
+				it != serv.locations.end(); ++it)
+			{
+				res = uri.find(it->route);
+				if (res == 0)
+					if (!it->cgi_ext.size()
+					|| uri.find_last_of(it->cgi_ext) == uri.size() - it->cgi_ext.size())
+						return it.base();
+			}
+			return NULL;
+		}
+
 		void
 		Router::_setError(
 			http::Res& response,
@@ -89,7 +113,36 @@ namespace ws
 		}
 
 		void
-		_writeFile(const std::string& path, const shared::Buffer& buff)
+		Router::_processServ(
+			const http::Req& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
+		{
+			if (_hasBody(request.method()) && mainConf.upload_path.size())
+				this->_upload(request, response, mainConf);
+			else if (mainConf.cgi_ext.size())
+				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, mainConf.cgi_ext).run();
+			else
+				this->_renderPage(request, response, mainConf);
+		}
+
+		void
+		Router::_upload(
+			const http::Req& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf) const
+		{
+			if (!this->_writeFile(
+				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
+				request.body()
+			))
+				return this->_setError(response, mainConf, STATUS403, 403);
+			response.setStatus(STATUS201);
+		}
+
+		bool	
+		Router::_writeFile(const std::string& path, const shared::Buffer& buff) const
 		{
 			std::ofstream	file(path);
 
@@ -97,67 +150,31 @@ namespace ws
 			{
 				file << buff.get_ptr();
 				file.close();
+				return true;
 			}
+			return false;
 		}
 
 		void
-		_upload(
-			const std::string& uri,
-			const std::string& upload_path,
-			const shared::Buffer& buff)
-		{
-			std::string	path;
-			size_t	lastDir = uri.find_last_of('/');
-
-			path = upload_path;
-			path += uri.substr(lastDir);
-			_writeFile(path, buff);
-		}
-
-		void
-		Router::_processServ(
-			http::Res& response,
+		Router::_renderPage(
 			const http::Req& request,
-			const conf::Server& serv) const
+			http::Res& response,
+			const conf::ServConfig& mainConf) const
 		{
-			const conf::Location*	loc;
 			std::string				path;
 			shared::Buffer			body;
-			conf::ServConfig		mainConf;
 
-			loc = this->_getLocation(request.path(), serv);
-			mainConf = loc ? static_cast<conf::ServConfig>(*loc) : static_cast<conf::ServConfig>(serv);
-			if (request.method() == POST
-				&& mainConf.upload_path.size())
-			{
-				response.setStatus(STATUS201);
-				return _upload(request.path(), mainConf.upload_path, request.body());
-			}
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
 				return this->_setError(response, mainConf, STATUS404, 404);
+			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
+				== mainConf.accepted_methods.end())
+				return this->_setError(response, mainConf, STATUS405, 405);
  			if (!(body = this->_getBody(path, request.path())).size())
 				return this->_setError(response, mainConf, STATUS403, 403);
-			if (!this->_checkAcceptedMethod(loc, request.method()))
-				return this->_setError(response, mainConf, STATUS405, 405);
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
 				return this->_setError(response, mainConf, STATUS413, 413);
 			response.body().join(body);
-		}
-
-		const conf::Location*
-		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
-		{
-			size_t	res;
-
-			for (conf::location_v::const_iterator it = serv.locations.begin();
-				it != serv.locations.end(); ++it)
-			{
-				res = uri.find(it->route);
-				if (res == 0)
-					return it.base();
-			}
-			return NULL;
 		}
 
 		std::string
@@ -219,9 +236,9 @@ namespace ws
 			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
 			{
 				if (it->d_type == DT_DIR)
-					size = sprintf(_buff, DIR_TEMP, it->d_name, it->d_name);
+					size = sprintf(_buff, DIR_TEMP, uri.c_str(), it->d_name, it->d_name);
 				else
-					size = sprintf(_buff, FILE_TEMP, it->d_name, it->d_name);
+					size = sprintf(_buff, FILE_TEMP, uri.c_str(), it->d_name, it->d_name);
 				buff.join(shared::Buffer(_buff, size));
 			}
 			buff.join(shared::Buffer(INDEX_OF2));
@@ -259,19 +276,6 @@ namespace ws
 				file.close();
 			}
 			return buff;
-		}
-
-		bool
-		Router::_checkAcceptedMethod(const conf::Location* loc, e_method method) const
-		{
-			if (loc)
-			{
-				if (std::find(loc->accepted_methods.begin(), loc->accepted_methods.end(), method) != loc->accepted_methods.end())
-					return true;
-			}
-			else
-				return method == GET;
-			return false;
 		}
 
 		bool

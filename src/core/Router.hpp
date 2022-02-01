@@ -22,7 +22,8 @@ namespace ws
 		private:
 			const conf::Config&	_config;
 
-			void	_processServ(http::Res& response, const http::Req& request, const conf::Server& serv) const;
+			void	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
+			void	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
 
 			const std::vector<struct dirent>	_getDirList(DIR* dirp) const;
 			shared::Buffer			_getFile(const std::string& path) const;
@@ -30,12 +31,14 @@ namespace ws
 			const conf::Server*		_getServerName(const std::string& host, const serv_lst& servLst) const;
 			const conf::Location*	_getLocation(const std::string& uri, const conf::Server& serv) const;
 			std::string				_getLocalPath(const std::string& uri, const conf::ServConfig& serv) const;
-			bool					_checkAcceptedMethod(const conf::Location* loc, e_method method) const;
 			bool					_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const;
 			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
 			shared::Buffer			_getBody(const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
+			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
 			
+
+			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
 			shared::Buffer			_getAutoIndexPage(DIR* dirp ,const std::string& uri) const;
 		};

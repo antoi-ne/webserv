@@ -12,9 +12,6 @@ namespace ws
 			if (::pipe(this->_out))
 				throw std::runtime_error("syscall pipe failed");
 
-			(void)host;
-			(void)port;
-
 			this->_env["SERVER_SOFTWARE"] = "webserv/0.1";
 			this->_env["SERVER_NAME"] = host;
 			this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";

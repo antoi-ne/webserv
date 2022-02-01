@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/23 16:28:04 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/02/01 14:16:53 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,8 @@
 
 namespace http
 {
-
 	Res::Res(void)
-	 : _statusMsg(STATUS200), _contentType("text/html"), _body()
+	 : Message(), _statusMsg(STATUS200), _contentType("text/html")
 	{}
 
 	ws::shared::Buffer Res::get_res()
@@ -62,7 +61,4 @@ namespace http
 
 	void	Res::setContentType(const std::string& contentType)
 	{ this->_contentType = contentType; }
-
-	ws::shared::Buffer&	Res::body(void)
-	{ return this->_body; }
 }

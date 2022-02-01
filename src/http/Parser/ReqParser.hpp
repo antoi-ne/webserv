@@ -1,34 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Res.hpp                                            :+:      :+:    :+:   */
+/*   ReqParser.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 13:40:11 by vneirinc         ###   ########.fr       */
+/*   Created: 2022/02/01 11:49:26 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/02/01 14:11:06 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "Message.hpp"
-#include "res_header.h"
+#include "Parser.hpp"
+#include "../Req.hpp"
 
 namespace http
 {
-	class Res : public Message
+	class ReqParser : public Parser
 	{
 	private:
-		std::string			_statusMsg;
-		std::string			_contentType;
-
+		http::Req&		_req;
 	public:
-		Res(void);
+		ReqParser(http::Req& req);
 
-		ws::shared::Buffer	get_res();
-
-		void	setStatus(const std::string& statusMsg);
-		void	setContentType(const std::string& contentType);
-
+	private:
+		virtual bool	_checkFirstLine(size_t endLine);
+		size_t			_getMethod(size_t endLine);
+		bool			_getPath(size_t index, size_t endPath);
+		size_t			_checkPathValidity(size_t index, size_t endPath);
+		bool			_skipStartCRLF(void);
+		bool			_getStartLine(size_t endLine);
+		bool			_failed(void);
 	};
-}
+	
+} // namespace http

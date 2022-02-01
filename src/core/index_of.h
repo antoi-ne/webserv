@@ -11,8 +11,8 @@
 						"<hr>" \
 							"<pre>"
 
-# define FILE_TEMP 				"    <a href=\"%s\">%s</a>\n"
-# define DIR_TEMP 				"    <a href=\"%s\">%s/</a>\n"
+# define FILE_TEMP 				"    <a href=\"%s/%s\">%s</a>\n"
+# define DIR_TEMP 				"    <a href=\"%s/%s\">%s/</a>\n"
 
 # define INDEX_OF2			"</pre>" \
 						"<hr>" \
