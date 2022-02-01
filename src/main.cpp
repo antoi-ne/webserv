@@ -23,6 +23,9 @@ using namespace ws;
 
 int main(void)
 {
+
+	net::Socket sock = net::Connection();
+
 	conf::Config cfg;
 	conf::Server srv;
 	conf::Location loc;

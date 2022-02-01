@@ -40,7 +40,6 @@ namespace ws
 			shared::Option<shared::Buffer> opt;
 			http::Res resf;
 
-
 			ctxs = this->_pool.probe();
 			for (it = ctxs.begin(); it != ctxs.end(); it++)
 			{
@@ -62,7 +61,7 @@ namespace ws
 						{
 							resf.setStatus(STATUS400);
 							resf.body().join(std::string("Bad Request\r\n"));
-							this->_res_cache[it->con] = resf.get_res();
+							this->_res_cache[it->con] = std::make_pair(resf.get_res(), false);
 						}
 						else
 						{
@@ -71,27 +70,31 @@ namespace ws
 								std::make_pair(it->srv.get_host(),
 								it->srv.get_port())
 							);
-							this->_res_cache[it->con] = res.get_res();
+							this->_res_cache[it->con] = std::make_pair(res.get_res(), true);
+							std::string test = this->_req_cache[it->con].header("Connection");
+							if (this->_req_cache[it->con].header("Connection") == "close")
+								this->_res_cache[it->con].second = false;
 						}
 						this->_req_cache.erase(it->con);
 					}
 				}
 
-				if (it->rwrite && this->_res_cache[it->con].size() != 0) // ready to receive response if any response is in the cache
+				if (it->rwrite && this->_res_cache[it->con].first.size() != 0) // ready to receive response if any response is in the cache
 				{
-					ssize_t rbytes = it->con.send(this->_res_cache[it->con]);
+					ssize_t rbytes = it->con.send(this->_res_cache[it->con].first);
 					if (rbytes == 0)
 					{
-						this->_res_cache[it->con] = shared::Buffer();
+						this->_res_cache[it->con].first = shared::Buffer();
 						this->_pool.close_con(it->con);
 					}
 					if (rbytes < 0)
 						continue;
-					this->_res_cache[it->con].advance(rbytes);
-					if (this->_res_cache[it->con].size() == 0)
+					this->_res_cache[it->con].first.advance(rbytes);
+					if (this->_res_cache[it->con].first.size() == 0)
 					{
-						this->_res_cache[it->con] = shared::Buffer();
-						this->_pool.close_con(it->con);
+						this->_res_cache[it->con].first = shared::Buffer();
+						if (this->_res_cache[it->con].second == false)
+							this->_pool.close_con(it->con);
 					}
 				}
 			}

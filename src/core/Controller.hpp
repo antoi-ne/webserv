@@ -5,6 +5,7 @@
 # include <list>
 # include <map>
 # include <utility>
+# include <ctime>
 
 # include "shared/Log.hpp"
 # include "shared/Buffer.hpp"
@@ -33,7 +34,7 @@ namespace ws
 			std::list<net::Server> _srv;
 			net::Pool _pool;
 			std::map<net::Connection, http::Req> _req_cache;
-			std::map<net::Connection, shared::Buffer> _res_cache;
+			std::map<net::Connection, std::pair<shared::Buffer,bool> > _res_cache;
 			core::Router _router;
 
 			void _loop();
