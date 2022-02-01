@@ -20,9 +20,9 @@ namespace ws
 			this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 			this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
 			this->_env["SERVER_PORT"] = std::to_string(port);
-			this->_env["PATH_INFO"] = script;
+			this->_env["PATH_INFO"] = req.path();
 			this->_env["PATH_TRANSLATED"] = script;
-			this->_env["SCRIPT_NAME"] = req.path();
+			this->_env["SCRIPT_FILENAME"] = script;
 			this->_env["CONTENT_TYPE"] = req.header("Content-Type");
 			this->_env["CONTENT_LENGTH"] = req.header("Content-Length");
 
@@ -82,7 +82,7 @@ namespace ws
 			args = new char*[3]();
 			if ((args[0] = strdup(this->_cgi.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
-			if ((args[0] = strdup(this->_script.c_str())) == NULL)
+			if ((args[1] = strdup(this->_script.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
 			args[2] = NULL;
 
@@ -97,14 +97,9 @@ namespace ws
 
 			::close(this->_in[1]);
 
-			for (std::map<std::string, std::string>::iterator it = this->_env.begin(); it != this->_env.end(); it++)
-			{
-				std::cout << it->first << " = " << it->second << std::endl;
-			}
-
 			buff = this->_subprocess(script, args, envp);
-			// TODO: parse buff into http::Res
 
+			std::cout << "res: " << buff.to_string() << std::endl;
 			return res;
 		}
 
@@ -144,7 +139,6 @@ namespace ws
 
 				while (::read(this->_out[0], buff, 2048) > 0)
 				{
-					std::cout << "out: " << buff << std::endl;
 					buffer.join(std::string(buff));
 					std::memset(buff, 0, 2049);
 				}
