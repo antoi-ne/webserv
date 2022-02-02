@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResParser.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:43:01 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 09:50:50 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 16:40:31 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,8 @@ namespace http
 
 		bool	_goodFirstLine(size_t endLine);
 		size_t	_checkHttpVer(void);
-		size_t	_checkStatusCode(void) const;
-		size_t	_skipWS(void) const;
+		size_t	_checkStatusCode(size_t i) const;
+		size_t	_skipWS(size_t i) const;
 	};
 	
 } // namespace htpp

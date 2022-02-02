@@ -1,5 +1,9 @@
-import cgi, cgitb
-cgitb.enable()
+# import cgi, cgitb
+# cgitb.enable()
 
+print("HTTP/1.1 200 OK")
+print("Connection: close\n")
 
-cgi.print_environ()
+print("Hello World")
+
+# cgi.print_environ()

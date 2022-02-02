@@ -35,7 +35,7 @@ namespace ws
 			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
 			shared::Buffer			_getBody(const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
-			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
+			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			
 
 			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;

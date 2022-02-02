@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 17:04:02 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 17:06:57 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,12 @@ namespace http
 		buff += "Date: ";
 		buff += this->_getTime() + crlf;
 
-		if (this->_contentLength == std::string::npos)
+		if (this->_header["Content-Length"] == "")
 		{
-			buff += "Content-Length: ";
-			buff += std::to_string(this->_body.size());
-			buff += crlf;
+			this->_header["Content-Length"] = std::to_string(this->_body.size());
+			// buff += "Content-Length: ";
+			// buff += std::to_string(this->_body.size());
+			// buff += crlf;
 		}
 		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
 			buff += (it->first + std::string(": ") + it->second + crlf);

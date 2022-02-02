@@ -96,10 +96,13 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
-			if (res.update(buff) == true || res.error() == true)
-			{
+			std::cout << buff.to_string() << std::endl;
+
+			if (res.update(buff) == true)
 				throw std::runtime_error("invalid response from cgi");
-			}
+			if (res.error() == true)
+				throw std::runtime_error("invalid response from cgi (error)");
+			
 			return res;
 		}
 

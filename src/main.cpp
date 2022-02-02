@@ -39,12 +39,14 @@ int main(void)
 	// srv.server_names.push_back("localhost");
 
 	loc.root = "./assets/ws2";
-	loc.index = "index.py";
-	loc.route = "/py";
+	loc.route = "/directory";
 	loc.accepted_methods.push_back(GET);
+	loc.accepted_methods.push_back(POST);
+	loc.accepted_methods.push_back(PUT);
 	loc.max_body_size = -1;
-	loc.cgi_ext = "py";
-	loc.cgi_script = "/usr/local/bin/python3";
+	loc.cgi_ext = "bla";
+	// loc.cgi_script = "/usr/local/bin/python3";
+	loc.cgi_script = "/Users/ancoulon/Documents/42/projects/webserv/scripts/cgi_tester";
 
 	srv.max_body_size = -1;
 	srv.root = "./assets/ws1";
