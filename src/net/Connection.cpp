@@ -4,8 +4,8 @@ namespace ws
 {
 	namespace net
 	{
-		Connection::Connection(int fd)
-			: Socket(fd)
+		Connection::Connection(int fd, std::time_t created_at)
+			: Socket(fd), _created_at(created_at)
 		{}
 
 		ssize_t Connection::send(shared::Buffer buff)
@@ -46,5 +46,11 @@ namespace ws
 		{
 			return this->get_fd() == rhs.get_fd();
 		}
+
+		std::time_t Connection::created_at()
+		{
+			return this->_created_at;
+		}
+
 	}
 }
