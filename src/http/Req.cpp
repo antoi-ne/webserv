@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 13:15:59 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 08:57:24 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,17 +28,27 @@ namespace	http
 	{
 		std::string		methods[] = METHODS;
 		std::string		buff;
+		std::string		crlf("\r\n"); 
 
 		buff += methods[this->_method];
 		buff += this->_path;
 		buff += " ";
 		buff += HTTPVER"\r\n";
 
+		if (this->_contentLength == std::string::npos)
+		{
+			buff += "Content-Length: ";
+			buff += std::to_string(this->_body.size());
+			buff += crlf;
+		}
 		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
-			buff += (it->first + std::string(": ") + it->second);
+			buff += (it->first + std::string(": ") + it->second + crlf);
+		buff += crlf;
+		ws::shared::Buffer	_buff(buff);
+
 		if (this->_body.size())
-			buff += this->_body.get_ptr();
-		return buff;
+			_buff.join(this->_body);
+		return _buff;
 	}
 
 	Req::Req(void)

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 14:07:21 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 11:55:38 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,7 @@ namespace ws
 		{
 			const std::string*	errorPage;
 
+			response.header()["connection"] = "close";
 			response.setStatus(str);
 			errorPage = this->_findErrorPage(serv, code);
 			if (errorPage != NULL)

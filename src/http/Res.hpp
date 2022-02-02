@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 13:40:11 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/01 16:55:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ namespace http
 	{
 	private:
 		std::string			_statusMsg;
-		std::string			_contentType;
 
 	public:
 		Res(void);
@@ -28,7 +27,8 @@ namespace http
 		ws::shared::Buffer	get_res();
 
 		void	setStatus(const std::string& statusMsg);
-		void	setContentType(const std::string& contentType);
+	private:
+		std::string	_getTime(void) const;
 
 	};
 }

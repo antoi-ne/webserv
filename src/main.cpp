@@ -13,8 +13,6 @@
 #include "net/Server.hpp"
 #include "net/Ctx.hpp"
 #include "net/Pool.hpp"
-#include "http/Req.hpp"
-#include "http/Res.hpp"
 
 #include "core/Controller.hpp"
 
@@ -27,11 +25,20 @@ int main(void)
 	conf::Server srv;
 	conf::Location loc;
 
+	loc.root = "./assets/upload";
+	loc.index = "test.html";
+	loc.route = "/test";
+	loc.accepted_methods.push_back(GET);
+	loc.autoindex = true;
+	loc.upload_path = "./assets/upload";
+
+	srv.max_body_size = -1;
 	srv.root = "./assets/ws1";
+	srv.accepted_methods.push_back(GET);
 	srv.index = "index.html";
 	srv.server_names.push_back("localhost");
-	srv.locations.clear();
-	srv.accepted_methods.push_back(GET);
+
+	srv.locations.push_back(loc);
 
 	cfg.servers[std::make_pair("0.0.0.0", 80U)].push_back(srv);
 

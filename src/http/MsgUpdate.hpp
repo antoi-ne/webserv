@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:56:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 14:09:33 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 09:12:38 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,9 @@ namespace http
 		Parser	_parser;
 	public:
 		MsgUpdate(void) : _parser(*this) {}
+
+		bool	error(void) const
+		{ return !this->_parser.headerFinish(); }
 
 		bool	update(const ws::shared::Buffer& buff)
 		{ return this->_parser.update(buff); }
