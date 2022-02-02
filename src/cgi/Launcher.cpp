@@ -59,9 +59,9 @@ namespace ws
 		Launcher::~Launcher()
 		{}
 
-		http::Res Launcher::run()
+		Launcher::Response Launcher::run()
 		{
-			http::Res res;
+			Response res;
 			char ** envp;
 			char ** args;
 			char *script;
@@ -96,7 +96,10 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
-			std::cout << "res: " << buff.to_string() << std::endl;
+			if (res.update(buff) == true || res.error() == true)
+			{
+				throw std::runtime_error("invalid response from cgi");
+			}
 			return res;
 		}
 

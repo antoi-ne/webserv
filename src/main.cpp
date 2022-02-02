@@ -25,12 +25,26 @@ int main(void)
 	conf::Server srv;
 	conf::Location loc;
 
-	loc.root = "./assets/upload";
-	loc.index = "test.html";
-	loc.route = "/test";
+	// loc.root = "./assets/upload";
+	// loc.index = "test.html";
+	// loc.route = "/test";
+	// loc.accepted_methods.push_back(GET);
+	// loc.autoindex = true;
+	// loc.upload_path = "./assets/upload";
+
+	// srv.max_body_size = -1;
+	// srv.root = "./assets/ws1";
+	// srv.accepted_methods.push_back(GET);
+	// srv.index = "index.html";
+	// srv.server_names.push_back("localhost");
+
+	loc.root = "./assets/ws2";
+	loc.index = "index.py";
+	loc.route = "/py";
 	loc.accepted_methods.push_back(GET);
-	loc.autoindex = true;
-	loc.upload_path = "./assets/upload";
+	loc.max_body_size = -1;
+	loc.cgi_ext = "py";
+	loc.cgi_script = "/usr/local/bin/python3";
 
 	srv.max_body_size = -1;
 	srv.root = "./assets/ws1";
