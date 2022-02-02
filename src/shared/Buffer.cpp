@@ -159,7 +159,7 @@ namespace ws
 			this->_size = newSize;
 		}
 
-		const char&	Buffer::operator[](size_t index)
+		const char&	Buffer::operator[](size_t index) const
 		{ return *(this->get_ptr() + index); }
 	}
 }

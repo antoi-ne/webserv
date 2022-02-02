@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 10:56:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 14:11:00 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 09:11:35 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ namespace	http
 		Parser(http::Message& msg);
 
 		bool		update(const ws::shared::Buffer& buff);
+		bool		headerFinish(void) const;
 
 	protected:
 		virtual	bool		_checkFirstLine(size_t endLine) = 0;

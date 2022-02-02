@@ -58,7 +58,7 @@ namespace ws
 					{
 						shared::Log::info(this->_req_cache[it->con].body().to_string());
 						std::cout << this->_req_cache[it->con].method() << std::endl;
-						if (req.method() == UNDEF || req.path().empty())
+						if (req.error())
 						{
 							resf.setStatus(STATUS400);
 							resf.body().join(std::string("Bad Request\r\n"));

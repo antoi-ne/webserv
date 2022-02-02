@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 16:42:58 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 09:20:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,17 @@ namespace http
 	http::Message&	Parser::_getMsg(void)
 	{ return this->_msg; }
 
+	bool	Parser::headerFinish(void) const
+	{ return this->_headerFinish; }
+
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
 		this->_buff.join(buff);
 		if (!this->_headerFinish)
-			this->_updateIfCRLF();
+		{
+			if (!this->_updateIfCRLF())
+				return false;
+		}
 		return this->_isNotFinish();
 	}
 
@@ -35,7 +41,10 @@ namespace http
 		{
 			if (this->_msg.contentLength() != std::string::npos
 				&& this->_buff.size() >= this->_msg.contentLength())
+			{
+				this->_msg.body() = this->_buff;
 				return false;
+			}
 			if (this->_msg.header()["transfer-encoding"] == "chunked")
 				return false;
 		}

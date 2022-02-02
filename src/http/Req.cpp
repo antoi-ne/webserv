@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 17:04:18 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 08:57:24 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,12 @@ namespace	http
 		buff += " ";
 		buff += HTTPVER"\r\n";
 
+		if (this->_contentLength == std::string::npos)
+		{
+			buff += "Content-Length: ";
+			buff += std::to_string(this->_body.size());
+			buff += crlf;
+		}
 		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
 			buff += (it->first + std::string(": ") + it->second + crlf);
 		buff += crlf;

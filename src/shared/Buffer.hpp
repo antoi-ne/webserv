@@ -38,7 +38,7 @@ namespace ws
 
 			void	join(const Buffer& buff);
 
-			const char&	operator[](size_t index);
+			const char&	operator[](size_t index) const;
 
 		private:
 
