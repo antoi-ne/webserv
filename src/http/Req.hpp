@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/25 12:32:44 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/01/31 12:58:06 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ namespace http
 		size_t			_checkPathValidity(size_t index, size_t endPath);
 		bool			_skipStartCRLF(void);
 		bool			_checkHeader(size_t endLine);
+		void			_endHeader(void);
+		bool			_checkChunkedBody(size_t endLine);
 		bool			_getStartLine(size_t endLine);
 		bool			_setHeader(size_t endLine);
 		bool			_updateIfCRLF(void);

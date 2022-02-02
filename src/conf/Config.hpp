@@ -24,13 +24,14 @@ namespace ws
 			ErrorPages error_pages;
 			std::string upload_path; // empty string means no upload path
 			std::string return_path; // empty string means no return path
+			std::string cgi_script;
+			std::string	cgi_ext;
 			int return_code;
+			std::vector<e_method>	accepted_methods;
 		};
 
 		struct Location : public ServConfig 
-		{
-			std::vector<e_method>	accepted_methods;
-		};
+		{};
 
 		// first route (path of the location) -> Location obj
 		typedef std::vector<Location>	location_v;
