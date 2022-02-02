@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 11:55:38 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 17:31:38 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ namespace ws
 				res = uri.find(it->route);
 				if (res == 0)
 					if (!it->cgi_ext.size()
-					|| uri.find_last_of(it->cgi_ext) == uri.size() - it->cgi_ext.size())
+					|| (it->cgi_ext.size() && uri.find_last_of(it->cgi_ext) - (it->cgi_ext.size() - 1) == uri.size() - it->cgi_ext.size()))
 						return it.base();
 			}
 			return NULL;
@@ -122,10 +122,8 @@ namespace ws
 		{
 			if (_hasBody(request.method()) && mainConf.upload_path.size())
 				this->_upload(request, response, mainConf);
-			else if (mainConf.cgi_ext.size())
-				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, mainConf.cgi_ext).run();
 			else
-				this->_renderPage(request, response, mainConf);
+				this->_renderPage(request, response, mainConf, host);
 		}
 
 		void
@@ -160,7 +158,8 @@ namespace ws
 		Router::_renderPage(
 			const http::Req& request,
 			http::Res& response,
-			const conf::ServConfig& mainConf) const
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
 		{
 			std::string				path;
 			shared::Buffer			body;
@@ -171,6 +170,11 @@ namespace ws
 			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
 				== mainConf.accepted_methods.end())
 				return this->_setError(response, mainConf, STATUS405, 405);
+			if (mainConf.cgi_ext.size())
+			{
+				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
+				return ;
+			}
  			if (!(body = this->_getBody(path, request.path())).size())
 				return this->_setError(response, mainConf, STATUS403, 403);
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))

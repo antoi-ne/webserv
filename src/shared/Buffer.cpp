@@ -146,6 +146,19 @@ namespace ws
 			return std::string::npos;
 		}
 
+		void	Buffer::join(const char* buff, size_t size)
+		{
+			size_t	newSize = this->_size + size;
+			char*	tmp = new char[newSize + 1]();
+
+			std::memcpy(tmp, this->_data, this->_size);
+			std::memcpy(tmp + this->_size, buff, size);
+			tmp[newSize] = 0;
+			delete [] this->_data;
+			this->_data = tmp;
+			this->_size = newSize;
+		}
+
 		void	Buffer::join(const Buffer& buff)
 		{
 			size_t	newSize = this->_size + buff.size();

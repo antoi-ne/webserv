@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 11:08:19 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 17:05:36 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,10 @@ namespace http
 
 		if (!(ret = this->_checkHttpVer()))
 			return false;
-		i += ret + this->_skipWS();
-		if (!(ret = this->_checkStatusCode()))
+		i += ret + this->_skipWS(i);
+		if (!(ret = this->_checkStatusCode(i)))
 			return false;
-		i += ret + this->_skipWS();
+		i += ret + this->_skipWS(i);
 		for (; i < endLine; ++i)
 			if (!this->_acceptedChar(this->_buff[i]))
 				return false;
@@ -51,19 +51,17 @@ namespace http
 		return httpVer.size();
 	}
 
-	size_t	ResParser::_skipWS(void) const
+	size_t	ResParser::_skipWS(size_t i) const
 	{
-		size_t	i = 0;
-
 		for (; this->_buff[i] == ' '; ++i);
 		return i;
 	}
 
-	size_t	ResParser::_checkStatusCode(void) const
+	size_t	ResParser::_checkStatusCode(size_t i) const
 	{
 		const size_t	expected_size = 3;
 		try {
-			std::stoi(std::string(this->_buff.get_ptr(), expected_size));
+			std::stoi(std::string(this->_buff.get_ptr() + i, expected_size));
 		} catch (...) {
 			return 0;
 		}
