@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 09:20:11 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/02 12:27:28 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,28 +26,63 @@ namespace http
 
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
-		this->_buff.join(buff);
 		if (!this->_headerFinish)
 		{
+			this->_buff.join(buff);
 			if (!this->_updateIfCRLF())
 				return false;
 		}
+		else
+			this->_msg.body().join(buff);
 		return this->_isNotFinish();
+	}
+
+	bool	Parser::_chunkedSize(size_t endLine, size_t& chunkSize) const
+	{
+		bool	hasCR = this->_buff[endLine - 1] == '\r';
+
+		if (endLine == 0 || (endLine == 1 && hasCR))
+			return false;
+		try {
+			chunkSize = std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
+		} catch (...) {
+			return false;
+		};
+		return true;
+	}
+
+	bool	Parser::_chunkedContent(size_t endLine, size_t& chunkSize)
+	{
+		bool	hasCR = this->_buff[endLine - 1] == '\r';
+		size_t	_chunkSize = chunkSize;
+
+		chunkSize = std::string::npos;
+		if (_chunkSize == 0 && (endLine == 0 || (endLine == 1 && hasCR)))
+		{
+			this->_headerFinish = true;
+			this->_msg.setContentLength(this->_msg.body().size());
+		}
+		else if (endLine - hasCR != _chunkSize)
+			return false;
+		else
+			this->_msg.body().join(ws::shared::Buffer(this->_buff.get_ptr(), _chunkSize));
+		return true;
+	}
+
+	bool	Parser::_unchunkedBody(size_t endLine)
+	{
+		static size_t	chunkSize = std::string::npos;
+
+		if (chunkSize == std::string::npos)
+			return this->_chunkedSize(endLine, chunkSize);
+		return this->_chunkedContent(endLine, chunkSize);
 	}
 
 	bool	Parser::_isNotFinish(void)
 	{
-		if (this->_headerFinish)
-		{
-			if (this->_msg.contentLength() != std::string::npos
-				&& this->_buff.size() >= this->_msg.contentLength())
-			{
-				this->_msg.body() = this->_buff;
-				return false;
-			}
-			if (this->_msg.header()["transfer-encoding"] == "chunked")
-				return false;
-		}
+		if (this->_msg.contentLength() != std::string::npos
+			&& this->_msg.body().size() >= this->_msg.contentLength())
+			return false;
 		return true;
 	}
 
@@ -59,6 +94,7 @@ namespace http
 		{
 			if ((this->*_fUpdate)(endLine) == false) // error case
 				return false;
+			this->_buff.advance(endLine + 1);
 			endLine = this->_buff.find('\n');
 		}
 		return true;
@@ -85,9 +121,15 @@ namespace http
 
 	void	Parser::_endHeader(void)
 	{
-		this->_headerFinish = true;
-		this->_msg.setContentLength(
-			_setContentLength(this->_msg.header()["Content-Length"]));
+		if (this->_msg.header()["transfer-encoding"] == "chunked")
+			this->_fUpdate = &Parser::_unchunkedBody;
+		else
+		{
+			this->_msg.body().join(this->_buff);
+			this->_headerFinish = true;
+			this->_msg.setContentLength(
+				_setContentLength(this->_msg.header()["Content-Length"]));
+		}
 	}
 
 	// TODO Check host
@@ -98,7 +140,6 @@ namespace http
 		else
 			if (!this->_setHeader(endLine))
 				return false;
-		this->_buff.advance(endLine + 1);
 		return true;
 	}
 
