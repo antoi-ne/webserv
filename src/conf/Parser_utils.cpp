@@ -14,6 +14,7 @@ namespace ws
             ret.autoindex = false;
             while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
             {
+
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 2);
@@ -48,10 +49,12 @@ namespace ws
             if (ret.max_body_size == 0)
                 ret.max_body_size = server.max_body_size;
             if ((ret.cgi_ext.empty() && !(ret.cgi_script.empty())) || (!(ret.cgi_ext.empty()) && ret.cgi_script.empty()))
-                //throw error !
+                throw std::exception();
             server.locations.push_back(ret);
             if (!(line.compare(1, 9, "location:")))
+			{
                 loc_attr(fd, server, line);
+			}
         }
 
         int  mapping_servers(server_map &config, std::ifstream &fd){
@@ -61,6 +64,7 @@ namespace ws
             
             tmp_server.autoindex = false;
             tmp_server.max_body_size = -1;
+            tmp_server.accepted_methods.push_back(GET);
             while (getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
             {
                 if (line[0] == '\0')

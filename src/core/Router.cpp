@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 16:33:12 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/02/03 17:48:52 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ namespace ws
 		{
 			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
-			if (it == this->_config.servers.end() || it->second.empty())
+			if (it == this->_config.servers.end())
 				return nullptr;
 			return _getServerName(header["host"], it->second);
 		}

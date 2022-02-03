@@ -16,10 +16,12 @@ namespace ws
 		class Parser
 		{
 			public:
-			Parser(std::string file_path = "../../config/example.wsconf");
+			Parser(std::string file_path = "./config/example.wsconf");
 			~Parser();
 
 			Config to_config();
+
+			void print_config(server_map server);
 			Config config;
 		};
 		std::string					p_route(std::string line);
