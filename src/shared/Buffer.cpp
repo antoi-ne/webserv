@@ -105,6 +105,9 @@ namespace ws
 			}
 			return std::string::npos;
 		}
+
+		size_t	Buffer::find(const std::string& s) const
+		{ return this->find(s.c_str()); }
 		
 		size_t	Buffer::find(const char* s) const
 		{
@@ -143,6 +146,32 @@ namespace ws
 			return std::string::npos;
 		}
 
+		void	Buffer::join(const std::string& s)
+		{
+			size_t	newSize = this->_size + s.size();
+			char*	tmp = new char[newSize + 1]();
+
+			std::memcpy(tmp, this->_data, this->_size);
+			std::memcpy(tmp + this->_size, s.c_str(), s.size());
+			tmp[newSize] = 0;
+			delete [] this->_data;
+			this->_data = tmp;
+			this->_size = newSize;
+		}
+
+		void	Buffer::join(const char* buff, size_t size)
+		{
+			size_t	newSize = this->_size + size;
+			char*	tmp = new char[newSize + 1]();
+
+			std::memcpy(tmp, this->_data, this->_size);
+			std::memcpy(tmp + this->_size, buff, size);
+			tmp[newSize] = 0;
+			delete [] this->_data;
+			this->_data = tmp;
+			this->_size = newSize;
+		}
+
 		void	Buffer::join(const Buffer& buff)
 		{
 			size_t	newSize = this->_size + buff.size();
@@ -156,7 +185,7 @@ namespace ws
 			this->_size = newSize;
 		}
 
-		const char&	Buffer::operator[](size_t index)
+		const char&	Buffer::operator[](size_t index) const
 		{ return *(this->get_ptr() + index); }
 	}
 }

@@ -5,6 +5,7 @@
 # include <list>
 # include <map>
 # include <utility>
+# include <ctime>
 
 # include "shared/Log.hpp"
 # include "shared/Buffer.hpp"
@@ -12,6 +13,8 @@
 # include "conf/Config.hpp"
 # include "net/Pool.hpp"
 # include "http/Req.hpp"
+# include "http/Parser/ReqParser.hpp"
+# include "http/MsgUpdate.hpp"
 # include "http/Res.hpp"
 # include "core/Router.hpp"
 # include "cgi/Launcher.hpp"
@@ -23,6 +26,8 @@ namespace ws
 		class Controller
 		{
 		public:
+			typedef http::MsgUpdate<http::Req, http::ReqParser>	Req;
+
 			Controller(const conf::Config& config);
 			~Controller();
 
@@ -32,8 +37,8 @@ namespace ws
 			conf::Config _config;
 			std::list<net::Server> _srv;
 			net::Pool _pool;
-			std::map<net::Connection, http::Req> _req_cache;
-			std::map<net::Connection, shared::Buffer> _res_cache;
+			std::map<net::Connection, Req> _req_cache;
+			std::map<net::Connection, std::pair<shared::Buffer,bool> > _res_cache;
 			core::Router _router;
 
 			void _loop();

@@ -1,34 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Res.hpp                                            :+:      :+:    :+:   */
+/*   MsgUpdate.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 14:13:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 08:19:35 by vneirinc         ###   ########.fr       */
+/*   Created: 2022/02/01 13:56:59 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/02/03 09:26:18 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include "Message.hpp"
-#include "res_header.h"
+#include "../shared/Buffer.hpp"
 
 namespace http
 {
-	class Res : public Message
+	template <class Msg, class Parser>
+	class MsgUpdate : public Msg
 	{
 	private:
-		std::string			_statusMsg;
-
+		Parser	_parser;
 	public:
-		Res(void);
+		MsgUpdate(void) : _parser(*this) {}
 
-		ws::shared::Buffer	get_res();
+		bool	error(void) const
+		{ return !this->_parser.headerFinish(); }
 
-		void	setStatus(const std::string& statusMsg);
-	private:
-		std::string	_getTime(void) const;
+		bool	update(const ws::shared::Buffer& buff)
+		{ return this->_parser.update(buff); }
 
+		void	chillCheck(const ws::shared::Buffer& buff)
+		{ this->_parser.chillCheck(buff); }
 	};
-}
+
+} // namespace http

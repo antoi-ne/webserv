@@ -26,6 +26,7 @@ namespace ws
 			size_t	size() const;
 			size_t	find(const char c) const;
 			size_t	find(const char* s) const;
+			size_t	find(const std::string& s) const;
 			size_t	find(const char* c, size_t until) const;
 			char * get_ptr();
 			const char * get_ptr() const;
@@ -36,8 +37,10 @@ namespace ws
 			Buffer&	resetCursor(void);
 
 			void	join(const Buffer& buff);
+			void	join(const std::string& s);
+			void	join(const char* buff, size_t size);
 
-			const char&	operator[](size_t index);
+			const char&	operator[](size_t index) const;
 
 		private:
 

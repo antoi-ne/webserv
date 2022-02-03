@@ -3,226 +3,55 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 14:11:34 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/01/23 10:15:51y vneirinc         ###   ########.fr       */
+/*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
+/*   Updated: 2022/02/02 08:57:24 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Req.hpp"
-#include <exception>
-#include <iostream>
 
-namespace http
-{ 
-	bool	_hasBody(e_method method) { return method == POST || method == PUT; }
-
-	bool	Req::hasHeader(void) const { return this->_headerFinish; }
+namespace	http
+{
+	bool	Req::_hasBody(e_method method) { return method == POST || method == PUT; }
 
 	e_method	Req::method(void) const { return this->_method; }
 
 	const std::string&	Req::path(void) const { return this->_path; }
 
-	Req::header_m&	Req::header(void)
-	{ return this->_header; }
+	void	Req::setPath(const std::string& path) { this->_path = path; }
 
-	const Req::header_m&	Req::header(void) const
-	{ return this->_header; }
+	void	Req::setMethod(e_method method) { this->_method = method; }
 
-	const std::string&	Req::header(const std::string field)
-	{ return this->_header[field]; }
+	ws::shared::Buffer	Req::getReq(void) const
+	{
+		std::string		methods[] = METHODS;
+		std::string		buff;
+		std::string		crlf("\r\n"); 
 
-	const ws::shared::Buffer&	Req::body(void) const
-	{ return this->_buff; }
+		buff += methods[this->_method];
+		buff += this->_path;
+		buff += " ";
+		buff += HTTPVER"\r\n";
+
+		if (this->_contentLength == std::string::npos)
+		{
+			buff += "Content-Length: ";
+			buff += std::to_string(this->_body.size());
+			buff += crlf;
+		}
+		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
+			buff += (it->first + std::string(": ") + it->second + crlf);
+		buff += crlf;
+		ws::shared::Buffer	_buff(buff);
+
+		if (this->_body.size())
+			_buff.join(this->_body);
+		return _buff;
+	}
 
 	Req::Req(void)
-	 :	_method(UNDEF), _path(), _header(), _buff(),
-	 	_contentLength(), _headerFinish(), _check_line(&Req::_checkStartLine)
+	 : Message(), _method(), _path()
 	{}
-
-	bool	Req::_isNotFinish(void) const
-	{
-		if (this->_headerFinish)
-		{
-			if (_hasBody(this->_method))
-				if (this->_contentLength > this->_buff.size())
-					return true;
-			return false;
-		}
-		return true;
-	}
-
-	bool	Req::update(ws::shared::Buffer& buff)
-	{
-		this->_buff.join(buff);
-		if (!this->_updateIfCRLF())
-			return false;
-		return this->_isNotFinish();
-	}
-
-	bool	Req::_updateIfCRLF(void)
-	{
-		size_t endLine = this->_buff.find('\n');
-
-		while (endLine != std::string::npos && !this->_headerFinish)
-		{
-			if ((this->*_check_line)(endLine) == false) // error case
-				return false;
-			endLine = this->_buff.find('\n');
-		}
-		return true;
-	}
-
-	bool	Req::_checkStartLine(size_t endLine)
-	{
-		if (!this->_skipStartCRLF())
-		{
-			if (!this->_getStartLine(endLine))
-				return false;
-			this->_buff.advance(endLine + 1);
-			this->_check_line = &Req::_checkHeader;
-		}
-		return true;
-	}
-
-	static size_t	_skipCRLF(ws::shared::Buffer& buff)
-	{
-		size_t i;
-
-		for (i = 0; i < buff.size() && (buff[i] == '\r' || buff[i] == '\n'); ++i);
-		return i;
-	}
-
-	bool	Req::_skipStartCRLF(void)
-	{
-		size_t	i = 0;
-
-		if (this->_method == UNDEF)
-		{
-			i = _skipCRLF(this->_buff);
-			this->_buff.advance(i);
-		}
-		return i;
-	}
-
-	bool	Req::_getStartLine(size_t endLine)
-	{
-		if (endLine)
-		{
-			size_t index = this->_getMethod(endLine);
-			if (index) // if not failed method -> UNDEF
-			{
-				size_t endPath = this->_buff.find(HTTPVER, endLine);
-				if (endPath != std::string::npos)
-					if (endPath + 8 == endLine
-						|| (endPath + 9 == endLine
-							&& this->_buff[endPath + 8] == '\r'))
-						return this->_getPath(index, endPath);
-			}
-		}
-		return false;
-	}
-
-	bool	Req::_getPath(size_t index, size_t endPath)
-	{
-		size_t	_maybeEndPath;
-
-		while (this->_buff[index] == ' ')
-			++index;
-		if ((_maybeEndPath = this->_checkPathValidity(index, endPath)))
-		{
-			while (this->_buff[--endPath] == ' ');
-			++endPath;
-			if (endPath == _maybeEndPath)
-				this->_path = std::string(this->_buff.get_ptr() + index, endPath - index);
-		}
-		return !this->_path.empty();
-	}
-
-	static inline bool	_acceptedChar(const char c)
-	{ return (c > 32 && c < 127); }
-
-	size_t	Req::_checkPathValidity(size_t index, size_t endPath)
-	{
-		if (this->_buff[index] != '/')
-			return 0;
-		for (; index < endPath; ++index)
-			if (!_acceptedChar(this->_buff[index])
-			|| (index && this->_buff[index - 1] == '.' && this->_buff[index] == '.')) // protect /../../
-				break ;
-		return index;
-	}
-
-	static inline size_t	_setContentLength(const std::string& s)
-	{
-		try {
-			return std::stoul(s);
-		} catch (...) {}
-		return 0;
-	}
-
-	void	Req::_endHeader(void)
-	{
-		this->_headerFinish = true;
-		this->_contentLength = _setContentLength(this->_header["Content-Length"]);
-		this->_check_line = NULL;
-	}
-
-	// TODO Check host
-	bool	Req::_checkHeader(size_t endLine)
-	{
-		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
-		{
-			//if (_hasBody(this->_method) && this->_header["transfer-encoding"] == "chunked")
-			//	this->_check_line = &Req::_checkChunkedBody;
-			//else
-				this->_endHeader();
-		}
-		else
-			if (!this->_setHeader(endLine))
-				return false;
-		this->_buff.advance(endLine + 1);
-		return true;
-	}
-
-	bool	Req::_failed(void)
-	{
-		this->_method = UNDEF;
-		return false;
-	}
-
-	bool	Req::_setHeader(size_t endLine)
-	{
-		size_t	i = 0;
-		size_t	keyEnd = 0;
-
-		while (i < endLine && this->_buff[i] != ':' && _acceptedChar(this->_buff[i]))
-			++i;
-		if (i == 0 || (this->_buff[i] != ':' && endLine - i > 1)) // currently accept any unaccepted char before \n at end normal \n or \r\n
-			return this->_failed();
-		keyEnd = i++;
-		for (; i < endLine && this->_buff[i] <= ' '; ++i); // not sure skip space before value
-		this->_header.insert(
-			std::make_pair(
-				std::string(this->_buff.get_ptr(), keyEnd),
-				std::string(this->_buff.get_ptr() + i, endLine - i)
-		));
-		return true;
-	}
-
-	size_t	Req::_getMethod(size_t endLine)
-	{
-		std::string	methods[] = METHODS;
-		size_t	i = 0;
-		
-		while (i < N_METHOD
-			&& this->_buff.find(methods[i].c_str(), endLine) == std::string::npos)
-			++i;
-		if (i >= N_METHOD)
-			return this->_failed();
-		this->_method = static_cast<e_method>(i);
-		return methods[i].size();
-	}
-
-} // namespace http
+}
