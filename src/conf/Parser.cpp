@@ -44,11 +44,14 @@ namespace ws
 					for(std::vector<Location>::iterator it3 = it2->locations.begin() ; it3 != it2->locations.end() ; it3++)
 					{
 						std::cout << "_______location_______" << std::endl;
+						std::cout << "route : " << it3->route << std::endl;
 						std::cout << "root:" << it3->root << std::endl;
 						std::cout << "mx_bdy_size: " << it3->max_body_size << std::endl;
 						std::cout << "autoindex:" << it3->autoindex << std::endl;
 						std::cout << "upload_path:" << it3->upload_path << std::endl;
 						std::cout << "index:" << it3->index << std::endl;
+						std::cout << "cgi_ext: "<< it3->cgi_ext << std::endl;
+						std::cout << "cgi_pass: "<< it3->cgi_script << std::endl;
 						std::cout << "return_code: " << it3->return_code << std::endl;
 						std::cout << "return_path: " << it3->return_path << std::endl;
 						std::cout << "accepted_method:";
@@ -91,7 +94,7 @@ namespace ws
 							 std::cout << "probleme occured with filling the server info" << std::endl;
 					}
 				}
-				print_config(this->config.servers);
+				//print_config(this->config.servers);
 			}
 			catch(int oui){
 				std::cout << "is :" << file_path << " a correct config file ?";
