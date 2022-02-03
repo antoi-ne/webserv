@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:45:41 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 11:24:07 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ namespace http
 		{
 			if (!this->_getStartLine(endLine))
 				ret = false;
-			this->_fUpdate = &Parser::checkHeader; // &(Parser::checkFirstLine) err?
+			this->_fUpdate = &Parser::checkHeader;
 		}
 		this->_buff.advance(endLine + 1);
 		return ret;

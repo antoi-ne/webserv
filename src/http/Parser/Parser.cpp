@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:46:08 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 11:29:25 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,30 +67,66 @@ namespace http
 
 	bool	Parser::_chunkedContent(size_t& chunkSize)
 	{
-		size_t	_chunkSize = chunkSize;
-		(void)_chunkSize;
+		size_t	size;
 
-		return true;
+		if (this->_buff.size() < chunkSize)
+			size = this->_buff.size();
+		else
+			size = chunkSize;
+		this->_msg.body().join(this->_buff.get_ptr(), size);
+		this->_buff.advance(size);
+		chunkSize -= size;
+		if (chunkSize == 0)
+			return true;
+		return false;
 	}
 
 	bool	Parser::_unchunkedBody(void)
 	{
-		static size_t	chunkSize = std::string::npos;
+		static bool			needCRLF = false;
+		static size_t		chunkSize = std::string::npos;
 
-		while (chunkSize != 0)
+		while (this->_buff.size() && (chunkSize != 0 || needCRLF))
 		{
+			if (needCRLF)
+			{
+				bool	hasCR = this->_buff[0] == '\r';
+
+				needCRLF = false;
+				if (this->_buff[0] == '\n' || (hasCR && this->_buff[1] == '\n'))
+				{
+					chunkSize = std::string::npos;
+					this->_buff.advance(1 + hasCR);
+				}
+				else
+				{
+					chunkSize = std::string::npos;
+					return false;
+				}
+			}
 			if (chunkSize == std::string::npos)
 			{
 				size_t	endLine = this->_buff.find('\n');
-				if (endLine != std::string::npos)
-					if (!this->_chunkedSize(endLine, chunkSize))
-						return false;
+
+				if (endLine == std::string::npos)
+					return true;
+				if (!this->_chunkedSize(endLine, chunkSize))
+				{
+					chunkSize = std::string::npos;
+					return false;
+				}
+				this->_buff.advance(endLine + 1);
 			}
 			else
-			{
-				if (!this->_chunkedContent(chunkSize))
-					return false;
-			}
+				needCRLF = this->_chunkedContent(chunkSize);
+		}
+		if (this->_buff.size())
+		{
+			chunkSize = std::string::npos;
+			if (this->_buff[0] == '\n' || (this->_buff[0] == '\r' && this->_buff[1] == '\n'))
+				this->_msg.setContentLength(this->_msg.body().size());
+			else
+				return false;
 		}
 		return true;
 	}
@@ -107,7 +143,7 @@ namespace http
 					return false;
 				}
 			}
-			else if (this->_msg.body().size() == this->_msg.contentLength())
+			if (this->_msg.body().size() == this->_msg.contentLength())
 				return false;
 		}
 		return true;
