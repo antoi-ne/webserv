@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 12:19:41 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 15:55:07 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,13 @@ namespace ws
 				this->_renderPage(request, response, mainConf, host);
 		}
 
+		std::string
+		_getMIME(const std::string& ext)
+		{
+			(void)ext;
+			return "";
+		}
+
 		void
 		Router::_upload(
 			const http::Req& request,
@@ -180,7 +187,7 @@ namespace ws
 				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
 				return ;
 			}
- 			if (!(body = this->_getBody(path, request.path())).size())
+ 			if (!this->_getBody(body, path, request.path()))
 				return this->_setError(response, mainConf, STATUS403, 403);
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
 				return this->_setError(response, mainConf, STATUS413, 413);
@@ -213,21 +220,20 @@ namespace ws
 			return path;
 		}
 
-		shared::Buffer
-		Router::_getBody(const std::string& path, const std::string& uri) const
+		bool
+		Router::_getBody(shared::Buffer& body, const std::string& path, const std::string& uri) const
 		{
 			if (path.back() == '/') // autoindex on case
 			{
-				shared::Buffer	buff;
     			DIR* dirp = opendir(path.c_str());
-				if (dirp)
-				{
-					buff = this->_getAutoIndexPage(dirp, uri);
-					closedir(dirp);
-				}
-				return buff;
+				if (!dirp)
+					return false;
+				body = this->_getAutoIndexPage(dirp, uri);
+				closedir(dirp);
 			}
-			return this->_getFile(path);
+			else
+				return this->_getFile(body, path);
+			return true;
 		}
 
 		shared::Buffer
@@ -265,26 +271,24 @@ namespace ws
 			return v;
 		}
 
-		shared::Buffer
-		Router::_getFile(const std::string& path) const
+		bool
+		Router::_getFile(shared::Buffer& body, const std::string& path) const
 		{
 			std::ifstream		file(path);
-			shared::Buffer		buff;
 
-			if (file)
+			if (!file)
+				return false;
+			char	_buff[2048];
+			size_t	len;
+
+			while (!file.eof())
 			{
-				char	_buff[2048];
-				size_t	len;
-
-				while (!file.eof())
-				{
-					file.read(_buff, 2048);
-					len = file.gcount();
-					buff.join(_buff, len);
-				}
-				file.close();
+				file.read(_buff, 2048);
+				len = file.gcount();
+				body.join(_buff, len);
 			}
-			return buff;
+			file.close();
+			return true;
 		}
 
 		bool
