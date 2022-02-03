@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:57:07 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 14:44:03 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,13 @@ namespace http
 	{
 		size_t	start = i;
 		size_t	ret;
+		const bool	hasCR = this->_buff[endLine - 1] == '\r';
 
 		if (!(ret = this->_checkStatusCode(i)))
 			return 0;
 		i += ret;
 		i = this->_skipWS(i);
-		for (; i < endLine; ++i)
+		for (; i < endLine - hasCR; ++i)
 			if (!this->_acceptedChar(this->_buff[i]))
 				return 0;
 		this->_res.setStatus(std::string(this->_buff.get_ptr() + start, i - start));

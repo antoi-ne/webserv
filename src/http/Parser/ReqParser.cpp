@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 11:24:07 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 14:36:10 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,29 +73,36 @@ namespace http
 
 	bool	ReqParser::_getPath(size_t index, size_t endPath)
 	{
-		size_t	_maybeEndPath;
+		size_t	_r_endPath;
 
 		while (this->_buff[index] == ' ')
 			++index;
-		if ((_maybeEndPath = this->_checkPathValidity(index, endPath)))
-		{
-			while (this->_buff[--endPath] == ' ');
-			++endPath;
-			if (endPath == _maybeEndPath)
-				this->_req.setPath(std::string(this->_buff.get_ptr() + index, endPath - index));
-		}
-		return !this->_req.path().empty();
+		if (this->_buff[index] != '/')
+			return false;
+		if (!(_r_endPath = this->_checkPathValidity(index, endPath)))
+			return false;
+		this->_req.setPath(std::string(this->_buff.get_ptr() + index, _r_endPath - index));
+		return true;
 	}
 
-	size_t	ReqParser::_checkPathValidity(size_t index, size_t endPath)
+	size_t	ReqParser::_checkPathValidity(size_t index, size_t& endPath)
 	{
-		if (this->_buff[index] != '/')
-			return 0;
-		for (; index < endPath; ++index)
+		size_t	path_size;
+
+		for (; index < endPath && this->_buff[index] != '?' && this->_buff[index] != ' '; ++index)
 			if (!this->_acceptedChar(this->_buff[index])
-			|| (index && this->_buff[index - 1] == '.' && this->_buff[index] == '.')) // protect /../../
-				break ;
-		return index;
+				|| (index && this->_buff[index - 1] == '.' && this->_buff[index] == '.')) // protect /../../
+				return 0;
+		path_size = index;
+		if (this->_buff[index] == '?')
+			for (; index < endPath && this->_buff[index] != ' '; ++index)
+				if (!this->_acceptedChar(this->_buff[index]))
+					return 0;
+		if (this->_buff[index] == ' ')
+			for (; index < endPath; ++index)
+				if (this->_buff[index] != ' ')
+					return 0;
+		return path_size;
 	}
 
 	bool	ReqParser::_failed(void)

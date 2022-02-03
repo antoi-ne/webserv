@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 11:29:25 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 14:41:13 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -174,7 +174,7 @@ namespace http
 	}
 
 	bool	Parser::_acceptedChar(const char c) const
-	{ return (c > 32 && c < 127); }
+	{ return (c > 31 && c < 127); }
 
 	static inline size_t	_setContentLength(const std::string& s)
 	{
@@ -222,6 +222,7 @@ namespace http
 		if (this->_buff[endLine - 1] == '\r')
 			hasCR = 1;
 		while (this->_buff[i] != ':'
+			&& this->_buff[i] != ' '
 			&& this->_acceptedChar(this->_buff[i]))
 			++i;
 		if (i != 0)
