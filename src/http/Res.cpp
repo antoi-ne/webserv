@@ -6,7 +6,11 @@
 /*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2022/02/02 17:06:57 by ancoulon         ###   ########.fr       */
+=======
+/*   Updated: 2022/02/03 09:49:31 by vneirinc         ###   ########.fr       */
+>>>>>>> vneirinc
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,34 +41,38 @@ namespace http
 
 	ws::shared::Buffer Res::get_res()
 	{
-		std::string	buff;
-		std::string		crlf("\r\n"); 
+		ws::shared::Buffer	buff;
+		std::string			crlf("\r\n"); 
 
-		buff += HTTPVER" ";
-		buff += this->_statusMsg + crlf;
+		buff.join(HTTPVER" ");
+		header_m::iterator	it = this->_header.find("status");
 
-		buff += "Server: ";
-		buff += SERVER"\r\n";
-
-		buff += "Date: ";
-		buff += this->_getTime() + crlf;
-
-		if (this->_header["Content-Length"] == "")
+		if (it == this->_header.end())
+			buff.join(this->_statusMsg);
+		else
 		{
-			this->_header["Content-Length"] = std::to_string(this->_body.size());
-			// buff += "Content-Length: ";
-			// buff += std::to_string(this->_body.size());
-			// buff += crlf;
+			buff.join(it->second);
+			this->_header.erase(it);
 		}
+		buff.join(crlf);
+
+		buff.join("Server: ");
+		buff.join(SERVER"\r\n");
+
+		buff.join("Date: ");
+		buff.join(this->_getTime() + crlf);
+
+		this->_header.erase("content-Length");
+		buff.join("Content-Length: ");
+		buff.join(std::to_string(this->_body.size()) + crlf);
+
 		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
-			buff += (it->first + std::string(": ") + it->second + crlf);
-		buff += crlf;
-		
-		ws::shared::Buffer	_buff(buff);
+			buff.join((it->first + std::string(": ") + it->second + crlf));
+		buff.join(crlf);
 
 		if (this->_body.size())
-			_buff.join(this->_body);
-		return _buff;
+			buff.join(this->_body);
+		return buff;
 	}
 
 	void	Res::setStatus(const std::string& statusMsg)

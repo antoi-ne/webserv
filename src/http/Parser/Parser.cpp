@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 12:27:28 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 09:46:08 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,11 @@
 namespace http
 {
 	Parser::Parser(http::Message& msg)
-	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(&Parser::_updateFirstLine)
+	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(&Parser::checkHeader)
+	{}
+
+	Parser::Parser(http::Message& msg, bool (Parser::*fUpdate)(size_t))
+	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(fUpdate)
 	{}
 
 	http::Message&	Parser::_getMsg(void)
@@ -24,25 +28,35 @@ namespace http
 	bool	Parser::headerFinish(void) const
 	{ return this->_headerFinish; }
 
+	void	Parser::chillCheck(const ws::shared::Buffer& buff)
+	{
+		this->_buff.join(buff);
+		if (!this->_headerFinish)
+			this->_chillIfCRLF();
+	}
+
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
-		if (!this->_headerFinish)
-		{
+		if (this->_msg.contentLength() == std::string::npos)
 			this->_buff.join(buff);
-			if (!this->_updateIfCRLF())
-				return false;
+		else if (this->_msg.body().size() + buff.size() > this->_msg.contentLength())
+		{
+			this->_headerFinish = false;
+			return false;
 		}
 		else
 			this->_msg.body().join(buff);
+		if (!this->_headerFinish && !this->_updateIfCRLF())
+			return false;
 		return this->_isNotFinish();
 	}
 
 	bool	Parser::_chunkedSize(size_t endLine, size_t& chunkSize) const
 	{
-		bool	hasCR = this->_buff[endLine - 1] == '\r';
-
-		if (endLine == 0 || (endLine == 1 && hasCR))
+		if (endLine == 0
+			|| (endLine == 1 && this->_buff[0] == '\r')) // just crlf
 			return false;
+		bool hasCR = this->_buff[endLine - 1] == '\r';
 		try {
 			chunkSize = std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
 		} catch (...) {
@@ -51,39 +65,63 @@ namespace http
 		return true;
 	}
 
-	bool	Parser::_chunkedContent(size_t endLine, size_t& chunkSize)
+	bool	Parser::_chunkedContent(size_t& chunkSize)
 	{
-		bool	hasCR = this->_buff[endLine - 1] == '\r';
 		size_t	_chunkSize = chunkSize;
+		(void)_chunkSize;
 
-		chunkSize = std::string::npos;
-		if (_chunkSize == 0 && (endLine == 0 || (endLine == 1 && hasCR)))
-		{
-			this->_headerFinish = true;
-			this->_msg.setContentLength(this->_msg.body().size());
-		}
-		else if (endLine - hasCR != _chunkSize)
-			return false;
-		else
-			this->_msg.body().join(ws::shared::Buffer(this->_buff.get_ptr(), _chunkSize));
 		return true;
 	}
 
-	bool	Parser::_unchunkedBody(size_t endLine)
+	bool	Parser::_unchunkedBody(void)
 	{
 		static size_t	chunkSize = std::string::npos;
 
-		if (chunkSize == std::string::npos)
-			return this->_chunkedSize(endLine, chunkSize);
-		return this->_chunkedContent(endLine, chunkSize);
+		while (chunkSize != 0)
+		{
+			if (chunkSize == std::string::npos)
+			{
+				size_t	endLine = this->_buff.find('\n');
+				if (endLine != std::string::npos)
+					if (!this->_chunkedSize(endLine, chunkSize))
+						return false;
+			}
+			else
+			{
+				if (!this->_chunkedContent(chunkSize))
+					return false;
+			}
+		}
+		return true;
 	}
 
 	bool	Parser::_isNotFinish(void)
 	{
-		if (this->_msg.contentLength() != std::string::npos
-			&& this->_msg.body().size() >= this->_msg.contentLength())
-			return false;
+		if (this->_headerFinish)
+		{
+			if (this->_msg.contentLength() == std::string::npos)
+			{
+				if (!this->_unchunkedBody())
+				{
+					this->_headerFinish = false;
+					return false;
+				}
+			}
+			else if (this->_msg.body().size() == this->_msg.contentLength())
+				return false;
+		}
 		return true;
+	}
+
+	void	Parser::_chillIfCRLF(void)
+	{
+		size_t endLine = this->_buff.find('\n');
+
+		while (endLine != std::string::npos && !this->_headerFinish)
+		{
+			(this->*_fUpdate)(endLine);
+			endLine = this->_buff.find('\n');
+		}
 	}
 
 	bool	Parser::_updateIfCRLF(void)
@@ -94,17 +132,8 @@ namespace http
 		{
 			if ((this->*_fUpdate)(endLine) == false) // error case
 				return false;
-			this->_buff.advance(endLine + 1);
 			endLine = this->_buff.find('\n');
 		}
-		return true;
-	}
-
-	bool	Parser::_updateFirstLine(size_t endLine)
-	{
-		if (!this->_checkFirstLine(endLine))
-			return false;
-		this->_fUpdate = &Parser::_checkHeader;
 		return true;
 	}
 
@@ -119,28 +148,33 @@ namespace http
 		return 0;
 	}
 
-	void	Parser::_endHeader(void)
+	void	Parser::_endHeader(size_t endLine)
 	{
-		if (this->_msg.header()["transfer-encoding"] == "chunked")
-			this->_fUpdate = &Parser::_unchunkedBody;
-		else
+		if (this->_msg.header()["transfer-encoding"] != "chunked")
 		{
-			this->_msg.body().join(this->_buff);
-			this->_headerFinish = true;
+			this->_msg.body().join(
+				this->_buff.get_ptr() + endLine + 1,
+				this->_buff.size() - (endLine + 1)
+			);
 			this->_msg.setContentLength(
 				_setContentLength(this->_msg.header()["Content-Length"]));
 		}
+		this->_headerFinish = true;
+		this->_msg.header().erase("transfer-encoding");
 	}
 
 	// TODO Check host
-	bool	Parser::_checkHeader(size_t endLine)
+	bool	Parser::checkHeader(size_t endLine)
 	{
+		bool	ret = true;
+
 		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
-			this->_endHeader();
+			this->_endHeader(endLine);
 		else
 			if (!this->_setHeader(endLine))
-				return false;
-		return true;
+				ret = false;
+		this->_buff.advance(endLine + 1);
+		return ret;
 	}
 
 	bool	Parser::_setHeader(size_t endLine)

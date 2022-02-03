@@ -10,6 +10,8 @@
 # include <string>
 
 # include "http/Req.hpp"
+# include "http/Parser/ResParser.hpp"
+# include "http/MsgUpdate.hpp"
 # include "http/Res.hpp"
 # include "http/Parser/ResParser.hpp"
 # include "http/MsgUpdate.hpp"
