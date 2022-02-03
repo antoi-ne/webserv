@@ -4,6 +4,7 @@
 # include "../http/Req.hpp"
 # include "../http/Res.hpp"
 # include "../http/CI_Less.hpp"
+# include "MIME.h"
 # include <dirent.h>
 
 namespace ws
@@ -26,14 +27,14 @@ namespace ws
 			void	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
 
 			const std::vector<struct dirent>	_getDirList(DIR* dirp) const;
-			shared::Buffer			_getFile(const std::string& path) const;
+			bool					_getFile(shared::Buffer& body, const std::string& path) const;
 			const conf::Server*		_getServ(http::Req::header_m& header, const conf::host_port& host) const;
 			const conf::Server*		_getServerName(const std::string& host, const serv_lst& servLst) const;
 			const conf::Location*	_getLocation(const std::string& uri, const conf::Server& serv) const;
 			std::string				_getLocalPath(const std::string& uri, const conf::ServConfig& serv) const;
 			bool					_checkMaxBodySize(const conf::ServConfig& serv, size_t bodySize) const;
 			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
-			shared::Buffer			_getBody(const std::string& path, const std::string& uri) const;
+			bool					_getBody(shared::Buffer& body, const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
 			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			

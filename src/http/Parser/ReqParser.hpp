@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:49:26 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:32:53 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 13:49:03 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ namespace http
 
 		size_t			_getMethod(size_t endLine);
 		bool			_getPath(size_t index, size_t endPath);
-		size_t			_checkPathValidity(size_t index, size_t endPath);
+		size_t			_checkPathValidity(size_t index, size_t& endPath);
 		bool			_skipStartCRLF(void);
 		bool			_getStartLine(size_t endLine);
 		bool			_failed(void);
