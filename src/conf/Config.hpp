@@ -26,7 +26,7 @@ namespace ws
 			std::string return_path; // empty string means no return path
 			std::string cgi_script;
 			std::string	cgi_ext;
-			int return_code;
+			std::string return_code;
 			std::vector<e_method>	accepted_methods;
 		};
 

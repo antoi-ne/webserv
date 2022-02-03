@@ -6,7 +6,7 @@
 /*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 12:23:26 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/02/03 12:28:38 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,14 @@ namespace ws
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
-			if (_hasBody(request.method()) && mainConf.upload_path.size())
+			if (mainConf.return_path.size())
+			{
+				if (_hasBody(request.method()) && mainConf.upload_path.size())
+					this->_upload(request, response, mainConf);
+				response.setStatus(mainConf.return_code);
+				response.header().insert(std::make_pair("Location", mainConf.return_path));
+			}
+			else if (_hasBody(request.method()) && mainConf.upload_path.size())
 				this->_upload(request, response, mainConf);
 			else
 				this->_renderPage(request, response, mainConf, host);
