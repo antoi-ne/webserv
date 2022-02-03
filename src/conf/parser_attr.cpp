@@ -48,6 +48,18 @@ namespace ws
             return (line);
         }
 
+        std::string p_cgi_pass(std::string line){
+            line.erase(0,9);
+            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+            return (line);
+        }
+
+        std::string p_cgi_ext(std::string line){
+            line.erase(0,8);
+            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+            return (line);
+        }
+
         std::vector<e_method> p_accpt_mtde(std::string line){
             line.erase(0,17);
             std::vector<e_method> ret;

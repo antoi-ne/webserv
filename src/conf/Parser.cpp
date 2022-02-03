@@ -5,7 +5,7 @@ namespace ws
 	namespace conf
 	{
 
-		/*void print_config(server_map server){
+		void print_config(server_map server){
 			for (server_map::iterator it = server.begin(); it != server.end(); it++)
 			{
 				std::cout << "_____SERVER_____" << std::endl;
@@ -44,11 +44,14 @@ namespace ws
 					for(std::vector<Location>::iterator it3 = it2->locations.begin() ; it3 != it2->locations.end() ; it3++)
 					{
 						std::cout << "_______location_______" << std::endl;
+						std::cout << "route : " << it3->route << std::endl;
 						std::cout << "root:" << it3->root << std::endl;
 						std::cout << "mx_bdy_size: " << it3->max_body_size << std::endl;
 						std::cout << "autoindex:" << it3->autoindex << std::endl;
 						std::cout << "upload_path:" << it3->upload_path << std::endl;
 						std::cout << "index:" << it3->index << std::endl;
+						std::cout << "cgi_ext: "<< it3->cgi_ext << std::endl;
+						std::cout << "cgi_pass: "<< it3->cgi_script << std::endl;
 						std::cout << "return_code: " << it3->return_code << std::endl;
 						std::cout << "return_path: " << it3->return_path << std::endl;
 						std::cout << "accepted_method:";
@@ -76,7 +79,7 @@ namespace ws
 
  				}
 			}
-		}*/
+		}
 
 		Parser::Parser(std::string file_path)
 		{

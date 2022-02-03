@@ -1,7 +1,6 @@
 server:
  listen: 127.0.0.1:9000
  server_names: hello.local world.local
- accepted_methods: GET POST DELETE
  root: ./assets/ws1
  index: index.html
  upload_path: /example/path
@@ -30,11 +29,13 @@ server:
  location: /redirect
   return: 307 http://example.com/hello
 
- location: /cgi/*.ext
+ location: /cgi
+  cgi_ext: .ext
   accepted_methods: GET POST 
   cgi_pass: /bin/script.ext
 
- location: /foo/*.py
+ location: /foo
+  cgi_ext: py
   accepted_methods: GET POST DELETE
   cgi_pass: /bin/python
  
