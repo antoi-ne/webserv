@@ -61,7 +61,7 @@ namespace ws
 
 		http::Res Launcher::run()
 		{
-			http::Res res;
+			http::MsgUpdate<http::Res, http::ResParser>	res;
 			char ** envp;
 			char ** args;
 			char *script;
@@ -96,7 +96,8 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
-			std::cout << "res: " << buff.to_string() << std::endl;
+			std::cout << "resBuff: " << buff.to_string() << std::endl;
+			res.chillCheck(buff);
 			return res;
 		}
 

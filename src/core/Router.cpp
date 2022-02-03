@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 17:31:38 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 08:11:19 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,9 +80,7 @@ namespace ws
 			{
 				res = uri.find(it->route);
 				if (res == 0)
-					if (!it->cgi_ext.size()
-					|| (it->cgi_ext.size() && uri.find_last_of(it->cgi_ext) - (it->cgi_ext.size() - 1) == uri.size() - it->cgi_ext.size()))
-						return it.base();
+					return it.base();
 			}
 			return NULL;
 		}
@@ -192,13 +190,12 @@ namespace ws
 
 			path = serv.root;
 			path += (uri.c_str() + serv.route.size());
-			if (path.back() == '/')
-				path.pop_back();
 			if (stat(path.c_str(), &info) != 0)
 				return std::string();
 			if (S_ISDIR(info.st_mode))
 			{
-				path.push_back('/');
+				if (path.back() != '/')
+					path.push_back('/');
 				if (!serv.autoindex)
 				{
 					path.append(serv.index);
@@ -244,9 +241,9 @@ namespace ws
 					size = sprintf(_buff, DIR_TEMP, uri.c_str(), it->d_name, it->d_name);
 				else
 					size = sprintf(_buff, FILE_TEMP, uri.c_str(), it->d_name, it->d_name);
-				buff.join(shared::Buffer(_buff, size));
+				buff.join(_buff, size);
 			}
-			buff.join(shared::Buffer(INDEX_OF2));
+			buff.join(INDEX_OF2, 25);
 			return buff;
 		}
 
@@ -276,7 +273,7 @@ namespace ws
 				{
 					file.read(_buff, 2048);
 					len = file.gcount();
-					buff.join(shared::Buffer(_buff, len));
+					buff.join(_buff, len);
 				}
 				file.close();
 			}

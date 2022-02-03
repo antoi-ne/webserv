@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 11:06:58 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 09:45:41 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,21 @@ namespace http
 {
 	ReqParser::ReqParser(http::Req& req)
 	 : Parser(req), _req(req)
-	{}
-
-	bool	ReqParser::_checkFirstLine(size_t endLine)
 	{
+		this->_fUpdate = &Parser::checkFirstLine;
+	}
+
+	bool	ReqParser::checkFirstLine(size_t endLine)
+	{
+		bool	ret = true;
 		if (!_skipStartCRLF())
 		{
 			if (!this->_getStartLine(endLine))
-				return false;
+				ret = false;
+			this->_fUpdate = &Parser::checkHeader; // &(Parser::checkFirstLine) err?
 		}
-		return true;
+		this->_buff.advance(endLine + 1);
+		return ret;
 	}
 
 	static size_t	_skipCRLF(ws::shared::Buffer& buff)

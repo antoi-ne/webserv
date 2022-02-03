@@ -37,6 +37,7 @@ namespace ws
 			Buffer&	resetCursor(void);
 
 			void	join(const Buffer& buff);
+			void	join(const std::string& s);
 			void	join(const char* buff, size_t size);
 
 			const char&	operator[](size_t index) const;

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 17:32:41 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/03 09:46:08 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,11 @@
 namespace http
 {
 	Parser::Parser(http::Message& msg)
-	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(&Parser::_updateFirstLine)
+	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(&Parser::checkHeader)
+	{}
+
+	Parser::Parser(http::Message& msg, bool (Parser::*fUpdate)(size_t))
+	 : _msg(msg), _buff(), _headerFinish(), _fUpdate(fUpdate)
 	{}
 
 	http::Message&	Parser::_getMsg(void)
@@ -23,6 +27,13 @@ namespace http
 
 	bool	Parser::headerFinish(void) const
 	{ return this->_headerFinish; }
+
+	void	Parser::chillCheck(const ws::shared::Buffer& buff)
+	{
+		this->_buff.join(buff);
+		if (!this->_headerFinish)
+			this->_chillIfCRLF();
+	}
 
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
@@ -102,6 +113,17 @@ namespace http
 		return true;
 	}
 
+	void	Parser::_chillIfCRLF(void)
+	{
+		size_t endLine = this->_buff.find('\n');
+
+		while (endLine != std::string::npos && !this->_headerFinish)
+		{
+			(this->*_fUpdate)(endLine);
+			endLine = this->_buff.find('\n');
+		}
+	}
+
 	bool	Parser::_updateIfCRLF(void)
 	{
 		size_t endLine = this->_buff.find('\n');
@@ -110,17 +132,8 @@ namespace http
 		{
 			if ((this->*_fUpdate)(endLine) == false) // error case
 				return false;
-			this->_buff.advance(endLine + 1);
 			endLine = this->_buff.find('\n');
 		}
-		return true;
-	}
-
-	bool	Parser::_updateFirstLine(size_t endLine)
-	{
-		if (!this->_checkFirstLine(endLine))
-			return false;
-		this->_fUpdate = &Parser::_checkHeader;
 		return true;
 	}
 
@@ -151,14 +164,17 @@ namespace http
 	}
 
 	// TODO Check host
-	bool	Parser::_checkHeader(size_t endLine)
+	bool	Parser::checkHeader(size_t endLine)
 	{
+		bool	ret = true;
+
 		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
 			this->_endHeader(endLine);
 		else
 			if (!this->_setHeader(endLine))
-				return false;
-		return true;
+				ret = false;
+		this->_buff.advance(endLine + 1);
+		return ret;
 	}
 
 	bool	Parser::_setHeader(size_t endLine)
