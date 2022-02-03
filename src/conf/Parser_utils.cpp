@@ -6,10 +6,11 @@ namespace ws
 {
 	namespace conf
 	{
-        void loc_attr(std::ifstream &fd, Server &server)
+        void loc_attr(std::ifstream &fd, Server &server, std::string prev_line)
         {
             std::string line;
             Location    ret;
+            ret.route = p_route(prev_line);
             ret.autoindex = false;
             ret.max_body_size = -1;
             while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
@@ -36,11 +37,9 @@ namespace ws
                 if (!(line.compare(0, 7, "return:")))
                     ret.return_code = p_return_code(line);
             }
-            if (ret.return_code != TEMPORARY_REDIRECT && ret.return_code != MOVED_TEMPORARLY && ret.return_code != MOVED_PERMANENTLY && ret.return_code != SEE_OTHER)
-                ret.return_code = UNDIFND;
             server.locations.push_back(ret);
             if (!(line.compare(1, 9, "location:")))
-                loc_attr(fd, server);
+                loc_attr(fd, server, line);
         }
 
         int  mapping_servers(server_map &config, std::ifstream &fd){
@@ -58,7 +57,7 @@ namespace ws
                 if (!(line.compare(0, 7, "listen:")))
                     tmp = map_servers(line);
                 if (!(line.compare(0, 9, "location:")))
-                    loc_attr(fd, tmp_server);
+                    loc_attr(fd, tmp_server, line);
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
                 if (!(line.compare(0, 5, "root:")))

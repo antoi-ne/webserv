@@ -7,7 +7,10 @@ namespace ws
 	namespace conf
 	{
         std::string p_route(std::string line){
-            line.erase(0, 5);
+            if (line[0] == ' ')
+                line.erase(1, 9);
+            else
+                line.erase(0, 9);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line); 
             
@@ -107,19 +110,17 @@ namespace ws
             return (tmp);
         }
 
-        return_code p_return_code(std::string line){
+        std::string p_return_code(std::string line){
             line.erase(0, 7);
-            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-            int ret = std::stoi(line);
-            if (ret == MOVED_PERMANENTLY)
-                return MOVED_PERMANENTLY;
-            if (ret == MOVED_TEMPORARLY)
-                return MOVED_TEMPORARLY;
-            if (ret == SEE_OTHER)
-                return SEE_OTHER;
-            if (ret == TEMPORARY_REDIRECT)
-                return TEMPORARY_REDIRECT;
-            return (UNDIFND);
+            size_t b = line.find_first_of("0123456789");
+            size_t s = b;
+            while (std::isdigit(line[s]))
+                s++;
+            std::string ret = line.substr(b, s);
+            if (ret != TEMPORARY_REDIRECT && ret != SEE_OTHER && ret != MOVED_PERMANENTLY && ret != MOVED_TEMPORARLY)
+                return (UNDIFND);
+            return (ret);
+            
         }
 
         ErrorPages p_error_pages(ErrorPages errors_pages, std::string line){

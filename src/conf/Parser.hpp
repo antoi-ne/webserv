@@ -30,7 +30,7 @@ namespace ws
 		int							p_m_bdy_size(std::string line);
 		std::string					p_upload_path(std::string line);
 		std::string					p_return_path(std::string line);
-		return_code					p_return_code(std::string line);
+		std::string					p_return_code(std::string line);
 		ErrorPages					p_error_pages(ErrorPages errors_pages, std::string line);
 		std::vector<std::string>	p_server_names(std::string line);
 		std::vector<e_method>		p_accpt_mtde(std::string line);
