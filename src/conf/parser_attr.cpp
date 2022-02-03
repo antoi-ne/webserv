@@ -116,7 +116,9 @@ namespace ws
             size_t s = b;
             while (std::isdigit(line[s]))
                 s++;
+            s--;
             std::string ret = line.substr(b, s);
+            std::cout << "|" << ret << "|" << std::endl;
             if (ret != TEMPORARY_REDIRECT && ret != SEE_OTHER && ret != MOVED_PERMANENTLY && ret != MOVED_TEMPORARLY)
                 return (UNDIFND);
             return (ret);
