@@ -75,6 +75,8 @@ namespace ws
                     tmp_server.upload_path = p_upload_path(line);
                 if (!(line.compare(0, 7, "return:")))
                     tmp_server.return_path = p_return_path(line);
+                if (!(line.compare(0, 17, "accepted_methods:")))
+                    tmp_server.accepted_methods = p_accpt_mtde(line);
                 if (!(line.compare(0, 7, "return:")))
                     tmp_server.return_code = p_return_code(line);
             }

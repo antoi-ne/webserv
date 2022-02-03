@@ -7,7 +7,7 @@ server:
  upload_path: /example/path
  client_max_body_size: 128 
  error_pages: 400 404 444 /path/4xx.html
- return: 308 http://example.net
+ return: 307 http://example.net
 
  location: /hello
   root: /other/path

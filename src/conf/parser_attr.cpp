@@ -46,23 +46,28 @@ namespace ws
         }
 
         std::vector<e_method> p_accpt_mtde(std::string line){
+            line.erase(0,17);
             std::vector<e_method> ret;
-            for (size_t i = 0; i < line.size(); i++)
+            for (size_t i = 0; i <= line.size(); i++)
             {
                 if (line[i] == ' ')
                     continue;
                 else
                 {
-                    std::string tmp = line.substr(i, line.find_first_of(" "));
-                    if (tmp == "GET")
+                    std::string tmp = line.substr(i, line.size());
+                    size_t end = tmp.find_first_of(" ");
+                    if (end == std::string::npos)
+                        end = tmp.size();
+                    std::string tmp2 = tmp.substr(0, end);
+                    if (tmp2 == "GET")
                         ret.push_back(GET);
-                    else if(tmp == "POST")
+                    else if(tmp2 == "POST")
                         ret.push_back(POST);
-                    else if(tmp == "PUT")
+                    else if(tmp2 == "PUT")
                         ret.push_back(PUT);
-                    else if(tmp == "DELETE")
+                    else if(tmp2 == "DELETE")
                         ret.push_back(DELETE);
-                    i += line.find_first_of(" ");
+                    i += end;
                 }
             }
             return (ret);
@@ -119,6 +124,7 @@ namespace ws
 
         ErrorPages p_error_pages(ErrorPages errors_pages, std::string line){
             ErrorPages ret(errors_pages);
+            line.erase(0, 12);
             size_t s = line.size();
             while (line[s] == ' ')
                 s--;
@@ -134,22 +140,19 @@ namespace ws
             }
             std::string path = line.substr(s, line.size());
             line.erase(s, line.size());
-            std::cout << path << std::endl;
             for (size_t i = 0; i < line.size(); i++)
             {
                 if (std::isdigit(line[i]))
                 {
-                    size_t end = line.find_first_of(" ") - 1;
-                    if (end == (std::string::npos - 1))
+
+                    int tmp = std::stoi(line.substr(i, line.size()));
+                    if (tmp > 999 || tmp <= 99)
                     {
-                        std::cout << "Error page, bad syntaxe" << std::endl;
-                        return (ret);                   
-                    } 
-                    std::cout << line.substr(i, end) << std::endl;
-                    int tmp = std::stoi(line.substr(i, end));
-                    std::cout << tmp << std::endl;
+                        std::cout << "bad error pages " << std::endl;
+                        return (ret);
+                    }
                     ret[tmp] = new std::string(path);
-                    i += end;
+                    i +=3;
                 }
             }
             return (ret);

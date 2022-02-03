@@ -5,7 +5,7 @@ namespace ws
 	namespace conf
 	{
 
-		void print_config(server_map server){
+		/*void print_config(server_map server){
 			for (server_map::iterator it = server.begin(); it != server.end(); it++)
 			{
 				std::cout << "_____SERVER_____" << std::endl;
@@ -76,7 +76,7 @@ namespace ws
 
  				}
 			}
-		}
+		}*/
 
 		Parser::Parser(std::string file_path)
 		{
@@ -91,7 +91,7 @@ namespace ws
 							 std::cout << "probleme occured with filling the server info" << std::endl;
 					}
 				}
-				print_config(this->config.servers);
+				//print_config(this->config.servers);
 			}
 			catch(int oui){
 				std::cout << "is :" << file_path << " a correct config file ?";
