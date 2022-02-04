@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ReqParser.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 14:36:10 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/04 19:47:31 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ namespace http
 			size_t index = this->_getMethod(endLine);
 			if (index) // if not failed method -> UNDEF
 			{
-				size_t endPath = this->_buff.find(HTTPVER, endLine);
+				size_t endPath = this->_buff.find_last_of_from(HTTPVER, endLine);
 				if (endPath != std::string::npos)
 					if (endPath + 8 == endLine
 						|| (endPath + 9 == endLine
