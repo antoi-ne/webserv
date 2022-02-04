@@ -36,15 +36,15 @@ namespace ws
 		{
 			std::list<net::Ctx> ctxs;
 			std::list<net::Ctx>::iterator it;
-			shared::Buffer buff;
-			shared::Option<shared::Buffer> opt;
-			http::Res resf;
 
 			ctxs = this->_pool.probe();
+			
 			for (it = ctxs.begin(); it != ctxs.end(); it++)
 			{
 				if (it->rread) // new request fragment received
 				{
+					shared::Option<shared::Buffer> opt;
+
 					opt = it->con.recv(4096);
 					if (opt.null())
 					{
@@ -55,11 +55,12 @@ namespace ws
 					Req& req = this->_req_cache[it->con];
 					if (req.update(opt.value()) == false)
 					{
-						shared::Log::info(this->_req_cache[it->con].body().to_string());
-						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (req.error())
 						{
+							http::Res resf;
+
 							resf.setStatus(STATUS400);
+							resf.header()["Connection"] = "close";
 							resf.body().join(std::string("Bad Request\r\n"));
 							this->_res_cache[it->con] = std::make_pair(resf.get_res(), false);
 						}
@@ -71,7 +72,6 @@ namespace ws
 								it->srv.get_port())
 							);
 							this->_res_cache[it->con] = std::make_pair(res.get_res(), true);
-							std::string test = this->_req_cache[it->con].header("Connection");
 							if (this->_req_cache[it->con].header("Connection") == "close")
 								this->_res_cache[it->con].second = false;
 						}
@@ -84,7 +84,7 @@ namespace ws
 					ssize_t rbytes = it->con.send(this->_res_cache[it->con].first);
 					if (rbytes == 0)
 					{
-						this->_res_cache[it->con].first = shared::Buffer();
+						this->_res_cache.erase(it->con);
 						this->_pool.close_con(it->con);
 					}
 					if (rbytes < 0)
@@ -92,7 +92,7 @@ namespace ws
 					this->_res_cache[it->con].first.advance(rbytes);
 					if (this->_res_cache[it->con].first.size() == 0)
 					{
-						this->_res_cache[it->con].first = shared::Buffer();
+						this->_res_cache.erase(it->con);
 						if (this->_res_cache[it->con].second == false)
 							this->_pool.close_con(it->con);
 					}

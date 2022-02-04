@@ -25,7 +25,6 @@ int main(int ac, char* av[])
 		return 1; (void)av;
 	conf::Parser	parser("./config/ws1.conf");
 
-	parser.print_config(parser.config.servers);
 	core::Controller control = core::Controller(parser.config);
 	control.start();
 }
