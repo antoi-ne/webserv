@@ -59,6 +59,7 @@ namespace ws
 						std::cout << this->_req_cache[it->con].method() << std::endl;
 						if (req.error())
 						{
+							resf.header()["Connection"] = "close";
 							resf.setStatus(STATUS400);
 							resf.body().join(std::string("Bad Request\r\n"));
 							this->_res_cache[it->con] = std::make_pair(resf.get_res(), false);
@@ -70,7 +71,7 @@ namespace ws
 								std::make_pair(it->srv.get_host(),
 								it->srv.get_port())
 							);
-							this->_res_cache[it->con] = std::make_pair(res.get_res(), true);
+							this->_res_cache[it->con] = std::make_pair(res.get_res(), (res.header("connection") != "close"));
 							std::string test = this->_req_cache[it->con].header("Connection");
 							if (this->_req_cache[it->con].header("Connection") == "close")
 								this->_res_cache[it->con].second = false;
