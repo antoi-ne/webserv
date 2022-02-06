@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 17:48:52 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/05 13:51:02 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ namespace ws
 			const conf::Server*		serv;
 			const conf::Location*	loc;
 			
+			if (request.header("connection") == "close")
+				response.header()["connection"] = "close";
 			if ((serv = this->_getServ(request.header(), host)))
 			{
 				if ((loc = this->_getLocation(request.path(), *serv)))
@@ -94,7 +96,6 @@ namespace ws
 		{
 			const std::string*	errorPage;
 
-			response.header()["connection"] = "close";
 			response.setStatus(str);
 			errorPage = this->_findErrorPage(serv, code);
 			if (errorPage != NULL)

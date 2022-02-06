@@ -55,46 +55,43 @@ namespace ws
 					Req& req = this->_req_cache[it->con];
 					if (req.update(opt.value()) == false)
 					{
+						http::Res res;
 						if (req.error())
 						{
-							http::Res resf;
-
-							resf.setStatus(STATUS400);
-							resf.header()["Connection"] = "close";
-							resf.body().join(std::string("Bad Request\r\n"));
-							this->_res_cache[it->con] = std::make_pair(resf.get_res(), false);
+							res.header()["Connection"] = "close";
+							res.setStatus(STATUS400);
+							res.body().join(std::string("Bad Request\r\n"));
 						}
 						else
 						{
-							http::Res res = this->_router.process(
+							res = this->_router.process(
 								this->_req_cache[it->con],
 								std::make_pair(it->srv.get_host(),
 								it->srv.get_port())
 							);
-							this->_res_cache[it->con] = std::make_pair(res.get_res(), true);
-							if (this->_req_cache[it->con].header("Connection") == "close")
-								this->_res_cache[it->con].second = false;
 						}
+						this->_res_cache[it->con] = std::make_pair(res.get_res(), res.header("connection") != "close");
 						this->_req_cache.erase(it->con);
 					}
 				}
 
-				if (it->rwrite && this->_res_cache[it->con].first.size() != 0) // ready to receive response if any response is in the cache
+				if (it->rwrite && this->_res_cache.find(it->con) != this->_res_cache.end())
 				{
 					ssize_t rbytes = it->con.send(this->_res_cache[it->con].first);
 					if (rbytes == 0)
 					{
 						this->_res_cache.erase(it->con);
 						this->_pool.close_con(it->con);
+						continue;
 					}
 					if (rbytes < 0)
 						continue;
 					this->_res_cache[it->con].first.advance(rbytes);
 					if (this->_res_cache[it->con].first.size() == 0)
 					{
-						this->_res_cache.erase(it->con);
 						if (this->_res_cache[it->con].second == false)
 							this->_pool.close_con(it->con);
+						this->_res_cache.erase(it->con);
 					}
 				}
 			}
