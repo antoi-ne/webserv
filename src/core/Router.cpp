@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/05 13:51:02 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/06 15:27:12 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,8 @@ namespace ws
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
+			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+				return this->_setError(response, mainConf, STATUS413, 413);
 			if (mainConf.return_path.size())
 			{
 				if (_hasBody(request.method()) && mainConf.upload_path.size())
@@ -190,8 +192,6 @@ namespace ws
 			}
  			if (!this->_getBody(body, path, request.path()))
 				return this->_setError(response, mainConf, STATUS403, 403);
-			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-				return this->_setError(response, mainConf, STATUS413, 413);
 			response.body().join(body);
 		}
 
