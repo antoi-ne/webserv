@@ -1,7 +1,9 @@
 import pytest
+from os import path
 from utils import connect_req, chunk_send, connect_one
 from utils_test import common_check
 from file import File
+
 
 '''
 	Need:
@@ -13,7 +15,8 @@ from file import File
 
 @pytest.fixture
 def file():
-	return File("/Volumes/Storage/goinfre/vneirinc/webserv/tester/page/hello_world.txt")
+	script_dir = path.dirname(__file__)
+	return File(script_dir + "/page/hello_world.txt")
 
 def	test_upload(file):
 	res = connect_req("POST /upload/{} HTTP/1.1\r\nhost: x\r\nContent-Length: {}\r\n\r\n{}".format(file.file_name, str(len(file.content)), file.content))

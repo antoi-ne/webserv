@@ -43,14 +43,14 @@ def chunk_send(client, header, body, div):
 	char_by_send = int(size / div);
 	last_seq_size = int(char_by_send + size % div);
 	start = 0
-	chunk_size = str(char_by_send) + CRLF
+	chunk_size = hex(char_by_send)[2:] + CRLF
 	while size > start + last_seq_size:
 		_req = chunk_size;
 		client.send(_req.encode())
 		_req = body[start:start + char_by_send] + CRLF
 		client.send(_req.encode())
 		start += char_by_send
-	_req = str(last_seq_size) + CRLF
+	_req = hex(last_seq_size)[2:] + CRLF
 	client.send(_req.encode())
 	_req = body[start:start + last_seq_size] + CRLF
 	client.send(_req.encode())

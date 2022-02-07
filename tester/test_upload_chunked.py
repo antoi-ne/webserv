@@ -1,4 +1,5 @@
 import pytest
+from os import path
 from utils import connect_req, chunk_send, connect_one, get_res
 from utils_test import common_check
 from file import File
@@ -13,7 +14,8 @@ from file import File
 
 @pytest.fixture
 def file():
-	return File("/Volumes/Storage/goinfre/vneirinc/webserv/tester/page/wopwop.txt")
+	script_dir = path.dirname(__file__)
+	return File(script_dir + "/page/wopwop.txt")
 
 def	test_chunked_upload(file):
 	client = connect_one()
