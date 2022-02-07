@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 10:56:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:26:00 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 16:14:00 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ namespace	http
 		bool				_checkHeader(size_t endLine);
 
 	private:
+		bool				_acceptedKey(const std::string& key, const std::string& value) const;
 		bool				_unchunkedBody(void);
 		bool				_chunkedSize(size_t endLine, size_t& chunkSize) const;
 		bool				_chunkedContent(size_t& chunkSize);

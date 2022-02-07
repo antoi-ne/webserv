@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 15:36:53 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 16:28:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,18 +191,32 @@ namespace http
 		bool	ret = true;
 
 		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
-			this->_endHeader(endLine);
+		{
+			if (this->_msg.header("host") == "")
+				ret = false;
+			else
+				this->_endHeader(endLine);
+		}
 		else
 			if (!this->_setHeader(endLine))
 				ret = false;
 		return ret;
 	}
 
+	bool	Parser::_acceptedKey(const std::string& key, const std::string& value) const
+	{
+		if (key == "host")
+		{
+			if (value.empty())
+				return false;
+		}
+		return true;
+	}
+
 	bool	Parser::_setHeader(size_t endLine)
 	{
 		int		hasCR = 0;
 		size_t	i = 0;
-		size_t	keyEnd = 0;
 
 		if (this->_buff[endLine - 1] == '\r')
 			hasCR = 1;
@@ -212,15 +226,16 @@ namespace http
 			++i;
 		if (i != 0)
 		{
+			std::string	key;
+			std::string	val;
+
+			key = std::string(this->_buff.get_ptr(), i);
 			if (this->_buff[i] == ':')
 			{
-				keyEnd = i++;
-				for (; i < endLine && this->_buff[i] <= ' '; ++i); // not sure skip space before value
-				this->_msg.header().insert(
-				std::make_pair(
-					std::string(this->_buff.get_ptr(), keyEnd),
-					std::string(this->_buff.get_ptr() + i, endLine - i - hasCR)
-				));
+				i++;
+				for (; i < endLine && this->_buff[i] == ' '; ++i); // not sure skip space before value
+				val = std::string(this->_buff.get_ptr() + i, endLine - i - hasCR);
+				this->_msg.header().insert(std::make_pair(key, val));
 			}
 			else if (hasCR)
 			{
@@ -229,7 +244,7 @@ namespace http
 			}
 			else if (i != endLine)
 				return false;
-			return true;
+			return _acceptedKey(key, val);
 		}
 		return false;
 	}
