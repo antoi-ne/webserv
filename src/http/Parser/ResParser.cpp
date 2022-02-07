@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResParser.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 16:33:17 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/02/07 13:54:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,11 +51,24 @@ namespace http
 		return i;
 	}
 
+	bool	ResParser::checkHeader(size_t endLine)
+	{
+		if (!Parser::_checkHeader(endLine))
+			this->_headerFinish = true;
+		else
+			this->_buff.advance(endLine + 1);
+		return true;
+	}
+
 	bool	ResParser::checkFirstLine(size_t endLine)
 	{
 		if (this->_goodFirstLine(endLine))
+		{
 			this->_buff.advance(endLine + 1);
-		this->_fUpdate = &Parser::checkHeader;
+			this->_fUpdate = &Parser::checkHeader;
+		}
+		else
+			this->_headerFinish = true;
 		return true;
 	}
 

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 10:56:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:32:48 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 13:26:00 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,14 +31,14 @@ namespace	http
 		Parser(http::Message& msg);
 		Parser(http::Message& msg, bool (Parser::*fUpdate)(size_t));
 
-		void		chillCheck(const ws::shared::Buffer& buff);
 		bool		update(const ws::shared::Buffer& buff);
 		bool		headerFinish(void) const;
-		bool		checkHeader(size_t endLine);
+		virtual bool	checkHeader(size_t endLine) = 0;
 		virtual	bool	checkFirstLine(size_t endLine) = 0;
 
 	protected:
 		bool				_acceptedChar(const char c) const;
+		bool				_checkHeader(size_t endLine);
 
 	private:
 		bool				_unchunkedBody(void);
@@ -48,7 +48,6 @@ namespace	http
 		void				_endHeader(size_t endLine);
 		bool				_isNotFinish(void);
 		bool				_updateIfCRLF(void);
-		void				_chillIfCRLF(void);
 		http::Message&		_getMsg(void);
 	};
 }

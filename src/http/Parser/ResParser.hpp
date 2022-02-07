@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResParser.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:43:01 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 12:23:50 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/02/07 13:22:57 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ namespace http
 		ResParser(http::Res& res);
 
 		virtual bool	checkFirstLine(size_t endLine);
+		virtual bool	checkHeader(size_t endLine);
 	private:
 		bool	_goodFirstLine(size_t endLine);
 		size_t	_checkHttpVer(void);

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 14:41:13 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 13:50:47 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,13 +27,6 @@ namespace http
 
 	bool	Parser::headerFinish(void) const
 	{ return this->_headerFinish; }
-
-	void	Parser::chillCheck(const ws::shared::Buffer& buff)
-	{
-		this->_buff.join(buff);
-		if (!this->_headerFinish)
-			this->_chillIfCRLF();
-	}
 
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
@@ -143,21 +136,14 @@ namespace http
 					return false;
 				}
 			}
-			if (this->_msg.body().size() == this->_msg.contentLength())
+			if (this->_msg.body().size() >= this->_msg.contentLength())
+			{
+				if (this->_msg.body().size() > this->_msg.contentLength())
+					this->_headerFinish = false;
 				return false;
+			}
 		}
 		return true;
-	}
-
-	void	Parser::_chillIfCRLF(void)
-	{
-		size_t endLine = this->_buff.find('\n');
-
-		while (endLine != std::string::npos && !this->_headerFinish)
-		{
-			(this->*_fUpdate)(endLine);
-			endLine = this->_buff.find('\n');
-		}
 	}
 
 	bool	Parser::_updateIfCRLF(void)
@@ -200,7 +186,7 @@ namespace http
 	}
 
 	// TODO Check host
-	bool	Parser::checkHeader(size_t endLine)
+	bool	Parser::_checkHeader(size_t endLine)
 	{
 		bool	ret = true;
 
@@ -209,7 +195,6 @@ namespace http
 		else
 			if (!this->_setHeader(endLine))
 				ret = false;
-		this->_buff.advance(endLine + 1);
 		return ret;
 	}
 

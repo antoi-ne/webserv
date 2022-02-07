@@ -21,11 +21,11 @@ def	test_chunked_upload(file):
 	client = connect_one()
 	chunk_send(client, "POST /upload/{} HTTP/1.1\r\nhost: x\r\ntransfer-encoding: chunked\r\n".format(file.file_name), file.content, 8)
 	res = get_res(client)
-	common_check(res, 201, "keep-alive")
+	common_check(res, client, 201, "keep-alive")
 
 def	test_retrieve(file):
-	res = connect_req("GET /upload/{} HTTP/1.1\r\nhost: x\r\n\r\n".format(file.file_name))
-	common_check(res, 200, "keep-alive")
+	[res, client] = connect_req("GET /upload/{} HTTP/1.1\r\nhost: x\r\n\r\n".format(file.file_name))
+	common_check(res, client, 200, "keep-alive")
 	body = res.read().decode()
 	assert len(body) == len(file.content)
 	assert body == file.content

@@ -1,5 +1,6 @@
+import pytest
 from utils_test import req_check, common_check
-from utils import connect_one, chunk_send, get_res
+from utils import connect_one, chunk_send, get_res, connect_req
 '''
 	Need:
 		body_size <= 1024
@@ -19,13 +20,18 @@ def test_fail_post():
 
 def test_fail_chunked():
 	client = connect_one()
-	cont = 'A' * 1000
+	cont = 'A' * 1025
 	chunk_send(client, "POST /post HTTP/1.1\r\nhost: x\r\ntransfer-encoding: chunked\r\n", cont, 21)
 	res = get_res(client)
-	common_check(res, 413)
+	common_check(res, client, 413)
 
-'''
-	weird
-def	test_content_length():
-	req_check("POST /post HTTP/1.1\r\nhost: x\r\nContent-Length: 8\r\n\r\nmorethan8adhiiahdoah", 400)
-'''
+def test_success_chunked():
+	client = connect_one()
+	cont = 'A' * 1024
+	chunk_send(client, "POST /post HTTP/1.1\r\nhost: x\r\ntransfer-encoding: chunked\r\n", cont, 21)
+	res = get_res(client)
+	common_check(res, client, 200)
+
+def test_success_post():
+	[res, client] = connect_req(req("/post", 1024))
+	common_check(res, client, 200)

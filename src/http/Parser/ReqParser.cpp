@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ReqParser.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/04 19:47:31 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 13:51:15 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,14 @@ namespace http
 	 : Parser(req), _req(req)
 	{
 		this->_fUpdate = &Parser::checkFirstLine;
+	}
+
+	bool	ReqParser::checkHeader(size_t endLine)
+	{
+		bool	ret = Parser::_checkHeader(endLine);
+
+		this->_buff.advance(endLine + 1);
+		return ret;
 	}
 
 	bool	ReqParser::checkFirstLine(size_t endLine)

@@ -10,7 +10,7 @@ def	connect_one(port = PORT, host = "localhost"):
 
 def connect_req(request):
 	client = connect_one()
-	return req_one_res(client, request)
+	return [req_one_res(client, request), client]
 
 def req_one_res(client, request):
 	client.send(request.encode())

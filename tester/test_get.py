@@ -1,4 +1,5 @@
-from utils_test import req_check
+from utils_test import req_check, common_check
+from utils import connect_one, one_req_div_send, get_res
 
 '''
 	Need:
@@ -8,6 +9,12 @@ from utils_test import req_check
 '''
 
 ### TEST
+
+#def	test_startcrlf():
+#	client = connect_one()
+#	one_req_div_send(client, "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n", 8)
+#	res = get_res(client)
+#	common_check(res, client, 200)
 
 def	test_crlf():
 	req_check("GET / HTTP/1.1\r\nhost: x\r\nconnection: close\r\n\r\n", 200, "close")

@@ -7,7 +7,7 @@ from utils_test import common_check
 '''
 
 def	test_301():
-	res = connect_req("GET /ret301 HTTP/1.1\r\nhost: x\r\n\r\n")
-	common_check(res, 301, "keep-alive")
+	[res, client] = connect_req("GET /ret301 HTTP/1.1\r\nhost: x\r\n\r\n")
+	common_check(res, client, 301, "keep-alive")
 	assert res.getheader("location") == "http://google.com"
 
