@@ -26,4 +26,4 @@ def	test_mainserv():
 	req("main", "bloublou")
 
 def test_empty_host():
-	req_check("GET / HTTP/1.1\r\nhost:\r\n\r\n", 200)
+	req_check("GET / HTTP/1.1\r\nhost: \r\n\r\n", 200)

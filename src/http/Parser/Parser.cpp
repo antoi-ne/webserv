@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:50:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 15:36:53 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,7 +179,7 @@ namespace http
 				this->_buff.size() - (endLine + 1)
 			);
 			this->_msg.setContentLength(
-				_setContentLength(this->_msg.header()["Content-Length"]));
+				_setContentLength(this->_msg.header("content-length")));
 		}
 		this->_headerFinish = true;
 		this->_msg.header().erase("transfer-encoding");

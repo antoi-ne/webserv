@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:54:11 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 15:33:48 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,17 @@ namespace http
 		return i;
 	}
 
+
+	void	ResParser::_finish(void)
+	{
+		this->_headerFinish = true;
+		this->_res.body() = this->_buff;
+	}
+
 	bool	ResParser::checkHeader(size_t endLine)
 	{
 		if (!Parser::_checkHeader(endLine))
-			this->_headerFinish = true;
+			this->_finish();
 		else
 			this->_buff.advance(endLine + 1);
 		return true;
@@ -68,7 +75,7 @@ namespace http
 			this->_fUpdate = &Parser::checkHeader;
 		}
 		else
-			this->_headerFinish = true;
+			this->_finish();
 		return true;
 	}
 
