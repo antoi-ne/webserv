@@ -10,6 +10,6 @@ class	File:
 		return file_path[start:]
 
 	def __readFile(self, file_path):
-		with open(file_path, "r") as file:
-			file_array = file.readlines()
-		return ''.join(file_array)
+		with open(file_path, "rb") as file:
+			_file = file.read()
+		return _file

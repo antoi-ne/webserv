@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/06 15:27:12 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/14 15:59:03 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,39 @@ namespace ws
 	{
 		bool	_hasBody(e_method method) { return method == POST || method == PUT; }
 
-		Router::Router(const conf::Config& conf) : _config(conf) {}
+		void	Router::_initMIME(const std::string mime_type, const std::string mime_ext)
+		{
+			size_t		i = 0;
+			size_t		start_ext = 0;
+			std::vector<std::string>	tmp;
+			
+			while (i < mime_ext.size())
+			{
+				if (mime_ext[i] == ';')
+				{
+					tmp.push_back(mime_ext.substr(start_ext, i));
+					if (mime_ext[i] == ' ')
+						++i;
+					start_ext = i + 2;
+				}
+				++i;
+			}
+			tmp.push_back(mime_ext.substr(start_ext, i));
+			this->_mime.push_back(make_pair(tmp, mime_type));
+		}
+
+		Router::Router(const conf::Config& conf) : _config(conf), _mime()
+    	{
+			std::string mime_type[] = MIME_TYPE;
+			std::string mime_ext[] = MIME_EXT;
+			size_t		i = 0;
+
+			while (!(mime_ext[i].empty()))
+			{
+				this->_initMIME(mime_type[i], mime_ext[i]);
+				++i;
+			}
+	    }
 
 		http::Res
 		Router::process(http::Req& request, const conf::host_port& host) const
@@ -134,11 +166,25 @@ namespace ws
 				this->_renderPage(request, response, mainConf, host);
 		}
 
-		std::string
-		_getMIME(const std::string& ext)
+		void
+		Router::_getMIME(http::Res& res, const std::string& ext) const
 		{
-			(void)ext;
-			return "";
+			mime_vec::const_iterator	it;
+
+			it = this->_mime.begin();
+			for (; it != this->_mime.end(); ++it)
+			{
+				std::vector<std::string>::const_iterator	ext_it = it->first.begin();
+
+				for (;ext_it != it->first.end(); ++ext_it)
+				{
+					if (*ext_it == ext)
+					{
+						res.header()["Content-Type"] = it->second;
+						return ;
+					}
+				}
+			}
 		}
 
 		void
@@ -162,11 +208,21 @@ namespace ws
 
 			if (file)
 			{
-				file << buff.get_ptr();
+				file.write(buff.get_ptr(), buff.size());
 				file.close();
 				return true;
 			}
 			return false;
+		}
+
+		std::string
+		Router::_getExt(const std::string& path) const
+		{
+			size_t	ext_start = path.find_last_of('.');
+
+			if (ext_start == std::string::npos)
+				return "";
+			return path.substr(ext_start + 1);
 		}
 
 		void
@@ -177,6 +233,7 @@ namespace ws
 			const conf::host_port& host) const
 		{
 			std::string				path;
+			std::string				ext;
 			shared::Buffer			body;
 
 			path = _getLocalPath(request.path(), mainConf);
@@ -185,13 +242,16 @@ namespace ws
 			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
 				== mainConf.accepted_methods.end())
 				return this->_setError(response, mainConf, STATUS405, 405);
-			if (mainConf.cgi_ext.size())
+			ext = this->_getExt(path);
+			if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
 			{
 				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
 				return ;
 			}
+			if (ext.size())
+				this->_getMIME(response, ext);
  			if (!this->_getBody(body, path, request.path()))
-				return this->_setError(response, mainConf, STATUS403, 403);
+				return this->_setError(response, mainConf, STATUS500, 500);
 			response.body().join(body);
 		}
 
@@ -206,9 +266,7 @@ namespace ws
 			path = serv.root;
 			path += (uri.c_str() + serv.route.size());
 			if (stat(path.c_str(), &info) != 0)
-			{
 				return std::string();
-			}
 			if (S_ISDIR(info.st_mode))
 			{
 				if (path.back() != '/')

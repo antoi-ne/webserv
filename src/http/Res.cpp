@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/04 15:17:40 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/14 15:30:15 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ namespace http
 	 : Message(), _statusMsg(STATUS200)
 	{
 		this->_header.insert(std::make_pair("Connection", "keep-alive"));
-		this->_header.insert(std::make_pair("Content-Type", "text/html"));
+		this->_header.insert(std::make_pair("Content-Type", "text/plain"));
 	}
 
 	void	Res::_getTime(ws::shared::Buffer& buff) const

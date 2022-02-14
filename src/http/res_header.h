@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:21:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 10:53:24 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/14 15:12:24 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,6 @@
 # define STATUS405 "405 Method Not Allowed"
 # define STATUS413 "413 Request Entity Too Large"
 # define STATUS444 "444 Wrong"
+
+# define STATUS500 "500 Internal Error"
 #endif

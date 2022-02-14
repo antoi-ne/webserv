@@ -15,6 +15,8 @@ namespace ws
 		{
 		public:
 			typedef std::vector<conf::Server>	serv_lst;
+			// extension -> type;
+			typedef std::vector<std::pair<std::vector<std::string>, std::string> > mime_vec;
 
 			Router(const conf::Config& _config);
 
@@ -22,10 +24,14 @@ namespace ws
 
 		private:
 			const conf::Config&	_config;
+			mime_vec			_mime;
 
 			void	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			void	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
 
+			std::string				_getExt(const std::string& path) const;
+			void					_getMIME(http::Res& res, const std::string& ext) const;
+			void					_initMIME(const std::string mime_type, const std::string mime_ext);
 			const std::vector<struct dirent>	_getDirList(DIR* dirp) const;
 			bool					_getFile(shared::Buffer& body, const std::string& path) const;
 			const conf::Server*		_getServ(http::Req::header_m& header, const conf::host_port& host) const;
