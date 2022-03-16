@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:57:25 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/16 13:37:34 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,6 @@ namespace	http
 	}
 
 	Req::Req(void)
-	 : Message(), _method(), _path()
+	 : Message(), _method(UNDEF), _path(), _createdTime(time(0))
 	{}
 }

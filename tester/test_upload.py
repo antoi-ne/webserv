@@ -23,6 +23,7 @@ def	test_upload(file):
 	client.send(("POST /upload/{} HTTP/1.1\r\nhost: x\r\nContent-Length: {}\r\n\r\n".format(file.file_name, len(file.content))).encode())
 	client.send(file.content)
 	res = get_res(client)
+	common_check(res, client, 201, "keep-alive")
 
 
 def	test_retrieve(file):

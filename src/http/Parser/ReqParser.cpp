@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:51:15 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/16 13:38:30 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ namespace http
 	ReqParser::ReqParser(http::Req& req)
 	 : Parser(req), _req(req)
 	{
+		std::cout << "method: " << this->_req.method() << std::endl;
 		this->_fUpdate = &Parser::checkFirstLine;
 	}
 
@@ -31,13 +32,16 @@ namespace http
 	bool	ReqParser::checkFirstLine(size_t endLine)
 	{
 		bool	ret = true;
+
 		if (!_skipStartCRLF())
 		{
 			if (!this->_getStartLine(endLine))
+			{
 				ret = false;
+			}
 			this->_fUpdate = &Parser::checkHeader;
+			this->_buff.advance(endLine + 1);
 		}
-		this->_buff.advance(endLine + 1);
 		return ret;
 	}
 

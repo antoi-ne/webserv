@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 16:28:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/16 09:36:37 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,14 @@ namespace http
 
 	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
+		if (!this->_addBuffer(buff)
+			|| (!this->_headerFinish && !this->_updateIfCRLF()))
+			return false;
+		return this->_isNotFinish();
+	}
+
+	bool	Parser::_addBuffer(const ws::shared::Buffer& buff)
+	{
 		if (this->_msg.contentLength() == std::string::npos)
 			this->_buff.join(buff);
 		else if (this->_msg.body().size() + buff.size() > this->_msg.contentLength())
@@ -39,9 +47,42 @@ namespace http
 		}
 		else
 			this->_msg.body().join(buff);
-		if (!this->_headerFinish && !this->_updateIfCRLF())
-			return false;
-		return this->_isNotFinish();
+		return true;
+	}
+
+	bool	Parser::_updateIfCRLF(void)
+	{
+		size_t endLine = this->_buff.find('\n');
+
+		while (endLine != std::string::npos && !this->_headerFinish)
+		{
+			if ((this->*_fUpdate)(endLine) == false) // error case
+				return false;
+			endLine = this->_buff.find('\n');
+		}
+		return true;
+	}
+
+	bool	Parser::_isNotFinish(void)
+	{
+		if (this->_headerFinish)
+		{
+			if (this->_msg.contentLength() == std::string::npos)
+			{
+				if (!this->_unchunkedBody())
+				{
+					this->_headerFinish = false;
+					return false;
+				}
+			}
+			if (this->_msg.body().size() >= this->_msg.contentLength())
+			{
+				if (this->_msg.body().size() > this->_msg.contentLength())
+					this->_headerFinish = false;
+				return false;
+			}
+		}
+		return true;
 	}
 
 	bool	Parser::_chunkedSize(size_t endLine, size_t& chunkSize) const
@@ -120,41 +161,6 @@ namespace http
 				this->_msg.setContentLength(this->_msg.body().size());
 			else
 				return false;
-		}
-		return true;
-	}
-
-	bool	Parser::_isNotFinish(void)
-	{
-		if (this->_headerFinish)
-		{
-			if (this->_msg.contentLength() == std::string::npos)
-			{
-				if (!this->_unchunkedBody())
-				{
-					this->_headerFinish = false;
-					return false;
-				}
-			}
-			if (this->_msg.body().size() >= this->_msg.contentLength())
-			{
-				if (this->_msg.body().size() > this->_msg.contentLength())
-					this->_headerFinish = false;
-				return false;
-			}
-		}
-		return true;
-	}
-
-	bool	Parser::_updateIfCRLF(void)
-	{
-		size_t endLine = this->_buff.find('\n');
-
-		while (endLine != std::string::npos && !this->_headerFinish)
-		{
-			if ((this->*_fUpdate)(endLine) == false) // error case
-				return false;
-			endLine = this->_buff.find('\n');
 		}
 		return true;
 	}

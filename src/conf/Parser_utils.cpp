@@ -14,7 +14,6 @@ namespace ws
             ret.autoindex = false;
             while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
             {
-
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 2);
@@ -95,7 +94,7 @@ namespace ws
                 }
             }
             config[tmp].push_back(tmp_server);
-           if (line == "server:")
+        	if (line == "server:")
                 return (mapping_servers(config, fd));
             return (1);
         }
