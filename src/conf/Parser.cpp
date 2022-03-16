@@ -82,23 +82,21 @@ namespace ws
 		}
 
 		Parser::Parser(std::string file_path)
+		 : config()
 		{
 			std::ifstream   fd(file_path);
-    		try {
-				std::string     line;
-				while (std::getline(fd, line) != NULL)
+			std::string     line;
+			
+			while (!fd.eof())
+			{
+				std::getline(fd, line);	
+				if (line == "server:")
 				{
-					if (line == "server:")
-					{
-						if (mapping_servers(this->config.servers, fd) == 0)
-							 std::cout << "probleme occured with filling the server info" << std::endl;
-					}
+					if (mapping_servers(this->config.servers, fd) == 0)
+						std::cout << "probleme occured with filling the server info" << std::endl;
 				}
-				//print_config(this->config.servers);
 			}
-			catch(int oui){
-				std::cout << "is :" << file_path << " a correct config file ?";
-				}
+			print_config(this->config.servers);
 		}
 
 		Parser::~Parser()

@@ -63,6 +63,7 @@ namespace ws
             tmp_server.max_body_size = -1;
             while (getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
             {
+                std::cout << line << std::endl;
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 1);
