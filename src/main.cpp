@@ -67,7 +67,7 @@ int main(int ac, char* av[])
 
 	for (conf::location_v::iterator	it = parser.config.servers[host].front().locations.begin(); it != parser.config.servers[host].front().locations.end(); ++it)
 		if (it->route == "/upload" || it->route == "/post")
-			it->max_body_size = 1024;
+			it->max_body_size = 10024;
 	parser.print_config(parser.config.servers);
 	core::Controller control = core::Controller(parser.config);
 	control.start();

@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 13:38:30 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/16 13:48:58 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@ namespace http
 	ReqParser::ReqParser(http::Req& req)
 	 : Parser(req), _req(req)
 	{
-		std::cout << "method: " << this->_req.method() << std::endl;
 		this->_fUpdate = &Parser::checkFirstLine;
 	}
 

@@ -27,7 +27,7 @@ namespace ws
 			mime_vec			_mime;
 
 			void	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
-			void	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
+			bool	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
 
 			std::string				_getExt(const std::string& path) const;
 			void					_getMIME(http::Res& res, const std::string& ext) const;
