@@ -28,6 +28,7 @@ namespace ws
 			size_t	find(const char* s) const;
 			size_t	find(const std::string& s) const;
 			size_t	find(const char* c, size_t until) const;
+			size_t	find(size_t from, const char* c) const;
 
 			size_t	find_last_of_from(const std::string& s, size_t from) const;
 			char * get_ptr();

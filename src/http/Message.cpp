@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Message.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 09:05:31 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/04 12:29:56 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/17 11:42:10 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,9 @@ namespace	http
 	const Message::header_m&	Message::header(void) const
 	{ return this->_header; }
 
-	const std::string	Message::header(const std::string field)
+	const std::string	Message::header(const std::string field) const
 	{
-		header_m::iterator	it = this->_header.find(field);
+		header_m::const_iterator	it = this->_header.find(field);
 
 		return it != this->_header.end() ? it->second : "";
 	}

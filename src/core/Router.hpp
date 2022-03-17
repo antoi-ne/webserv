@@ -47,6 +47,9 @@ namespace ws
 			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
 			shared::Buffer			_getAutoIndexPage(DIR* dirp ,const std::string& uri) const;
+
+			ws::shared::Buffer		_parseFormData(const std::string& boundary, const ws::shared::Buffer& body, std::string& filename) const;
+			std::string 			_getBoundary(std::string headerField) const;
 		};
 	}
 }

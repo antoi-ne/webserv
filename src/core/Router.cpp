@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/17 09:33:07 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/17 13:20:38 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,15 +169,54 @@ namespace ws
 			http::Res& response,
 			const conf::ServConfig& mainConf) const
 		{
-			if (!this->_writeFile(
-				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
-				request.body()))
-			{
+			ws::shared::Buffer	content;
+			std::string 		filename;
+			std::string			boundary = "--" + this->_getBoundary(request.header("content-type"));
+
+			content = this->_parseFormData(boundary, request.body(), filename);
+			if (!content.size())
+				this->_setError(response, mainConf, STATUS400, 400);
+			else if (!this->_writeFile(mainConf.upload_path + filename, content))
 				this->_setError(response, mainConf, STATUS403, 403);
-				return false;
+			else
+				return true;
+			return false;
+		}
+
+		std::string
+		Router::_getBoundary(std::string headerField) const
+		{
+			size_t pos = headerField.find("boundary");
+
+			if (pos == std::string::npos)
+				return "";
+			return headerField.c_str() + pos + 9;
+			
+		}
+
+		ws::shared::Buffer
+		Router::_parseFormData(
+			const std::string& boundary,
+			const ws::shared::Buffer& body,
+			std::string& filename) const
+		{
+			ws::shared::Buffer	content;
+			std::string			line;
+			size_t				pos;
+
+			filename="/test";
+			if (boundary.size() > 2)
+			{
+				pos = body.find(boundary);
+				if (pos != std::string::npos)
+				{
+					size_t	i = pos + boundary.size();
+					pos = body.find(i, boundary.c_str());
+					if (pos != std::string::npos)
+						content.join(body.get_ptr() + i, pos - boundary.size());
+				}
 			}
-			response.setStatus(STATUS201);
-			return true;
+			return content;
 		}
 
 		bool	
