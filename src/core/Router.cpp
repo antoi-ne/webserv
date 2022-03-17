@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 13:57:32 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/17 09:33:07 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,15 +67,11 @@ namespace ws
 			
 			if (request.header("connection") == "close")
 				response.header()["connection"] = "close";
-			if ((serv = this->_getServ(request.header(), host)))
-			{
-				if ((loc = this->_getLocation(request.path(), *serv)))
-					this->_processServ(request, response, *loc, host);
-				else
-					this->_processServ(request, response, *serv, host);
-			}
+			serv = this->_getServ(request.header(), host);
+			if ((loc = this->_getLocation(request.path(), *serv)))
+				this->_processServ(request, response, *loc, host);
 			else
-				this->_setError(response, *serv, STATUS444, 444);
+				this->_processServ(request, response, *serv, host);
 			return response;
 		}
 
@@ -84,8 +80,8 @@ namespace ws
 		{
 			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
-			if (it == this->_config.servers.end())
-				return nullptr;
+			//if (it == this->_config.servers.end())
+			//	return nullptr; not possible?
 			return _getServerName(header["host"], it->second);
 		}
 
@@ -151,16 +147,15 @@ namespace ws
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
-			if (_hasBody(request.method()))
+			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+				return this->_setError(response, mainConf, STATUS413, 413);
+			if (_hasBody(request.method()) && mainConf.upload_path.size())
 			{
-				if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-					return this->_setError(response, mainConf, STATUS413, 413);
-				if (mainConf.upload_path.size())
-					if (!this->_upload(request, response, mainConf))
-						return ;
+				if (!this->_upload(request, response, mainConf))
+					return ;
 			}
 			else if (!mainConf.return_path.size())
-				this->_renderPage(request, response, mainConf, host);
+				return this->_renderPage(request, response, mainConf, host);
 			if (mainConf.return_path.size())
 			{
 				response.setStatus(mainConf.return_code);
@@ -176,8 +171,7 @@ namespace ws
 		{
 			if (!this->_writeFile(
 				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
-				request.body()
-			))
+				request.body()))
 			{
 				this->_setError(response, mainConf, STATUS403, 403);
 				return false;
@@ -218,13 +212,16 @@ namespace ws
 				== mainConf.accepted_methods.end())
 				return this->_setError(response, mainConf, STATUS405, 405);
 			ext = this->_getExt(path);
-			if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
-			{
-				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
-				return ;
-			}
 			if (ext.size())
-				this->_getMIME(response, ext);
+			{
+				if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
+				{
+					response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
+					return ;
+				}
+				else
+					this->_getMIME(response, ext);
+			}
  			if (!this->_getBody(body, path, request.path()))
 				return this->_setError(response, mainConf, STATUS500, 500);
 			response.body().join(body);
@@ -306,15 +303,15 @@ namespace ws
 		shared::Buffer
 		Router::_getAutoIndexPage(DIR* dirp ,const std::string& uri) const
 		{
-			char	_buff[512];
-			size_t	size;
+			std::vector<struct dirent>	dirList;
+			shared::Buffer	buff;
+			char			_buff[512];
+			size_t			size;
 
 			size = sprintf(_buff, INDEX_OF1, uri.c_str(), uri.c_str());
+			buff.join(_buff, size);
 
-			shared::Buffer	buff(_buff, size);
-
-			const std::vector<struct dirent>	dirList = this->_getDirList(dirp);
-
+			dirList = this->_getDirList(dirp);
 			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
 			{
 				if (it->d_type == DT_DIR)
@@ -323,6 +320,7 @@ namespace ws
 					size = sprintf(_buff, FILE_TEMP, uri.c_str(), it->d_name, it->d_name);
 				buff.join(_buff, size);
 			}
+
 			buff.join(INDEX_OF2, 25);
 			return buff;
 		}
@@ -341,18 +339,17 @@ namespace ws
 		bool
 		Router::_getFile(shared::Buffer& body, const std::string& path) const
 		{
-			std::ifstream		file(path);
+			std::ifstream	file(path);
+			char			buff[2048];
+			size_t			len;
 
 			if (!file)
 				return false;
-			char	_buff[2048];
-			size_t	len;
-
 			while (!file.eof())
 			{
-				file.read(_buff, 2048);
+				file.read(buff, 2048);
 				len = file.gcount();
-				body.join(_buff, len);
+				body.join(buff, len);
 			}
 			file.close();
 			return true;

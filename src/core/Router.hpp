@@ -43,7 +43,6 @@ namespace ws
 			bool					_getBody(shared::Buffer& body, const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
 			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
-			
 
 			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;
