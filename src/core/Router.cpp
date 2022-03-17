@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/17 13:20:38 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/17 16:38:20 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,14 +169,14 @@ namespace ws
 			http::Res& response,
 			const conf::ServConfig& mainConf) const
 		{
-			ws::shared::Buffer	content;
-			std::string 		filename;
-			std::string			boundary = "--" + this->_getBoundary(request.header("content-type"));
-
-			content = this->_parseFormData(boundary, request.body(), filename);
-			if (!content.size())
+			std::pair<std::string, ws::shared::Buffer>	content;
+			std::string									boundary;
+			
+			boundary = "--" + this->_getBoundary(request.header("content-type"));
+			content = this->_parseFormData(boundary, request.body());
+			if (!content.first.size())
 				this->_setError(response, mainConf, STATUS400, 400);
-			else if (!this->_writeFile(mainConf.upload_path + filename, content))
+			else if (!this->_writeFile(mainConf.upload_path + content.first, content.second))
 				this->_setError(response, mainConf, STATUS403, 403);
 			else
 				return true;
@@ -194,29 +194,58 @@ namespace ws
 			
 		}
 
-		ws::shared::Buffer
+		size_t
+		_filename(std::string& filename, const ws::shared::Buffer& body, size_t start)
+		{
+			size_t	pos = body.find(start, "filename=\"");
+			size_t i = pos;
+
+			if (pos != std::string::npos)
+			{
+				pos += 10;
+				i = pos;
+				while (body[i] != '"')
+					++i;
+				filename = "/" + std::string(body.get_ptr() + pos, i - pos);
+				if ((i = body.find(i, "\n")) != std::string::npos)
+					if ((i = body.find(++i, "\n")) != std::string::npos)
+						if ((i = body.find(++i, "\n")))
+							++i;
+			}
+			return i;
+		}
+
+		std::pair<std::string, ws::shared::Buffer>
 		Router::_parseFormData(
 			const std::string& boundary,
-			const ws::shared::Buffer& body,
-			std::string& filename) const
+			const ws::shared::Buffer& body) const
 		{
+			std::string			filename;
 			ws::shared::Buffer	content;
-			std::string			line;
 			size_t				pos;
 
-			filename="/test";
 			if (boundary.size() > 2)
 			{
-				pos = body.find(boundary);
-				if (pos != std::string::npos)
+				if ((pos = body.find(boundary)) != std::string::npos)
 				{
-					size_t	i = pos + boundary.size();
-					pos = body.find(i, boundary.c_str());
-					if (pos != std::string::npos)
-						content.join(body.get_ptr() + i, pos - boundary.size());
+					pos += boundary.size();
+					if ((pos = _filename(filename, body, pos)) != std::string::npos)
+					{
+						size_t endData = body.find_last_of_from(boundary.c_str(), body.size() - 1);
+						if (endData != std::string::npos)
+						{
+							if ((endData = body.find_last_of_from("\n", endData)))
+							{
+								--endData;
+								if (body[endData] == '\r')
+									--endData;
+								content.join(body.get_ptr() + pos, endData - pos);
+							}
+						}
+					}
 				}
 			}
-			return content;
+			return std::make_pair(filename, content);
 		}
 
 		bool	
