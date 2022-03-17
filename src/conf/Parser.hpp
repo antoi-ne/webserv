@@ -20,6 +20,7 @@ namespace ws
 			~Parser();
 
 			Config to_config();
+			void	print_config(server_map server);
 			Config config;
 		};
 		std::string					p_route(std::string line);

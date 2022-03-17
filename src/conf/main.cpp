@@ -3,8 +3,9 @@
 #include "Config.hpp"
 
 
+
 int main(void)
 {
-    ws::conf::Parser test;
+    ws::conf::Parser parser;
     return (0);
 }
