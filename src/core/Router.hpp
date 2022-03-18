@@ -26,8 +26,8 @@ namespace ws
 			const conf::Config&	_config;
 			mime_vec			_mime;
 
-			void	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
-			bool	_upload( const http::Req& request, http::Res& response, const conf::ServConfig& mainConf) const;
+			std::pair<const char *, uint16_t>	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
+			std::pair<const char *, uint16_t>	_upload( const http::Req& request, const conf::ServConfig& mainConf) const;
 
 			std::string				_getExt(const std::string& path) const;
 			void					_getMIME(http::Res& res, const std::string& ext) const;
@@ -42,7 +42,8 @@ namespace ws
 			void					_checkReq(const conf::ServConfig& servConf, http::Res& response, const http::Req& request) const;
 			bool					_getBody(shared::Buffer& body, const std::string& path, const std::string& uri) const;
 			void					_setError(http::Res& response, const conf::ServConfig& serv, const char* str, uint16_t code) const; 
-			void					_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
+			std::pair<const char *, uint16_t>	_renderPage(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
+			std::pair<const char *, uint16_t>	_delete(const std::string& path) const;
 
 			bool					_writeFile(const std::string& path, const shared::Buffer& buff) const;
 			const std::string*		_findErrorPage(const conf::ServConfig& serv, const uint16_t code) const;

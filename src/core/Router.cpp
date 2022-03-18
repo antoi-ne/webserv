@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/17 16:38:20 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/18 12:10:35 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,17 +61,26 @@ namespace ws
 		http::Res
 		Router::process(http::Req& request, const conf::host_port& host) const
 		{
-			http::Res				response;
-			const conf::Server*		serv;
-			const conf::Location*	loc;
+			http::Res					response;
+			const conf::Server*			serv;
+			const conf::Location*		loc;
+			std::pair<const char *, uint16_t>	err;
 			
 			if (request.header("connection") == "close")
 				response.header()["connection"] = "close";
 			serv = this->_getServ(request.header(), host);
 			if ((loc = this->_getLocation(request.path(), *serv)))
-				this->_processServ(request, response, *loc, host);
+			{
+				err = this->_processServ(request, response, *loc, host);
+				if (err.second)
+					this->_setError(response, *loc, err.first, err.second);
+			}
 			else
-				this->_processServ(request, response, *serv, host);
+			{
+				err = this->_processServ(request, response, *serv, host);
+				if (err.second)
+					this->_setError(response, *serv, err.first, err.second);
+			}
 			return response;
 		}
 
@@ -80,8 +89,6 @@ namespace ws
 		{
 			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
-			//if (it == this->_config.servers.end())
-			//	return nullptr; not possible?
 			return _getServerName(header["host"], it->second);
 		}
 
@@ -140,7 +147,7 @@ namespace ws
 			return it->second;
 		}
 
-		void
+		std::pair<const char *, uint16_t>
 		Router::_processServ(
 			const http::Req& request,
 			http::Res& response,
@@ -148,11 +155,12 @@ namespace ws
 			const conf::host_port& host) const
 		{
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-				return this->_setError(response, mainConf, STATUS413, 413);
+				return std::make_pair(STATUS413, 413);
 			if (_hasBody(request.method()) && mainConf.upload_path.size())
 			{
-				if (!this->_upload(request, response, mainConf))
-					return ;
+				std::pair<const char *, uint16_t>	err = this->_upload(request, mainConf);
+				if (err.second)
+					return err;
 			}
 			else if (!mainConf.return_path.size())
 				return this->_renderPage(request, response, mainConf, host);
@@ -161,12 +169,12 @@ namespace ws
 				response.setStatus(mainConf.return_code);
 				response.header().insert(std::make_pair("Location", mainConf.return_path));
 			}
+			return std::make_pair("", 0);
 		}
 
-		bool	
+		std::pair<const char *, uint16_t>	
 		Router::_upload(
 			const http::Req& request,
-			http::Res& response,
 			const conf::ServConfig& mainConf) const
 		{
 			std::pair<std::string, ws::shared::Buffer>	content;
@@ -175,12 +183,10 @@ namespace ws
 			boundary = "--" + this->_getBoundary(request.header("content-type"));
 			content = this->_parseFormData(boundary, request.body());
 			if (!content.first.size())
-				this->_setError(response, mainConf, STATUS400, 400);
+				return std::make_pair(STATUS400, 400);
 			else if (!this->_writeFile(mainConf.upload_path + content.first, content.second))
-				this->_setError(response, mainConf, STATUS403, 403);
-			else
-				return true;
-			return false;
+				return std::make_pair(STATUS413, 403);
+			return std::make_pair("", 0);
 		}
 
 		std::string
@@ -234,7 +240,7 @@ namespace ws
 						size_t endData = body.find_last_of_from(boundary.c_str(), body.size() - 1);
 						if (endData != std::string::npos)
 						{
-							if ((endData = body.find_last_of_from("\n", endData)))
+							if ((endData = body.find_last_of_from("\n", endData)) != std::string::npos)
 							{
 								--endData;
 								if (body[endData] == '\r')
@@ -262,7 +268,7 @@ namespace ws
 			return false;
 		}
 
-		void
+		std::pair<const char *, uint16_t>
 		Router::_renderPage(
 			const http::Req& request,
 			http::Res& response,
@@ -275,24 +281,35 @@ namespace ws
 
 			path = _getLocalPath(request.path(), mainConf);
 			if (path.empty())
-				return this->_setError(response, mainConf, STATUS404, 404);
+				return std::make_pair(STATUS404, 404);
 			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
 				== mainConf.accepted_methods.end())
-				return this->_setError(response, mainConf, STATUS405, 405);
+				return std::make_pair(STATUS405, 405);
 			ext = this->_getExt(path);
 			if (ext.size())
 			{
 				if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
 				{
 					response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
-					return ;
+					return std::make_pair("", 0);
 				}
 				else
 					this->_getMIME(response, ext);
 			}
- 			if (!this->_getBody(body, path, request.path()))
-				return this->_setError(response, mainConf, STATUS500, 500);
+			if (request.method() == DELETE)
+				return this->_delete(path);
+ 			else if (!this->_getBody(body, path, request.path()))
+				return std::make_pair(STATUS500, 500);
 			response.body().join(body);
+			return std::make_pair("", 0);
+		}
+
+		std::pair<const char *, uint16_t>
+		Router::_delete(const std::string& path) const
+		{
+			if (remove(path.c_str()) == -1)
+				return std::make_pair(STATUS500, 500);
+			return std::make_pair("", 0);
 		}
 
 		std::string
