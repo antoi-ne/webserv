@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/18 12:10:35 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/18 16:13:52 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -279,7 +279,7 @@ namespace ws
 			std::string				ext;
 			shared::Buffer			body;
 
-			path = _getLocalPath(request.path(), mainConf);
+			path = _getLocalPath(request.method() ,request.path(), mainConf);
 			if (path.empty())
 				return std::make_pair(STATUS404, 404);
 			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
@@ -297,19 +297,47 @@ namespace ws
 					this->_getMIME(response, ext);
 			}
 			if (request.method() == DELETE)
-				return this->_delete(path);
+			{
+				if (!this->_delete(path))
+					return std::make_pair(STATUS500, 500);
+			}
  			else if (!this->_getBody(body, path, request.path()))
 				return std::make_pair(STATUS500, 500);
 			response.body().join(body);
 			return std::make_pair("", 0);
 		}
 
-		std::pair<const char *, uint16_t>
+		bool
+		Router::_deleteDir(const std::string& path, DIR* dirp) const
+		{
+    		struct dirent*	dp;
+
+    		while ((dp = readdir(dirp)) != NULL)
+				if (dp->d_name[0] != '.' || (dp->d_name[1] != '\0' && dp->d_name[1] != '.'))
+					if (!this->_delete(path + "/" + dp->d_name))
+						return false;
+			return true;
+		}
+
+		bool
 		Router::_delete(const std::string& path) const
 		{
-			if (remove(path.c_str()) == -1)
-				return std::make_pair(STATUS500, 500);
-			return std::make_pair("", 0);
+			bool		ret = true;
+			struct stat	info;
+
+			if (stat(path.c_str(), &info) == 0)
+			{
+				if (S_ISDIR(info.st_mode))
+				{
+					DIR* dirp = opendir(path.c_str());
+					if (!dirp || !this->_deleteDir(path, dirp))
+						ret = false;
+					closedir(dirp);
+				}
+				if (remove(path.c_str()) == -1)
+					ret = false;
+			}
+			return ret;
 		}
 
 		std::string
@@ -324,6 +352,7 @@ namespace ws
 
 		std::string
 		Router::_getLocalPath(
+			const e_method	method,
 			const std::string& uri,
 			const conf::ServConfig& serv) const
 		{
@@ -338,7 +367,7 @@ namespace ws
 			{
 				if (path.back() != '/')
 					path.push_back('/');
-				if (!serv.autoindex)
+				if (!serv.autoindex && method != DELETE)
 				{
 					path.append(serv.index);
 					if (stat(path.c_str(), &info) != 0)
