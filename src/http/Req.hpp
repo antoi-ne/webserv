@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:15:13 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 13:34:53 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/18 12:04:48 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ namespace	http
 
 		void	setPath(const std::string& path);
 		void	setMethod(e_method method);
+		time_t	getCreatedTime(void) const;
 
 		ws::shared::Buffer	getReq(void) const;
 	private:

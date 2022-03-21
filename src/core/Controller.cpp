@@ -36,6 +36,7 @@ namespace ws
 		{
 			std::list<net::Ctx> ctxs;
 			std::list<net::Ctx>::iterator it;
+			std::map<net::Connection, Req>::iterator rqit;
 
 			ctxs = this->_pool.probe();
 			
@@ -93,6 +94,15 @@ namespace ws
 							this->_pool.close_con(it->con);
 						this->_res_cache.erase(it->con);
 					}
+				}
+			}
+
+			for (rqit = this->_req_cache.begin(); rqit != this->_req_cache.end(); rqit++)
+			{
+				if (rqit->second.getCreatedTime() + 60 > time(NULL))
+				{
+					this->_pool.close_con(rqit->first);
+					this->_req_cache.erase(rqit);
 				}
 			}
 		}
