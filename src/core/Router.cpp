@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/18 16:13:52 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/19 13:13:05 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,38 +58,43 @@ namespace ws
 			this->_mime.push_back(make_pair(tmp, mime_type));
 		}
 
+		void
+		Router::f(
+			const http::Req& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
+		{
+			std::pair<const char *, uint16_t>	err;
+
+			err = this->_processServ(request, response, mainConf, host);
+			if (err.second)
+				this->_setError(response, mainConf, err.first, err.second);
+		}
+
 		http::Res
-		Router::process(http::Req& request, const conf::host_port& host) const
+		Router::process(const http::Req& request, const conf::host_port& host) const
 		{
 			http::Res					response;
 			const conf::Server*			serv;
 			const conf::Location*		loc;
-			std::pair<const char *, uint16_t>	err;
 			
 			if (request.header("connection") == "close")
 				response.header()["connection"] = "close";
-			serv = this->_getServ(request.header(), host);
+			serv = this->_getServ(request.header("host"), host);
 			if ((loc = this->_getLocation(request.path(), *serv)))
-			{
-				err = this->_processServ(request, response, *loc, host);
-				if (err.second)
-					this->_setError(response, *loc, err.first, err.second);
-			}
+				this->f(request, response, *loc, host);
 			else
-			{
-				err = this->_processServ(request, response, *serv, host);
-				if (err.second)
-					this->_setError(response, *serv, err.first, err.second);
-			}
+				this->f(request, response, *serv, host);
 			return response;
 		}
 
 		const conf::Server*
-		Router::_getServ(http::Req::header_m& header, const conf::host_port& host) const
+		Router::_getServ(const std::string& headerHost, const conf::host_port& host) const
 		{
 			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
-			return _getServerName(header["host"], it->second);
+			return _getServerName(headerHost, it->second);
 		}
 
 		const conf::Server*
@@ -154,6 +159,9 @@ namespace ws
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
+			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
+				== mainConf.accepted_methods.end())
+				return std::make_pair(STATUS405, 405);
 			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
 				return std::make_pair(STATUS413, 413);
 			if (_hasBody(request.method()) && mainConf.upload_path.size())
@@ -282,15 +290,16 @@ namespace ws
 			path = _getLocalPath(request.method() ,request.path(), mainConf);
 			if (path.empty())
 				return std::make_pair(STATUS404, 404);
-			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
-				== mainConf.accepted_methods.end())
-				return std::make_pair(STATUS405, 405);
 			ext = this->_getExt(path);
 			if (ext.size())
 			{
 				if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
 				{
-					response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
+					try {
+						response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
+					} catch (...) {
+						return std::make_pair(STATUS500, 500);
+					}
 					return std::make_pair("", 0);
 				}
 				else

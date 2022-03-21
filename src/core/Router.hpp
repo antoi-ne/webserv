@@ -20,13 +20,15 @@ namespace ws
 
 			Router(const conf::Config& _config);
 
-			http::Res	process(http::Req& request, const conf::host_port& host) const;
+			http::Res	process(const http::Req& request, const conf::host_port& host) const;
 
 		private:
 			const conf::Config&	_config;
 			mime_vec			_mime;
 
 			std::pair<const char *, uint16_t>	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
+
+			void								f(const http::Req& request, http::Res& response,const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			std::pair<const char *, uint16_t>	_upload( const http::Req& request, const conf::ServConfig& mainConf) const;
 
 			std::string				_getExt(const std::string& path) const;
@@ -34,7 +36,7 @@ namespace ws
 			void					_initMIME(const std::string mime_type, const std::string mime_ext);
 			const std::vector<struct dirent>	_getDirList(DIR* dirp) const;
 			bool					_getFile(shared::Buffer& body, const std::string& path) const;
-			const conf::Server*		_getServ(http::Req::header_m& header, const conf::host_port& host) const;
+			const conf::Server*		_getServ(const std::string& headerHost, const conf::host_port& host) const;
 			const conf::Server*		_getServerName(const std::string& host, const serv_lst& servLst) const;
 			const conf::Location*	_getLocation(const std::string& uri, const conf::Server& serv) const;
 			std::string				_getLocalPath(const e_method method, const std::string& uri, const conf::ServConfig& serv) const;
