@@ -26,9 +26,9 @@ namespace ws
 			const conf::Config&	_config;
 			mime_vec			_mime;
 
+			void								_process(const http::Req& request, http::Res& response,const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			std::pair<const char *, uint16_t>	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
 
-			void								f(const http::Req& request, http::Res& response,const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			std::pair<const char *, uint16_t>	_upload( const http::Req& request, const conf::ServConfig& mainConf) const;
 
 			std::string				_getExt(const std::string& path) const;

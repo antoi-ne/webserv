@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/19 13:13:05 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/21 13:15:06 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ namespace ws
 		}
 
 		void
-		Router::f(
+		Router::_process(
 			const http::Req& request,
 			http::Res& response,
 			const conf::ServConfig& mainConf,
@@ -83,9 +83,9 @@ namespace ws
 				response.header()["connection"] = "close";
 			serv = this->_getServ(request.header("host"), host);
 			if ((loc = this->_getLocation(request.path(), *serv)))
-				this->f(request, response, *loc, host);
+				this->_process(request, response, *loc, host);
 			else
-				this->f(request, response, *serv, host);
+				this->_process(request, response, *serv, host);
 			return response;
 		}
 

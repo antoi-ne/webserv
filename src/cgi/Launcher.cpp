@@ -95,7 +95,6 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
-			std::cout << "resBuff: " << buff.to_string() << std::endl;
 			res.update(buff);
 			return res;
 		}
@@ -105,8 +104,6 @@ namespace ws
 			pid_t pid;
 			int ret;
 			shared::Buffer buffer;
-
-			std::cout << "script: " << script << std::endl;
 
 			pid = ::fork();
 			if (pid < 0)
