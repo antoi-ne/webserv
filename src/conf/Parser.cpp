@@ -43,18 +43,18 @@ namespace ws
 					std::cout << "return_code: " << sit->return_code << std::endl;
 					for (std::vector<Location>::iterator it3 = sit->locations.begin(); it3 != sit->locations.end(); it3++)
 					{
-						std::cout << "_______location_______" << std::endl;
-						std::cout << "route : " << it3->route << std::endl;
-						std::cout << "root:" << it3->root << std::endl;
-						std::cout << "mx_bdy_size: " << it3->max_body_size << std::endl;
-						std::cout << "autoindex:" << it3->autoindex << std::endl;
-						std::cout << "upload_path:" << it3->upload_path << std::endl;
-						std::cout << "index:" << it3->index << std::endl;
-						std::cout << "cgi_ext: " << it3->cgi_ext << std::endl;
-						std::cout << "cgi_pass: " << it3->cgi_script << std::endl;
-						std::cout << "return_code: " << it3->return_code << std::endl;
-						std::cout << "return_path: " << it3->return_path << std::endl;
-						std::cout << "accepted_method:";
+						std::cout << "LOCATION:" << std::endl;
+						std::cout << " ->route : " << it3->route << std::endl;
+						std::cout << " ->root:" << it3->root << std::endl;
+						std::cout << " ->mx_bdy_size: " << it3->max_body_size << std::endl;
+						std::cout << " ->autoindex:" << it3->autoindex << std::endl;
+						std::cout << " ->upload_path:" << it3->upload_path << std::endl;
+						std::cout << " ->index:" << it3->index << std::endl;
+						std::cout << " ->cgi_ext: " << it3->cgi_ext << std::endl;
+						std::cout << " ->cgi_pass: " << it3->cgi_script << std::endl;
+						std::cout << " ->return_code: " << it3->return_code << std::endl;
+						std::cout << " ->return_path: " << it3->return_path << std::endl;
+						std::cout << " ->accepted_method:";
 						for(std::vector<e_method>::iterator it4 = it3->accepted_methods.begin() ; it4 != it3->accepted_methods.end() ; it4++)
 						{
 							if (*it4 == GET)
@@ -83,21 +83,18 @@ namespace ws
 		 : config()
 		{
 			std::ifstream   fd(file_path);
-    		try {
-				std::string     line;
-				while (!fd.eof())
+			std::string     line;
+			
+			while (!fd.eof())
+			{
+				std::getline(fd, line);	
+				if (line == "server:")
 				{
-					std::getline(fd, line);	
-					if (line == "server:")
-					{
-						if (mapping_servers(this->config.servers, fd) == 0)
-							 std::cout << "probleme occured with filling the server info" << std::endl;
-					}
+					if (mapping_servers(this->config.servers, fd) == 0)
+						std::cout << "probleme occured with filling the server info" << std::endl;
 				}
 			}
-			catch(...){
-				std::cout << "is :" << file_path << " a correct config file ?";
-			}
+			print_config(this->config.servers);
 		}
 
 		Parser::~Parser()

@@ -25,12 +25,14 @@ namespace ws
             if (e_addr == std::string::npos)
             {
                 ret.first = "0.0.0.0";
-                ret.second = std::stoi(line);
+                try{ret.second = std::stoi(line);}
+                catch(...){std::cout << "bad port number";}
             }
             else
             {
                 ret.first = line.substr(b_addr, e_addr);
-                ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
+                try{ret.second = std::stoi(line.substr((e_addr + 1), line.size()));}
+                catch(...){std::cout << "bad port number";}
             }
             return (ret);
             
@@ -99,8 +101,17 @@ namespace ws
         int p_m_bdy_size(std::string line){
             line.erase(0, 21);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-            int ret = std::stoi(line);
-            return (ret);
+            try 
+            {
+                int ret = std::stoi(line);
+                return (ret);
+            }
+            catch(...)
+            {
+                std::cout << "max body size problem: number's conversion is mot possible" << std::endl;
+                 int ret2 = 0;
+                 return (ret2);
+            }
         }
 
         std::string p_upload_path(std::string line){
@@ -130,7 +141,6 @@ namespace ws
                 s++;
             s--;
             std::string ret = line.substr(b, s);
-            std::cout << "|" << ret << "|" << std::endl;
             if (ret != TEMPORARY_REDIRECT && ret != SEE_OTHER && ret != MOVED_PERMANENTLY && ret != MOVED_TEMPORARLY)
                 return (UNDIFND);
             return (ret);
@@ -160,14 +170,20 @@ namespace ws
                 if (std::isdigit(line[i]))
                 {
 
-                    int tmp = std::stoi(line.substr(i, line.size()));
-                    if (tmp > 999 || tmp <= 99)
+                    try{
+                        int tmp = std::stoi(line.substr(i, line.size()));
+                        if (tmp > 999 || tmp <= 99)
+                        {
+                                std::cout << "bad error pages " << std::endl;
+                                return (ret);
+                        }
+                        ret[tmp] = new std::string(path);
+                        i +=3;}
+                    catch(...)
                     {
-                        std::cout << "bad error pages " << std::endl;
-                        return (ret);
+                        std::cout << "bad error pages" << std::endl;
                     }
-                    ret[tmp] = new std::string(path);
-                    i +=3;
+                   
                 }
             }
             return (ret);
@@ -183,7 +199,7 @@ namespace ws
                 else
                 {
                     std::string strtmp = line.substr(i, line.size());
-                    size_t end = strtmp.find_first_not_of("_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.");
+                    size_t end = strtmp.find_first_not_of("_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789");
                     if (end == std::string::npos)
                         end = strtmp.size();
                     std::string tmp = line.substr(i, end);

@@ -6,12 +6,13 @@ namespace ws
 {
 	namespace conf
 	{
-        void loc_attr(std::ifstream &fd, Server &server, std::string prev_line)
+        int loc_attr(std::ifstream &fd, Server &server, std::string prev_line)
         {
             std::string line;
             Location    ret;
             ret.route = p_route(prev_line);
             ret.autoindex = false;
+            ret.max_body_size = -1;
             while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
             {
                 if (line[0] == '\0')
@@ -45,15 +46,16 @@ namespace ws
                 ret.error_pages = server.error_pages;
             if (ret.root.empty())
                 ret.root = server.root;
-            if (ret.max_body_size == 0)
+            if (ret.max_body_size == -1)
                 ret.max_body_size = server.max_body_size;
             if ((ret.cgi_ext.empty() && !(ret.cgi_script.empty())) || (!(ret.cgi_ext.empty()) && ret.cgi_script.empty()))
-                throw std::exception();
+                throw ("cgi error");
             server.locations.push_back(ret);
             if (!(line.compare(1, 9, "location:")))
-			{
-                loc_attr(fd, server, line);
-			}
+                return loc_attr(fd, server, line);
+            if (!(line.compare(0, 7, "server:")))
+                return (-1);
+            return (0);
         }
 
         int  mapping_servers(server_map &config, std::ifstream &fd){
@@ -69,10 +71,14 @@ namespace ws
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 1);
-                if (!(line.compare(0, 7, "listen:")))
+                if (!(line.compare(0, 7, "listen:"))) {
                     tmp = map_servers(line);
+                }
                 if (!(line.compare(0, 9, "location:")))
-                    loc_attr(fd, tmp_server, line);
+                {
+                    if (loc_attr(fd, tmp_server, line) == -1)
+                        break ;
+                }
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
                 if (!(line.compare(0, 5, "root:")))
@@ -94,7 +100,7 @@ namespace ws
                 }
             }
             config[tmp].push_back(tmp_server);
-        	if (line == "server:")
+           if (line == "server:")
                 return (mapping_servers(config, fd));
             return (1);
         }
