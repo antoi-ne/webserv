@@ -97,13 +97,17 @@ namespace ws
 				}
 			}
 
-			for (rqit = this->_req_cache.begin(); rqit != this->_req_cache.end(); rqit++)
+			rqit = this->_req_cache.begin();
+			while (rqit != this->_req_cache.end())
+				this->_checkTimeout(rqit++);
+		}
+
+		void	Controller::_checkTimeout(std::map<net::Connection, Req>::iterator rqit)
+		{
+			if (rqit->second.getCreatedTime() + 60 < time(NULL))
 			{
-				if (rqit->second.getCreatedTime() + 60 > time(NULL))
-				{
-					this->_pool.close_con(rqit->first);
-					this->_req_cache.erase(rqit);
-				}
+				this->_pool.close_con(rqit->first);
+				this->_req_cache.erase(rqit);
 			}
 		}
 	}

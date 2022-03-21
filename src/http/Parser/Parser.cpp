@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 09:36:37 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/21 15:45:55 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,7 +191,6 @@ namespace http
 		this->_msg.header().erase("transfer-encoding");
 	}
 
-	// TODO Check host
 	bool	Parser::_checkHeader(size_t endLine)
 	{
 		bool	ret = true;
@@ -211,11 +210,8 @@ namespace http
 
 	bool	Parser::_acceptedKey(const std::string& key, const std::string& value) const
 	{
-		if (key == "host")
-		{
-			if (value.empty())
-				return false;
-		}
+		if (key == "host" && value.empty())
+			return false;
 		return true;
 	}
 
@@ -239,7 +235,7 @@ namespace http
 			if (this->_buff[i] == ':')
 			{
 				i++;
-				for (; i < endLine && this->_buff[i] == ' '; ++i); // not sure skip space before value
+				for (; i < endLine && this->_buff[i] == ' '; ++i);
 				val = std::string(this->_buff.get_ptr() + i, endLine - i - hasCR);
 				this->_msg.header().insert(std::make_pair(key, val));
 			}

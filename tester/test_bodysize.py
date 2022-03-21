@@ -12,9 +12,6 @@ def req(path, size):
 	content = 'A' * size 
 	return "POST {} HTTP/1.1\r\nhost: x\r\nContent-Length: {}\r\n\r\n{}".format(path, size, content)
 
-def test_fail_upload():
-	req_check(req("/upload", 1025), 413)
-
 def test_fail_post():
 	req_check(req("/post", 1025), 413)
 

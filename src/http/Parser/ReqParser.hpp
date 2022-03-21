@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:49:26 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 13:22:49 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/21 14:53:07 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ namespace http
 		size_t			_checkPathValidity(size_t index, size_t& endPath);
 		bool			_skipStartCRLF(void);
 		bool			_getStartLine(size_t endLine);
-		bool			_failed(void);
 	};
 	
 } // namespace http

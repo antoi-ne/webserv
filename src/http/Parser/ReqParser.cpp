@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:52:44 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 13:48:58 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/21 14:53:02 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,25 +30,22 @@ namespace http
 
 	bool	ReqParser::checkFirstLine(size_t endLine)
 	{
-		bool	ret = true;
-
 		if (!_skipStartCRLF())
 		{
 			if (!this->_getStartLine(endLine))
-			{
-				ret = false;
-			}
+				return false;
 			this->_fUpdate = &Parser::checkHeader;
 			this->_buff.advance(endLine + 1);
 		}
-		return ret;
+		return true;
 	}
 
 	static size_t	_skipCRLF(ws::shared::Buffer& buff)
 	{
 		size_t i;
 
-		for (i = 0; i < buff.size() && (buff[i] == '\r' || buff[i] == '\n'); ++i);
+		for (i = 0; i < buff.size()
+			&& (buff[i] == '\r' || buff[i] == '\n'); ++i);
 		return i;
 	}
 
@@ -69,7 +66,7 @@ namespace http
 		if (endLine)
 		{
 			size_t index = this->_getMethod(endLine);
-			if (index) // if not failed method -> UNDEF
+			if (index)
 			{
 				size_t endPath = this->_buff.find_last_of_from(HTTPVER, endLine);
 				if (endPath != std::string::npos)
@@ -116,12 +113,6 @@ namespace http
 		return path_size;
 	}
 
-	bool	ReqParser::_failed(void)
-	{
-		this->_req.setMethod(UNDEF);
-		return false;
-	}
-
 	size_t	ReqParser::_getMethod(size_t endLine)
 	{
 		std::string	methods[] = METHODS;
@@ -131,7 +122,10 @@ namespace http
 			&& this->_buff.find(methods[i].c_str(), endLine) == std::string::npos)
 			++i;
 		if (i >= N_METHOD)
-			return this->_failed();
+		{
+			this->_req.setMethod(UNDEF);
+			return 0;
+		}
 		this->_req.setMethod(static_cast<e_method>(i));
 		return methods[i].size();
 	}
