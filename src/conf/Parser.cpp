@@ -4,6 +4,27 @@ namespace ws
 {
 	namespace conf
 	{
+
+		void Parser::set_default_parameter(server_map &server){
+			for (server_map::iterator it = server.begin(); it != server.end(); it++)
+			{
+				for (std::vector<Server>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+				{
+					for (std::vector<Location>::iterator it3 = sit->locations.begin(); it3 != sit->locations.end(); it3++)
+					{
+						if (it3->error_pages.empty())
+                			it3->error_pages = sit->error_pages;
+            			if (it3->root.empty())
+             	   			it3->root = sit->root;
+            			if (it3->max_body_size == -1)
+                			it3->max_body_size = sit->max_body_size;
+						if (it3->index.empty())
+							it3->index = sit->index;
+					}
+				}
+			}
+		}
+
 		void Parser::print_config(server_map server){
 			for (server_map::iterator it = server.begin(); it != server.end(); it++)
 			{
@@ -35,7 +56,7 @@ namespace ws
 					for (ErrorPages::iterator it3 = sit->error_pages.begin() ; it3 != sit->error_pages.end(); it3++)
 					{
 						std::cout  << it3->first << "-->";
-						std::cout << *it3->second << std::endl;
+						std::cout << it3->second << std::endl;
 					}
 					std::cout << "mx_bdy_size: " << sit->max_body_size << std::endl;
 					std::cout << "uplaod_path: " << sit->upload_path << std::endl;
@@ -71,7 +92,7 @@ namespace ws
 						for (ErrorPages::iterator it4 = it3->error_pages.begin() ; it4 != it3->error_pages.end(); it4++)
 						{
 							std::cout  << it4->first << "-->";
-							std::cout << *it4->second << std::endl;
+							std::cout << it4->second << std::endl;
 						}
 						std::cout << std::endl;
 					}
@@ -82,6 +103,7 @@ namespace ws
 		Parser::Parser(std::string file_path)
 		 : config()
 		{
+			this->valid = true;
 			std::ifstream   fd(file_path);
 			std::string     line;
 			
@@ -90,10 +112,14 @@ namespace ws
 				std::getline(fd, line);	
 				if (line == "server:")
 				{
-					if (mapping_servers(this->config.servers, fd) == 0)
+					if (this->mapping_servers(this->config.servers, fd) == 0)
+					{
+						this->valid = 0;
 						std::cout << "probleme occured with filling the server info" << std::endl;
+					}
 				}
 			}
+			set_default_parameter(this->config.servers);
 			print_config(this->config.servers);
 		}
 

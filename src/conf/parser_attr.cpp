@@ -6,7 +6,21 @@ namespace ws
 {
 	namespace conf
 	{
-        std::string p_route(std::string line){
+        size_t find_first_occur(std::string line){
+            int i;
+
+            i = 0;
+            while (line[i])
+            {
+                if (line[i] >= 32 && line[i] < 127)
+                    return (i);
+                i++;
+            }
+            return (i);
+        }
+
+
+        std::string Parser::p_route(std::string line){
             if (line[0] == ' ')
                 line.erase(1, 9);
             else
@@ -16,17 +30,20 @@ namespace ws
             
         }
 
-        host_port map_servers(std::string line){
+        host_port Parser::map_servers(std::string line){
             line.erase(0, 7);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             host_port ret;
             std::size_t b_addr = line.find_first_not_of(" ");
             std::size_t e_addr = line.find_first_of(":");
-            if (e_addr == std::string::npos)
+            if (e_addr == line.npos)
             {
                 ret.first = "0.0.0.0";
                 try{ret.second = std::stoi(line);}
-                catch(...){std::cout << "bad port number";}
+                catch(...){
+                    this->valid = false;
+                    std::cout << "bad port number";
+                }
             }
             else
             {
@@ -38,31 +55,31 @@ namespace ws
             
         }
 
-        std::string p_root(std::string line){
+        std::string Parser::p_root(std::string line){
             line.erase(0, 5);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line);
         }
 
-        std::string p_index(std::string line){
+        std::string Parser::p_index(std::string line){
             line.erase(0, 6);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line);
         }
 
-        std::string p_cgi_pass(std::string line){
+        std::string Parser::p_cgi_pass(std::string line){
             line.erase(0,9);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line);
         }
 
-        std::string p_cgi_ext(std::string line){
+        std::string Parser::p_cgi_ext(std::string line){
             line.erase(0,8);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line);
         }
 
-        std::vector<e_method> p_accpt_mtde(std::string line){
+        std::vector<e_method> Parser::p_accpt_mtde(std::string line){
             line.erase(0,17);
             std::vector<e_method> ret;
             for (size_t i = 0; i <= line.size(); i++)
@@ -90,7 +107,7 @@ namespace ws
             return (ret);
         }
 
-        bool p_a_index(std::string line){
+        bool Parser::p_a_index(std::string line){
             line.erase(0, 10);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             if (line == "on")
@@ -98,7 +115,7 @@ namespace ws
             return (false);
         }
 
-        int p_m_bdy_size(std::string line){
+        int Parser::p_m_bdy_size(std::string line){
             line.erase(0, 21);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             try 
@@ -109,18 +126,19 @@ namespace ws
             catch(...)
             {
                 std::cout << "max body size problem: number's conversion is mot possible" << std::endl;
-                 int ret2 = 0;
-                 return (ret2);
+                int ret2 = 0;
+                
+                return (ret2);
             }
         }
 
-        std::string p_upload_path(std::string line){
+        std::string Parser::p_upload_path(std::string line){
             line.erase(0, 12);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             return (line);
         }
 
-        std::string p_return_path(std::string line){
+        std::string Parser::p_return_path(std::string line){
             line.erase(0, 12);
             size_t begin = line.find_first_of("abcdefghijklmnopqrstuvwxyz/");
             if (begin == std::string::npos)
@@ -133,7 +151,7 @@ namespace ws
             return (tmp);
         }
 
-        std::string p_return_code(std::string line){
+        std::string Parser::p_return_code(std::string line){
             line.erase(0, 7);
             size_t b = line.find_first_of("0123456789");
             size_t s = b;
@@ -147,7 +165,7 @@ namespace ws
             
         }
 
-        ErrorPages p_error_pages(ErrorPages errors_pages, std::string line){
+        ErrorPages Parser::p_error_pages(ErrorPages errors_pages, std::string line){
             ErrorPages ret(errors_pages);
             line.erase(0, 12);
             size_t s = line.size();
@@ -157,7 +175,7 @@ namespace ws
                 line.erase(s, line.size());
             if ((s = line.find_last_of(" ")) == std::string::npos)
             {
-                if ((s = line.find_first_of("abcdefghijklmnopqrstuvwxyz/")) == std::string::npos)
+                if ((s = find_first_occur(line) == line.size()))
                 {
                     std::cout << "Error page, bad syntaxe" << std::endl;
                     return (ret);
@@ -169,27 +187,24 @@ namespace ws
             {
                 if (std::isdigit(line[i]))
                 {
-
+                    std::string tmp = line.substr(i, 3);
+                    size_t lastof = path.find_last_of("/");
+                    path.insert(lastof + 1, tmp);
                     try{
-                        int tmp = std::stoi(line.substr(i, line.size()));
-                        if (tmp > 999 || tmp <= 99)
-                        {
-                                std::cout << "bad error pages " << std::endl;
-                                return (ret);
-                        }
-                        ret[tmp] = new std::string(path);
-                        i +=3;}
-                    catch(...)
-                    {
-                        std::cout << "bad error pages" << std::endl;
+                        int tmpint = std::stoi(tmp);
+                        ret[tmpint] = path;
+                        path.erase(lastof + 1, 3);
                     }
-                   
+                    catch(...){
+                        std::cout << "bad error page num" << std::endl;
+                    }
+                    i += 3;    
                 }
             }
             return (ret);
         }
 
-        std::vector<std::string> p_server_names(std::string line){
+        std::vector<std::string> Parser::p_server_names(std::string line){
             line.erase(0, 13);
             std::vector <std::string> ret;
             for (size_t i = 0; i < line.size(); i++)
