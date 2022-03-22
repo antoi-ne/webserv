@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/22 14:37:25 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 15:44:14 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,8 +141,8 @@ namespace ws
 
 			response.setStatus(str);
 			errorPage = this->_findErrorPage(serv, code);
-			if (errorPage != NULL)
-				response.body().join(*errorPage);
+			if (errorPage)
+				this->_getFile(response.body(), *errorPage);
 			if (code == 400 || code == 413)
 				response.header()["connection"] = "close";
 		}
@@ -154,7 +154,7 @@ namespace ws
 
 			if (it == serv.error_pages.end())
 				return NULL;
-			return it->second;
+			return &it->second;
 		}
 
 		std::pair<const char *, uint16_t>
