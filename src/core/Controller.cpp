@@ -56,21 +56,11 @@ namespace ws
 					Req& req = this->_req_cache[it->con];
 					if (req.update(opt.value()) == false)
 					{
-						http::Res res;
-						if (req.error())
-						{
-							res.header()["Connection"] = "close";
-							res.setStatus(STATUS400);
-							res.body().join(std::string("Bad Request\r\n"));
-						}
-						else
-						{
-							res = this->_router.process(
-								this->_req_cache[it->con],
-								std::make_pair(it->srv.get_host(),
-								it->srv.get_port())
-							);
-						}
+						http::Res res = this->_router.process(
+							this->_req_cache[it->con],
+							std::make_pair(it->srv.get_host(),
+							it->srv.get_port())
+						);
 						this->_res_cache[it->con] = std::make_pair(res.get_res(), res.header("connection") != "close");
 						this->_req_cache.erase(it->con);
 					}
@@ -96,7 +86,6 @@ namespace ws
 					}
 				}
 			}
-
 			rqit = this->_req_cache.begin();
 			while (rqit != this->_req_cache.end())
 				this->_checkTimeout(rqit++);

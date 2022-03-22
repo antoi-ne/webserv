@@ -3,7 +3,9 @@
 # include "../conf/Config.hpp"
 # include "../http/Req.hpp"
 # include "../http/Res.hpp"
+# include "../http/MsgUpdate.hpp"
 # include "../http/CI_Less.hpp"
+# include "../http/Parser/ReqParser.hpp"
 # include "MIME.h"
 # include <dirent.h>
 
@@ -14,19 +16,19 @@ namespace ws
 		class Router
 		{
 		public:
+			typedef http::MsgUpdate<http::Req, http::ReqParser>	ReqU;
 			typedef std::vector<conf::Server>	serv_lst;
-			// extension -> type;
 			typedef std::vector<std::pair<std::vector<std::string>, std::string> > mime_vec;
 
 			Router(const conf::Config& _config);
 
-			http::Res	process(const http::Req& request, const conf::host_port& host) const;
+			http::Res	process(const ReqU& request, const conf::host_port& host) const;
 
 		private:
 			const conf::Config&	_config;
 			mime_vec			_mime;
 
-			void								_process(const http::Req& request, http::Res& response,const conf::ServConfig& mainConf, const conf::host_port& host) const;
+			void								_process(const ReqU& request, http::Res& response,const conf::ServConfig& mainConf, const conf::host_port& host) const;
 			std::pair<const char *, uint16_t>	_processServ(const http::Req& request, http::Res& response, const conf::ServConfig& mainConf, const conf::host_port& host) const;
 
 			std::pair<const char *, uint16_t>	_upload( const http::Req& request, const conf::ServConfig& mainConf) const;

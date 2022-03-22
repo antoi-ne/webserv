@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/21 13:15:06 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 14:37:25 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,20 +60,23 @@ namespace ws
 
 		void
 		Router::_process(
-			const http::Req& request,
+			const ReqU& request,
 			http::Res& response,
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
 			std::pair<const char *, uint16_t>	err;
 
-			err = this->_processServ(request, response, mainConf, host);
+			if (!request.error())
+				err = this->_processServ(request, response, mainConf, host);
+			else
+				err = std::make_pair(STATUS400, 400);
 			if (err.second)
 				this->_setError(response, mainConf, err.first, err.second);
 		}
 
 		http::Res
-		Router::process(const http::Req& request, const conf::host_port& host) const
+		Router::process(const ReqU& request, const conf::host_port& host) const
 		{
 			http::Res					response;
 			const conf::Server*			serv;
@@ -140,6 +143,8 @@ namespace ws
 			errorPage = this->_findErrorPage(serv, code);
 			if (errorPage != NULL)
 				response.body().join(*errorPage);
+			if (code == 400 || code == 413)
+				response.header()["connection"] = "close";
 		}
 
 		const std::string*
