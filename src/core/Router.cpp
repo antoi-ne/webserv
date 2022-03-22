@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/22 15:44:14 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 17:03:04 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,13 +66,15 @@ namespace ws
 			const conf::host_port& host) const
 		{
 			std::pair<const char *, uint16_t>	err;
+			std::string							ext;
 
 			if (!request.error())
 				err = this->_processServ(request, response, mainConf, host);
 			else
 				err = std::make_pair(STATUS400, 400);
-			if (err.second)
-				this->_setError(response, mainConf, err.first, err.second);
+			this->_setError(response, mainConf, err.first, err.second);
+			ext = this->_getExt(err.first);
+			this->_getMIME(response, ext);
 		}
 
 		http::Res
@@ -308,7 +310,7 @@ namespace ws
 					return std::make_pair("", 0);
 				}
 				else
-					this->_getMIME(response, ext);
+					this->_getMIME(response, path.back() == '/' ? "html" : ext);
 			}
 			if (request.method() == DELETE)
 			{
