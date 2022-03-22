@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 10:56:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/16 09:33:47 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 09:39:16 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ namespace	http
 		bool				_addBuffer(const ws::shared::Buffer& buff);
 		bool				_acceptedKey(const std::string& key, const std::string& value) const;
 		bool				_unchunkedBody(void);
-		bool				_chunkedSize(size_t endLine, size_t& chunkSize) const;
+		size_t				_chunkedSize(size_t endLine) const;
 		bool				_chunkedContent(size_t& chunkSize);
 		bool				_setHeader(size_t endLine);
 		void				_endHeader(size_t endLine);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResParser.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/07 15:33:48 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 09:59:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,8 @@
 namespace http
 {
 	ResParser::ResParser(http::Res& res)
-	 : Parser(res), _res(res)
-	{
-		this->_fUpdate = &Parser::checkFirstLine;
-	}
+	 : Parser(res, &Parser::checkFirstLine), _res(res)
+	{}
 
 	bool	ResParser::_goodFirstLine(size_t endLine)
 	{
@@ -50,7 +48,6 @@ namespace http
 		this->_res.setStatus(std::string(this->_buff.get_ptr() + start, i - start));
 		return i;
 	}
-
 
 	void	ResParser::_finish(void)
 	{

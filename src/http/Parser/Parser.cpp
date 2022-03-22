@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/21 15:45:55 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 09:54:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,18 +85,19 @@ namespace http
 		return true;
 	}
 
-	bool	Parser::_chunkedSize(size_t endLine, size_t& chunkSize) const
+	size_t	Parser::_chunkedSize(size_t endLine) const
 	{
-		if (endLine == 0
-			|| (endLine == 1 && this->_buff[0] == '\r')) // just crlf
-			return false;
-		bool hasCR = this->_buff[endLine - 1] == '\r';
-		try {
-			chunkSize = std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
-		} catch (...) {
-			return false;
-		};
-		return true;
+		if (endLine > 0)
+		{
+			bool hasCR = this->_buff[endLine - 1] == '\r';
+			if (!hasCR || endLine > 1)
+			{
+				try {
+					return std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
+				} catch (...) {};
+			}
+		}
+		return std::string::npos;
 	}
 
 	bool	Parser::_chunkedContent(size_t& chunkSize)
@@ -127,28 +128,22 @@ namespace http
 				bool	hasCR = this->_buff[0] == '\r';
 
 				needCRLF = false;
+				chunkSize = std::string::npos;
 				if (this->_buff[0] == '\n' || (hasCR && this->_buff[1] == '\n'))
-				{
-					chunkSize = std::string::npos;
 					this->_buff.advance(1 + hasCR);
-				}
 				else
-				{
-					chunkSize = std::string::npos;
 					return false;
-				}
 			}
 			if (chunkSize == std::string::npos)
 			{
 				size_t	endLine = this->_buff.find('\n');
-
 				if (endLine == std::string::npos)
 					return true;
-				if (!this->_chunkedSize(endLine, chunkSize))
-				{
-					chunkSize = std::string::npos;
+
+				chunkSize = this->_chunkedSize(endLine);
+				if (chunkSize == std::string::npos)
 					return false;
-				}
+
 				this->_buff.advance(endLine + 1);
 			}
 			else
@@ -178,7 +173,7 @@ namespace http
 
 	void	Parser::_endHeader(size_t endLine)
 	{
-		if (this->_msg.header()["transfer-encoding"] != "chunked")
+		if (this->_msg.header("transfer-encoding") != "chunked")
 		{
 			this->_msg.body().join(
 				this->_buff.get_ptr() + endLine + 1,
@@ -188,7 +183,6 @@ namespace http
 				_setContentLength(this->_msg.header("content-length")));
 		}
 		this->_headerFinish = true;
-		this->_msg.header().erase("transfer-encoding");
 	}
 
 	bool	Parser::_checkHeader(size_t endLine)
