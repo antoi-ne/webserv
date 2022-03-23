@@ -53,20 +53,13 @@ namespace ws
         }
         size_t find_ascii(std::string line, int wich){
             size_t ret = 1;
-            for(int i; line[i]; i++)
+            for(int i = 0; line[i]; i++)
             {
                 if (wich == FIRST_OFF && line[i] >= 32 && line[i] < 127)
                     return (i);
-                else if (wich == LAST_OFF)
-                {
-                    if (line[i] >= 32 && line[i] < 127)
-                        ret = i;
-                }
-                i++;
             }
             return (ret);
         }
-
 
         std::string Parser::p_route(std::string line){
             if (line[0] == ' ')
@@ -85,7 +78,7 @@ namespace ws
             host_port ret;
             size_t b_addr = finder(line, " ", FIRST_NOT_OFF);
             size_t e_addr = finder(line, ":", FIRST_OFF);
-            if (e_addr == -1)
+            if (e_addr == (size_t)-1)
             {
                 ret.first = "0.0.0.0";
                 try{ret.second = std::stoi(line);}
@@ -143,7 +136,7 @@ namespace ws
                 {
                     std::string tmp = line.substr(i, line.size());
                     size_t end = finder(tmp, " ", FIRST_OFF);
-                    if (end == -1)
+                    if (end == (size_t)-1)
                         end = tmp.size();
                     std::string tmp2 = tmp.substr(0, end);
                     if (tmp2 == "GET")
@@ -172,7 +165,15 @@ namespace ws
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             if (line == "on")
                 return (true);
-            return (false);
+            else if (line == "off")
+                return (false);
+            else
+            {
+                std::cout << "auto index wrong parameter" << std::endl;
+                this->valid = false;
+                return (false);
+            }
+            
         }
 
         int Parser::p_m_bdy_size(std::string line){
@@ -198,7 +199,7 @@ namespace ws
             try{
                 line.erase(0, 12);
             size_t begin = finder(line, "abcdefghijklmnopqrstuvwxyz/", FIRST_OFF);
-            if (begin == -1)
+            if (begin == (size_t)-1)
             {
                 std::cout << "return path problem" << std::endl;
                 this->valid = false;
@@ -206,7 +207,7 @@ namespace ws
             }
             std::string tmp = line.substr(begin, line.size());
             size_t end = finder(line, " ", FIRST_OFF);
-            if (end == -1)
+            if (end == (size_t)-1)
                 end = line.size();
             tmp = tmp.substr(begin, end);
             return (tmp);
@@ -222,7 +223,7 @@ namespace ws
             try{
             line.erase(0, 7);
             size_t b = finder(line, "0123456789", FIRST_OFF);
-            if (b == -1)
+            if (b == (size_t)-1)
                 throw("bad");
             size_t s = b;
             while (std::isdigit(line[s]))

@@ -106,14 +106,20 @@ namespace ws
 			std::ifstream   fd(file_path);
 			std::string     line;
 			
+			if (!fd)
+			{
+				std::cout << "bad file opening." << std::endl;
+				this->valid = false;
+				return ;
+			}
 			while (!fd.eof())
 			{
-				std::getline(fd, line);	
+				std::getline(fd, line);
 				if (line == "server:")
 				{
 					if (this->mapping_servers(this->config.servers, fd) == 0)
 					{
-						this->valid = 0;
+						this->valid = false;
 						std::cout << "probleme occured with filling the server info" << std::endl;
 					}
 				}
