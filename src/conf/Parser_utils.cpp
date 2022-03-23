@@ -63,6 +63,9 @@ namespace ws
             {
                 if (line[0] == '\0')
                     continue;
+                line.erase(0, 1);
+                if (!(line.compare(0, 7, "listen:")))
+                    tmp = map_servers(line);
                 if (!(line.compare(0, 9, "location:")))
                 {
                     line = loc_attr(fd, tmp_server, line); 
