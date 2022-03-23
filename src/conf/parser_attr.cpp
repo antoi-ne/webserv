@@ -199,7 +199,11 @@ namespace ws
                 line.erase(0, 12);
             size_t begin = finder(line, "abcdefghijklmnopqrstuvwxyz/", FIRST_OFF);
             if (begin == -1)
+            {
+                std::cout << "return path problem" << std::endl;
+                this->valid = false;
                 return ("");
+            }
             std::string tmp = line.substr(begin, line.size());
             size_t end = finder(line, " ", FIRST_OFF);
             if (end == -1)
