@@ -12,6 +12,29 @@ namespace ws
 {
 	namespace conf
 	{
+        bool is_IPaddr(std::string line){
+            int check = 0;
+            for(size_t i = 0; line[i]; i++)
+            {
+                int j = 0; 
+                while (j < 3 && line[i] >= 48 && line[i] <= 57)
+                {
+                    j++;
+                    i++;
+                }
+                if (line[i] == '.')
+                    check++;
+                else if (line[i] == '\0')
+                    break ;
+                else
+                    return (false);
+            }
+            if (check == 3)
+                return (true);
+            else
+                return(false);
+        }
+
         size_t finder(std::string line, const char *tofind, int wich){
             size_t ret = -1;
             for (size_t i = 0; line[i]; i++)
@@ -76,9 +99,17 @@ namespace ws
             line.erase(0, 7);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             host_port ret;
-            size_t b_addr = finder(line, " ", FIRST_NOT_OFF);
+            for (int i = 0; line[i]; i++)
+            {
+                if ((line[i] < 48 || line[i] > 57) && (line[i] != '.' && line[i] != ':'))
+                {
+                    std::cout << "bad arg in IP addr & port" << std::endl;
+                    this->valid = false;
+                    return (ret);
+                }
+            }
             size_t e_addr = finder(line, ":", FIRST_OFF);
-            if (e_addr == (size_t)-1)
+            if (e_addr == (size_t)-1 && (is_IPaddr(line) == false))
             {
                 ret.first = "0.0.0.0";
                 try{ret.second = std::stoi(line);}
@@ -89,15 +120,18 @@ namespace ws
             }
             else
             {
-                try{ret.first = line.substr(b_addr, e_addr);
-                ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
+                try{
+                    ret.first = line.substr(0, e_addr);
+                    if (is_IPaddr(ret.first) == true && e_addr != -1)
+                            ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
+                    else
+                            throw ("");
                 }
                 catch(...){
                     this->valid = false;
                     std::cout << "bad port number" << std::endl;}
             }
             return (ret);
-            
         }
 
         std::string Parser::p_root(std::string line){
