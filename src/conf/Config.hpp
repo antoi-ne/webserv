@@ -12,7 +12,7 @@ namespace ws
 {
 	namespace conf
 	{
-		typedef std::map<unsigned int, const std::string*> ErrorPages;
+		typedef std::map<unsigned int, std::string> ErrorPages;
 
 		struct ServConfig 
 		{

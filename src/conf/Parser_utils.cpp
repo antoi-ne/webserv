@@ -6,14 +6,14 @@ namespace ws
 {
 	namespace conf
 	{
-        int loc_attr(std::ifstream &fd, Server &server, std::string prev_line)
+        std::string Parser::loc_attr(std::ifstream &fd, Server &server, std::string prev_line)
         {
             std::string line;
             Location    ret;
             ret.route = p_route(prev_line);
             ret.autoindex = false;
             ret.max_body_size = -1;
-            while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
+            while (this->valid == true && std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
             {
                 if (line[0] == '\0')
                     continue;
@@ -41,32 +41,25 @@ namespace ws
                 if (!(line.compare(0, 7, "return:")))
                     ret.return_code = p_return_code(line);
             }
-           
-            if (ret.error_pages.empty())
-                ret.error_pages = server.error_pages;
-            if (ret.root.empty())
-                ret.root = server.root;
-            if (ret.max_body_size == -1)
-                ret.max_body_size = server.max_body_size;
             if ((ret.cgi_ext.empty() && !(ret.cgi_script.empty())) || (!(ret.cgi_ext.empty()) && ret.cgi_script.empty()))
+            {
+                this->valid = false;
                 throw ("cgi error");
+            }
             server.locations.push_back(ret);
             if (!(line.compare(1, 9, "location:")))
                 return loc_attr(fd, server, line);
-            if (!(line.compare(0, 7, "server:")))
-                return (-1);
-            return (0);
+            return (line);
         }
 
-        int  mapping_servers(server_map &config, std::ifstream &fd){
+        int  Parser::mapping_servers(server_map &config, std::ifstream &fd){
             std::string line;
             host_port   tmp;
             Server      tmp_server;
             
             tmp_server.autoindex = false;
             tmp_server.max_body_size = -1;
-            tmp_server.accepted_methods.push_back(GET);
-            while (getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
+            while (this->valid == true && getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
             {
                 if (line[0] == '\0')
                     continue;
@@ -76,8 +69,11 @@ namespace ws
                 }
                 if (!(line.compare(0, 9, "location:")))
                 {
-                    if (loc_attr(fd, tmp_server, line) == -1)
-                        break ;
+                    line = loc_attr(fd, tmp_server, line); 
+                    if (!(line.compare(0, 7,"server:")) || (line[0] != '\0' && line[0] != ' '))
+                        break;
+                    else
+                        line.erase(0, 1);
                 }
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
