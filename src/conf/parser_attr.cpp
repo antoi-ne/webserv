@@ -2,21 +2,69 @@
 #include "Parser.hpp"
 #include "return_code.hpp"
 
+# define FIRST_OFF 1
+# define FIRST_NOT_OFF 2
+# define LAST_OFF 3
+# define LAST_NOT_OFF 4
+
+
 namespace ws
 {
 	namespace conf
 	{
-        size_t find_first_occur(std::string line){
-            int i;
-
-            i = 0;
-            while (line[i])
+        size_t finder(std::string line, const char *tofind, int wich){
+            size_t ret = -1;
+            for (size_t i = 0; line[i]; i++)
             {
-                if (line[i] >= 32 && line[i] < 127)
+                if (wich == FIRST_OFF)
+                {
+                    for (size_t j = 0; tofind[j]; j++)
+                    {
+                        if (line[i] == tofind[j])
+                            return (i);
+                    }
+                }
+                if (wich == FIRST_NOT_OFF)
+                {
+                    for (size_t j = 0; tofind[j]; j++)
+                    {
+                        if (line[i] != tofind[j])
+                            return (i);
+                    }
+                }
+                if (wich == LAST_OFF)
+                {
+                    for (size_t j = 0; tofind[j]; j++)
+                    {
+                        if (line[i] == tofind[j])
+                            ret = i;
+                    }
+                }
+                if (wich == LAST_NOT_OFF)
+                {
+                    for (size_t j = 0; tofind[j]; j++)
+                    {
+                        if (line[i] != tofind[j])
+                            ret = i;
+                    }
+                }
+            }
+            return (ret);
+        }
+        size_t find_ascii(std::string line, int wich){
+            size_t ret = 1;
+            for(int i; line[i]; i++)
+            {
+                if (wich == FIRST_OFF && line[i] >= 32 && line[i] < 127)
                     return (i);
+                else if (wich == LAST_OFF)
+                {
+                    if (line[i] >= 32 && line[i] < 127)
+                        ret = i;
+                }
                 i++;
             }
-            return (i);
+            return (ret);
         }
 
 
@@ -34,9 +82,11 @@ namespace ws
             line.erase(0, 7);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             host_port ret;
-            std::size_t b_addr = line.find_first_not_of(" ");
-            std::size_t e_addr = line.find_first_of(":");
-            if (e_addr == line.npos)
+            //size_t b_addr = line.find_first_not_of(" ");
+            //size_t e_addr = line.find_first_of(":");
+            size_t b_addr = finder(line, " ", FIRST_NOT_OFF);
+            size_t e_addr = finder(line, ":", FIRST_OFF);
+            if (e_addr == -1)
             {
                 ret.first = "0.0.0.0";
                 try{ret.second = std::stoi(line);}
@@ -89,8 +139,8 @@ namespace ws
                 else
                 {
                     std::string tmp = line.substr(i, line.size());
-                    size_t end = tmp.find_first_of(" ");
-                    if (end == std::string::npos)
+                    size_t end = finder(tmp, " ", FIRST_OFF);
+                    if (end == -1)
                         end = tmp.size();
                     std::string tmp2 = tmp.substr(0, end);
                     if (tmp2 == "GET")
@@ -120,15 +170,13 @@ namespace ws
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             try 
             {
-                int ret = std::stoi(line);
-                return (ret);
+                //int ret = std::stoi(line);
+                return (std::stoi(line));
             }
             catch(...)
             {
-                std::cout << "max body size problem: number's conversion is mot possible" << std::endl;
-                int ret2 = 0;
-                
-                return (ret2);
+                std::cout << "max body size problem: number's conversion is not possible" << std::endl;
+                return (0);
             }
         }
 
@@ -140,12 +188,12 @@ namespace ws
 
         std::string Parser::p_return_path(std::string line){
             line.erase(0, 12);
-            size_t begin = line.find_first_of("abcdefghijklmnopqrstuvwxyz/");
-            if (begin == std::string::npos)
+            size_t begin = finder(line, "abcdefghijklmnopqrstuvwxyz/", FIRST_OFF);
+            if (begin == -1)
                 return ("");
             std::string tmp = line.substr(begin, line.size());
-            size_t end = line.find_first_of(" ");
-            if (end == std::string::npos)
+            size_t end = finder(line, " ", FIRST_OFF);
+            if (end == -1)
                 end = line.size();
             tmp = tmp.substr(begin, end);
             return (tmp);
@@ -153,7 +201,12 @@ namespace ws
 
         std::string Parser::p_return_code(std::string line){
             line.erase(0, 7);
-            size_t b = line.find_first_of("0123456789");
+            size_t b = finder(line, "0123456789", FIRST_OFF);
+            if (b == -1)
+            {
+                std::cout << "return's code wrong parameter" << std::endl;
+                this->valid = false;
+            }
             size_t s = b;
             while (std::isdigit(line[s]))
                 s++;
@@ -166,42 +219,45 @@ namespace ws
         }
 
         ErrorPages Parser::p_error_pages(ErrorPages errors_pages, std::string line){
-            ErrorPages ret(errors_pages);
-            line.erase(0, 12);
-            size_t s = line.size();
-            while (line[s] == ' ')
-                s--;
-            if (s != line.size())
-                line.erase(s, line.size());
-            if ((s = line.find_last_of(" ")) == std::string::npos)
-            {
-                if ((s = find_first_occur(line) == line.size()))
+            try{
+                ErrorPages ret(errors_pages);
+                line.erase(0, 12);
+                size_t s = line.size();
+                while (line[s] == ' ')
+                    s--;
+                if (s != line.size())
+                    line.erase(s, line.size());
+                if ((s = line.find_last_of(" ")) == std::string::npos)
                 {
-                    std::cout << "Error page, bad syntaxe" << std::endl;
-                    return (ret);
+                    if ((s = find_first_ascii(line) == line.size()))
+                    {
+                        std::cout << "Error page, bad syntaxe" << std::endl;
+                        return (ret);
+                    }
                 }
-            }
-            std::string path = line.substr(s, line.size());
-            line.erase(s, line.size());
-            for (size_t i = 0; i < line.size(); i++)
-            {
-                if (std::isdigit(line[i]))
+                std::string path = line.substr(s, line.size());
+                line.erase(s, line.size());
+                for (size_t i = 0; i < line.size(); i++)
                 {
-                    std::string tmp = line.substr(i, 3);
-                    size_t lastof = path.find_last_of("/");
-                    path.insert(lastof + 1, tmp);
-                    try{
+                    if (std::isdigit(line[i]))
+                    {
+                        std::string tmp = line.substr(i, 3);
+                        size_t lastof = path.find_last_of("/");
+                        path.insert(lastof + 1, tmp);
+                    
                         int tmpint = std::stoi(tmp);
                         ret[tmpint] = path;
                         path.erase(lastof + 1, 3);
+                        i += 3;    
                     }
-                    catch(...){
-                        std::cout << "bad error page num" << std::endl;
-                    }
-                    i += 3;    
                 }
+                return (ret);
             }
-            return (ret);
+            catch(...){
+                this->valid = false;
+                std::cout << "bad error page num" << std::endl;
+                return (ErrorPages());
+                }
         }
 
         std::vector<std::string> Parser::p_server_names(std::string line){
@@ -214,8 +270,10 @@ namespace ws
                 else
                 {
                     std::string strtmp = line.substr(i, line.size());
-                    size_t end = strtmp.find_first_not_of("_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789");
-                    if (end == std::string::npos)
+                    std::cout << strtmp << std::endl;
+                    size_t end = finder(strtmp, "_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789", FIRST_NOT_OFF);
+                    std::cout << end << std::endl;
+                    if (end == -1)
                         end = strtmp.size();
                     std::string tmp = line.substr(i, end);
                     ret.push_back(tmp);

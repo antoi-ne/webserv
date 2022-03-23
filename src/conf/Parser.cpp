@@ -120,7 +120,7 @@ namespace ws
 				}
 			}
 			set_default_parameter(this->config.servers);
-			print_config(this->config.servers);
+			//print_config(this->config.servers);
 		}
 
 		Parser::~Parser()

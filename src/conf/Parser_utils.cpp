@@ -74,7 +74,6 @@ namespace ws
                         break;
                     else
                         line.erase(0, 1);
-                    std::cout << line << std::endl;
                 }
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
@@ -95,7 +94,7 @@ namespace ws
                     tmp_server.return_path = p_return_path(line);
                     tmp_server.return_code = p_return_code(line);
                 }
-            } 
+            }
             config[tmp].push_back(tmp_server);
            if (line == "server:")
                 return (mapping_servers(config, fd));
