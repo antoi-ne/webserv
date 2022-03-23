@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/02 08:57:24 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/18 12:05:42 by ancoulon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ namespace	http
 	void	Req::setPath(const std::string& path) { this->_path = path; }
 
 	void	Req::setMethod(e_method method) { this->_method = method; }
+
+	time_t	Req::getCreatedTime(void) const { return this->_createdTime; }
 
 	ws::shared::Buffer	Req::getReq(void) const
 	{
@@ -52,6 +54,6 @@ namespace	http
 	}
 
 	Req::Req(void)
-	 : Message(), _method(), _path()
+	 : Message(), _method(UNDEF), _path(), _createdTime(time(0))
 	{}
 }

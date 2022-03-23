@@ -13,6 +13,8 @@
 # include "http/Parser/ResParser.hpp"
 # include "http/MsgUpdate.hpp"
 # include "http/Res.hpp"
+# include "http/Parser/ResParser.hpp"
+# include "http/MsgUpdate.hpp"
 # include "shared/Log.hpp"
 # include "conf/Config.hpp"
 
@@ -24,12 +26,14 @@ namespace ws
 		{
 		public:
 
+			typedef http::MsgUpdate<http::Res, http::ResParser> Response;
+
 			// cgi: full path in cgi_pass; script: full physical path of the script to execute
 			Launcher(http::Req req, std::string host, in_port_t port, std::string cgi, std::string script);
 
 			~Launcher();
 
-			http::Res run();
+			Response run();
 
 		private:
 

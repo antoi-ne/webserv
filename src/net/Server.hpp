@@ -23,7 +23,7 @@ namespace ws
 		{
 		public:
 
-			Server(std::string host = "localhost", in_port_t port = 0, int backlog = 5);
+			Server(std::string host = "localhost", in_port_t port = 0, int backlog = 500);
 
 			void listen();
 

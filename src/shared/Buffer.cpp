@@ -146,6 +146,45 @@ namespace ws
 			return std::string::npos;
 		}
 
+		size_t	Buffer::find(size_t from, const char* s) const
+		{
+			const char*	ptr = this->get_ptr();
+			
+			if (from <= this->size())
+			{
+				for (size_t	i = from, j = 0; i < this->size(); ++i)
+				{
+					if (ptr[i] == s[j])
+					{
+						if (!s[++j])
+							return (i - j) + 1;
+					}
+					else
+						j = 0;
+				}
+			}
+			return std::string::npos;
+		}
+
+		// return first char of string s
+		size_t	Buffer::find_last_of_from(const std::string& s, size_t from) const
+		{
+			const char*	ptr = this->get_ptr();
+			
+			for (size_t	i = from, j = s.size() - 1; i > 0; --i)
+			{
+				if (ptr[i] == s[j])
+				{
+					if (j == 0)
+						return i;
+					--j;
+				}
+				else
+					j = s.size() - 1;
+			}
+			return std::string::npos;
+		}
+
 		void	Buffer::join(const std::string& s)
 		{
 			size_t	newSize = this->_size + s.size();

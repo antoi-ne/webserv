@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResParser.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:42:39 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:57:07 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 09:59:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,8 @@
 namespace http
 {
 	ResParser::ResParser(http::Res& res)
-	 : Parser(res), _res(res)
-	{
-		this->_fUpdate = &Parser::checkFirstLine;
-	}
+	 : Parser(res, &Parser::checkFirstLine), _res(res)
+	{}
 
 	bool	ResParser::_goodFirstLine(size_t endLine)
 	{
@@ -38,23 +36,43 @@ namespace http
 	{
 		size_t	start = i;
 		size_t	ret;
+		const bool	hasCR = this->_buff[endLine - 1] == '\r';
 
 		if (!(ret = this->_checkStatusCode(i)))
 			return 0;
 		i += ret;
 		i = this->_skipWS(i);
-		for (; i < endLine; ++i)
+		for (; i < endLine - hasCR; ++i)
 			if (!this->_acceptedChar(this->_buff[i]))
 				return 0;
 		this->_res.setStatus(std::string(this->_buff.get_ptr() + start, i - start));
 		return i;
 	}
 
+	void	ResParser::_finish(void)
+	{
+		this->_headerFinish = true;
+		this->_res.body() = this->_buff;
+	}
+
+	bool	ResParser::checkHeader(size_t endLine)
+	{
+		if (!Parser::_checkHeader(endLine))
+			this->_finish();
+		else
+			this->_buff.advance(endLine + 1);
+		return true;
+	}
+
 	bool	ResParser::checkFirstLine(size_t endLine)
 	{
 		if (this->_goodFirstLine(endLine))
+		{
 			this->_buff.advance(endLine + 1);
-		this->_fUpdate = &Parser::checkHeader;
+			this->_fUpdate = &Parser::checkHeader;
+		}
+		else
+			this->_finish();
 		return true;
 	}
 

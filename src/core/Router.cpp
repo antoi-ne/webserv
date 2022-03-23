@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 12:19:41 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 17:03:04 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,35 +24,82 @@ namespace ws
 	{
 		bool	_hasBody(e_method method) { return method == POST || method == PUT; }
 
-		Router::Router(const conf::Config& conf) : _config(conf) {}
+		Router::Router(const conf::Config& conf) : _config(conf), _mime()
+    	{
+			std::string mime_type[] = MIME_TYPE;
+			std::string mime_ext[] = MIME_EXT;
+			size_t		i = 0;
+
+			while (!(mime_ext[i].empty()))
+			{
+				this->_initMIME(mime_type[i], mime_ext[i]);
+				++i;
+			}
+	    }
+
+		void	Router::_initMIME(const std::string mime_type, const std::string mime_ext)
+		{
+			size_t		i = 0;
+			size_t		start_ext = 0;
+			std::vector<std::string>	tmp;
+			
+			while (i < mime_ext.size())
+			{
+				if (mime_ext[i] == ';')
+				{
+					tmp.push_back(mime_ext.substr(start_ext, i));
+					if (mime_ext[i] == ' ')
+						++i;
+					start_ext = i + 2;
+				}
+				++i;
+			}
+			tmp.push_back(mime_ext.substr(start_ext, i));
+			this->_mime.push_back(make_pair(tmp, mime_type));
+		}
+
+		void
+		Router::_process(
+			const ReqU& request,
+			http::Res& response,
+			const conf::ServConfig& mainConf,
+			const conf::host_port& host) const
+		{
+			std::pair<const char *, uint16_t>	err;
+			std::string							ext;
+
+			if (!request.error())
+				err = this->_processServ(request, response, mainConf, host);
+			else
+				err = std::make_pair(STATUS400, 400);
+			this->_setError(response, mainConf, err.first, err.second);
+			ext = this->_getExt(err.first);
+			this->_getMIME(response, ext);
+		}
 
 		http::Res
-		Router::process(http::Req& request, const conf::host_port& host) const
+		Router::process(const ReqU& request, const conf::host_port& host) const
 		{
-			http::Res				response;
-			const conf::Server*		serv;
-			const conf::Location*	loc;
+			http::Res					response;
+			const conf::Server*			serv;
+			const conf::Location*		loc;
 			
-			if ((serv = this->_getServ(request.header(), host)))
-			{
-				if ((loc = this->_getLocation(request.path(), *serv)))
-					this->_processServ(request, response, *loc, host);
-				else
-					this->_processServ(request, response, *serv, host);
-			}
+			if (request.header("connection") == "close")
+				response.header()["connection"] = "close";
+			serv = this->_getServ(request.header("host"), host);
+			if ((loc = this->_getLocation(request.path(), *serv)))
+				this->_process(request, response, *loc, host);
 			else
-				this->_setError(response, *serv, STATUS444, 444);
+				this->_process(request, response, *serv, host);
 			return response;
 		}
 
 		const conf::Server*
-		Router::_getServ(http::Req::header_m& header, const conf::host_port& host) const
+		Router::_getServ(const std::string& headerHost, const conf::host_port& host) const
 		{
 			conf::server_map::const_iterator it = this->_config.servers.find(host);
 
-			if (it == this->_config.servers.end() || it->second.empty())
-				return nullptr;
-			return _getServerName(header["host"], it->second);
+			return _getServerName(headerHost, it->second);
 		}
 
 		const conf::Server*
@@ -94,11 +141,12 @@ namespace ws
 		{
 			const std::string*	errorPage;
 
-			response.header()["connection"] = "close";
 			response.setStatus(str);
 			errorPage = this->_findErrorPage(serv, code);
-			if (errorPage != NULL)
-				response.body().join(*errorPage);
+			if (errorPage)
+				this->_getFile(response.body(), *errorPage);
+			if (code == 400 || code == 413)
+				response.header()["connection"] = "close";
 		}
 
 		const std::string*
@@ -108,41 +156,117 @@ namespace ws
 
 			if (it == serv.error_pages.end())
 				return NULL;
-			return it->second;
+			return &it->second;
 		}
 
-		void
+		std::pair<const char *, uint16_t>
 		Router::_processServ(
 			const http::Req& request,
 			http::Res& response,
 			const conf::ServConfig& mainConf,
 			const conf::host_port& host) const
 		{
+			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
+				== mainConf.accepted_methods.end())
+				return std::make_pair(STATUS405, 405);
+			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
+				return std::make_pair(STATUS413, 413);
+			if (_hasBody(request.method()) && mainConf.upload_path.size())
+			{
+				std::pair<const char *, uint16_t>	err = this->_upload(request, mainConf);
+				if (err.second)
+					return err;
+			}
+			else if (!mainConf.return_path.size())
+				return this->_renderPage(request, response, mainConf, host);
 			if (mainConf.return_path.size())
 			{
-				if (_hasBody(request.method()) && mainConf.upload_path.size())
-					this->_upload(request, response, mainConf);
 				response.setStatus(mainConf.return_code);
 				response.header().insert(std::make_pair("Location", mainConf.return_path));
 			}
-			else if (_hasBody(request.method()) && mainConf.upload_path.size())
-				this->_upload(request, response, mainConf);
-			else
-				this->_renderPage(request, response, mainConf, host);
+			return std::make_pair("", 0);
 		}
 
-		void
+		std::pair<const char *, uint16_t>	
 		Router::_upload(
 			const http::Req& request,
-			http::Res& response,
 			const conf::ServConfig& mainConf) const
 		{
-			if (!this->_writeFile(
-				mainConf.upload_path + (request.path().c_str() + mainConf.route.size()),
-				request.body()
-			))
-				return this->_setError(response, mainConf, STATUS403, 403);
-			response.setStatus(STATUS201);
+			std::pair<std::string, ws::shared::Buffer>	content;
+			std::string									boundary;
+			
+			boundary = "--" + this->_getBoundary(request.header("content-type"));
+			content = this->_parseFormData(boundary, request.body());
+			if (!content.first.size())
+				return std::make_pair(STATUS400, 400);
+			else if (!this->_writeFile(mainConf.upload_path + content.first, content.second))
+				return std::make_pair(STATUS413, 403);
+			return std::make_pair("", 0);
+		}
+
+		std::string
+		Router::_getBoundary(std::string headerField) const
+		{
+			size_t pos = headerField.find("boundary");
+
+			if (pos == std::string::npos)
+				return "";
+			return headerField.c_str() + pos + 9;
+			
+		}
+
+		size_t
+		_filename(std::string& filename, const ws::shared::Buffer& body, size_t start)
+		{
+			size_t	pos = body.find(start, "filename=\"");
+			size_t i = pos;
+
+			if (pos != std::string::npos)
+			{
+				pos += 10;
+				i = pos;
+				while (body[i] != '"')
+					++i;
+				filename = "/" + std::string(body.get_ptr() + pos, i - pos);
+				if ((i = body.find(i, "\n")) != std::string::npos)
+					if ((i = body.find(++i, "\n")) != std::string::npos)
+						if ((i = body.find(++i, "\n")))
+							++i;
+			}
+			return i;
+		}
+
+		std::pair<std::string, ws::shared::Buffer>
+		Router::_parseFormData(
+			const std::string& boundary,
+			const ws::shared::Buffer& body) const
+		{
+			std::string			filename;
+			ws::shared::Buffer	content;
+			size_t				pos;
+
+			if (boundary.size() > 2)
+			{
+				if ((pos = body.find(boundary)) != std::string::npos)
+				{
+					pos += boundary.size();
+					if ((pos = _filename(filename, body, pos)) != std::string::npos)
+					{
+						size_t endData = body.find_last_of_from(boundary.c_str(), body.size() - 1);
+						if (endData != std::string::npos)
+						{
+							if ((endData = body.find_last_of_from("\n", endData)) != std::string::npos)
+							{
+								--endData;
+								if (body[endData] == '\r')
+									--endData;
+								content.join(body.get_ptr() + pos, endData - pos);
+							}
+						}
+					}
+				}
+			}
+			return std::make_pair(filename, content);
 		}
 
 		bool	
@@ -152,14 +276,14 @@ namespace ws
 
 			if (file)
 			{
-				file << buff.get_ptr();
+				file.write(buff.get_ptr(), buff.size());
 				file.close();
 				return true;
 			}
 			return false;
 		}
 
-		void
+		std::pair<const char *, uint16_t>
 		Router::_renderPage(
 			const http::Req& request,
 			http::Res& response,
@@ -167,28 +291,84 @@ namespace ws
 			const conf::host_port& host) const
 		{
 			std::string				path;
+			std::string				ext;
 			shared::Buffer			body;
 
-			path = _getLocalPath(request.path(), mainConf);
+			path = _getLocalPath(request.method() ,request.path(), mainConf);
 			if (path.empty())
-				return this->_setError(response, mainConf, STATUS404, 404);
-			if (std::find(mainConf.accepted_methods.begin(), mainConf.accepted_methods.end(), request.method())
-				== mainConf.accepted_methods.end())
-				return this->_setError(response, mainConf, STATUS405, 405);
-			if (mainConf.cgi_ext.size())
+				return std::make_pair(STATUS404, 404);
+			ext = this->_getExt(path);
+			if (ext.size())
 			{
-				response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
-				return ;
+				if (mainConf.cgi_ext.size() && mainConf.cgi_ext == ext)
+				{
+					try {
+						response = cgi::Launcher(request, host.first, host.second, mainConf.cgi_script, path).run();
+					} catch (...) {
+						return std::make_pair(STATUS500, 500);
+					}
+					return std::make_pair("", 0);
+				}
+				else
+					this->_getMIME(response, path.back() == '/' ? "html" : ext);
 			}
- 			if (!(body = this->_getBody(path, request.path())).size())
-				return this->_setError(response, mainConf, STATUS403, 403);
-			if (!this->_checkMaxBodySize(mainConf, request.body().size()))
-				return this->_setError(response, mainConf, STATUS413, 413);
+			if (request.method() == DELETE)
+			{
+				if (!this->_delete(path))
+					return std::make_pair(STATUS500, 500);
+			}
+ 			else if (!this->_getBody(body, path, request.path()))
+				return std::make_pair(STATUS500, 500);
 			response.body().join(body);
+			return std::make_pair("", 0);
+		}
+
+		bool
+		Router::_deleteDir(const std::string& path, DIR* dirp) const
+		{
+    		struct dirent*	dp;
+
+    		while ((dp = readdir(dirp)) != NULL)
+				if (dp->d_name[0] != '.' || (dp->d_name[1] != '\0' && dp->d_name[1] != '.'))
+					if (!this->_delete(path + "/" + dp->d_name))
+						return false;
+			return true;
+		}
+
+		bool
+		Router::_delete(const std::string& path) const
+		{
+			bool		ret = true;
+			struct stat	info;
+
+			if (stat(path.c_str(), &info) == 0)
+			{
+				if (S_ISDIR(info.st_mode))
+				{
+					DIR* dirp = opendir(path.c_str());
+					if (!dirp || !this->_deleteDir(path, dirp))
+						ret = false;
+					closedir(dirp);
+				}
+				if (remove(path.c_str()) == -1)
+					ret = false;
+			}
+			return ret;
+		}
+
+		std::string
+		Router::_getExt(const std::string& path) const
+		{
+			size_t	ext_start = path.find_last_of('.');
+
+			if (ext_start == std::string::npos)
+				return "";
+			return path.substr(ext_start + 1);
 		}
 
 		std::string
 		Router::_getLocalPath(
+			const e_method	method,
 			const std::string& uri,
 			const conf::ServConfig& serv) const
 		{
@@ -203,7 +383,7 @@ namespace ws
 			{
 				if (path.back() != '/')
 					path.push_back('/');
-				if (!serv.autoindex)
+				if (!serv.autoindex && method != DELETE)
 				{
 					path.append(serv.index);
 					if (stat(path.c_str(), &info) != 0)
@@ -213,35 +393,55 @@ namespace ws
 			return path;
 		}
 
-		shared::Buffer
-		Router::_getBody(const std::string& path, const std::string& uri) const
+		void
+		Router::_getMIME(http::Res& res, const std::string& ext) const
+		{
+			mime_vec::const_iterator	it;
+
+			it = this->_mime.begin();
+			for (; it != this->_mime.end(); ++it)
+			{
+				std::vector<std::string>::const_iterator	ext_it = it->first.begin();
+
+				for (;ext_it != it->first.end(); ++ext_it)
+				{
+					if (*ext_it == ext)
+					{
+						res.header()["Content-Type"] = it->second;
+						return ;
+					}
+				}
+			}
+		}
+
+		bool
+		Router::_getBody(shared::Buffer& body, const std::string& path, const std::string& uri) const
 		{
 			if (path.back() == '/') // autoindex on case
 			{
-				shared::Buffer	buff;
     			DIR* dirp = opendir(path.c_str());
-				if (dirp)
-				{
-					buff = this->_getAutoIndexPage(dirp, uri);
-					closedir(dirp);
-				}
-				return buff;
+				if (!dirp)
+					return false;
+				body = this->_getAutoIndexPage(dirp, uri);
+				closedir(dirp);
 			}
-			return this->_getFile(path);
+			else
+				return this->_getFile(body, path);
+			return true;
 		}
 
 		shared::Buffer
 		Router::_getAutoIndexPage(DIR* dirp ,const std::string& uri) const
 		{
-			char	_buff[512];
-			size_t	size;
+			std::vector<struct dirent>	dirList;
+			shared::Buffer	buff;
+			char			_buff[512];
+			size_t			size;
 
 			size = sprintf(_buff, INDEX_OF1, uri.c_str(), uri.c_str());
+			buff.join(_buff, size);
 
-			shared::Buffer	buff(_buff, size);
-
-			const std::vector<struct dirent>	dirList = this->_getDirList(dirp);
-
+			dirList = this->_getDirList(dirp);
 			for (std::vector<struct dirent>::const_iterator it = ++dirList.begin(); it != dirList.end(); ++it)
 			{
 				if (it->d_type == DT_DIR)
@@ -250,6 +450,7 @@ namespace ws
 					size = sprintf(_buff, FILE_TEMP, uri.c_str(), it->d_name, it->d_name);
 				buff.join(_buff, size);
 			}
+
 			buff.join(INDEX_OF2, 25);
 			return buff;
 		}
@@ -265,26 +466,23 @@ namespace ws
 			return v;
 		}
 
-		shared::Buffer
-		Router::_getFile(const std::string& path) const
+		bool
+		Router::_getFile(shared::Buffer& body, const std::string& path) const
 		{
-			std::ifstream		file(path);
-			shared::Buffer		buff;
+			std::ifstream	file(path);
+			char			buff[2048];
+			size_t			len;
 
-			if (file)
+			if (!file)
+				return false;
+			while (!file.eof())
 			{
-				char	_buff[2048];
-				size_t	len;
-
-				while (!file.eof())
-				{
-					file.read(_buff, 2048);
-					len = file.gcount();
-					buff.join(_buff, len);
-				}
-				file.close();
+				file.read(buff, 2048);
+				len = file.gcount();
+				body.join(buff, len);
 			}
-			return buff;
+			file.close();
+			return true;
 		}
 
 		bool

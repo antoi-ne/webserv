@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:22:56 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 11:29:25 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/22 09:54:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,14 +28,15 @@ namespace http
 	bool	Parser::headerFinish(void) const
 	{ return this->_headerFinish; }
 
-	void	Parser::chillCheck(const ws::shared::Buffer& buff)
+	bool	Parser::update(const ws::shared::Buffer& buff)
 	{
-		this->_buff.join(buff);
-		if (!this->_headerFinish)
-			this->_chillIfCRLF();
+		if (!this->_addBuffer(buff)
+			|| (!this->_headerFinish && !this->_updateIfCRLF()))
+			return false;
+		return this->_isNotFinish();
 	}
 
-	bool	Parser::update(const ws::shared::Buffer& buff)
+	bool	Parser::_addBuffer(const ws::shared::Buffer& buff)
 	{
 		if (this->_msg.contentLength() == std::string::npos)
 			this->_buff.join(buff);
@@ -46,23 +47,57 @@ namespace http
 		}
 		else
 			this->_msg.body().join(buff);
-		if (!this->_headerFinish && !this->_updateIfCRLF())
-			return false;
-		return this->_isNotFinish();
+		return true;
 	}
 
-	bool	Parser::_chunkedSize(size_t endLine, size_t& chunkSize) const
+	bool	Parser::_updateIfCRLF(void)
 	{
-		if (endLine == 0
-			|| (endLine == 1 && this->_buff[0] == '\r')) // just crlf
-			return false;
-		bool hasCR = this->_buff[endLine - 1] == '\r';
-		try {
-			chunkSize = std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
-		} catch (...) {
-			return false;
-		};
+		size_t endLine = this->_buff.find('\n');
+
+		while (endLine != std::string::npos && !this->_headerFinish)
+		{
+			if ((this->*_fUpdate)(endLine) == false) // error case
+				return false;
+			endLine = this->_buff.find('\n');
+		}
 		return true;
+	}
+
+	bool	Parser::_isNotFinish(void)
+	{
+		if (this->_headerFinish)
+		{
+			if (this->_msg.contentLength() == std::string::npos)
+			{
+				if (!this->_unchunkedBody())
+				{
+					this->_headerFinish = false;
+					return false;
+				}
+			}
+			if (this->_msg.body().size() >= this->_msg.contentLength())
+			{
+				if (this->_msg.body().size() > this->_msg.contentLength())
+					this->_headerFinish = false;
+				return false;
+			}
+		}
+		return true;
+	}
+
+	size_t	Parser::_chunkedSize(size_t endLine) const
+	{
+		if (endLine > 0)
+		{
+			bool hasCR = this->_buff[endLine - 1] == '\r';
+			if (!hasCR || endLine > 1)
+			{
+				try {
+					return std::stoul(std::string(this->_buff.get_ptr(), endLine - hasCR), nullptr, 16);
+				} catch (...) {};
+			}
+		}
+		return std::string::npos;
 	}
 
 	bool	Parser::_chunkedContent(size_t& chunkSize)
@@ -93,28 +128,22 @@ namespace http
 				bool	hasCR = this->_buff[0] == '\r';
 
 				needCRLF = false;
+				chunkSize = std::string::npos;
 				if (this->_buff[0] == '\n' || (hasCR && this->_buff[1] == '\n'))
-				{
-					chunkSize = std::string::npos;
 					this->_buff.advance(1 + hasCR);
-				}
 				else
-				{
-					chunkSize = std::string::npos;
 					return false;
-				}
 			}
 			if (chunkSize == std::string::npos)
 			{
 				size_t	endLine = this->_buff.find('\n');
-
 				if (endLine == std::string::npos)
 					return true;
-				if (!this->_chunkedSize(endLine, chunkSize))
-				{
-					chunkSize = std::string::npos;
+
+				chunkSize = this->_chunkedSize(endLine);
+				if (chunkSize == std::string::npos)
 					return false;
-				}
+
 				this->_buff.advance(endLine + 1);
 			}
 			else
@@ -131,50 +160,8 @@ namespace http
 		return true;
 	}
 
-	bool	Parser::_isNotFinish(void)
-	{
-		if (this->_headerFinish)
-		{
-			if (this->_msg.contentLength() == std::string::npos)
-			{
-				if (!this->_unchunkedBody())
-				{
-					this->_headerFinish = false;
-					return false;
-				}
-			}
-			if (this->_msg.body().size() == this->_msg.contentLength())
-				return false;
-		}
-		return true;
-	}
-
-	void	Parser::_chillIfCRLF(void)
-	{
-		size_t endLine = this->_buff.find('\n');
-
-		while (endLine != std::string::npos && !this->_headerFinish)
-		{
-			(this->*_fUpdate)(endLine);
-			endLine = this->_buff.find('\n');
-		}
-	}
-
-	bool	Parser::_updateIfCRLF(void)
-	{
-		size_t endLine = this->_buff.find('\n');
-
-		while (endLine != std::string::npos && !this->_headerFinish)
-		{
-			if ((this->*_fUpdate)(endLine) == false) // error case
-				return false;
-			endLine = this->_buff.find('\n');
-		}
-		return true;
-	}
-
 	bool	Parser::_acceptedChar(const char c) const
-	{ return (c > 32 && c < 127); }
+	{ return (c > 31 && c < 127); }
 
 	static inline size_t	_setContentLength(const std::string& s)
 	{
@@ -186,55 +173,65 @@ namespace http
 
 	void	Parser::_endHeader(size_t endLine)
 	{
-		if (this->_msg.header()["transfer-encoding"] != "chunked")
+		if (this->_msg.header("transfer-encoding") != "chunked")
 		{
 			this->_msg.body().join(
 				this->_buff.get_ptr() + endLine + 1,
 				this->_buff.size() - (endLine + 1)
 			);
 			this->_msg.setContentLength(
-				_setContentLength(this->_msg.header()["Content-Length"]));
+				_setContentLength(this->_msg.header("content-length")));
 		}
 		this->_headerFinish = true;
-		this->_msg.header().erase("transfer-encoding");
 	}
 
-	// TODO Check host
-	bool	Parser::checkHeader(size_t endLine)
+	bool	Parser::_checkHeader(size_t endLine)
 	{
 		bool	ret = true;
 
 		if (endLine == 0 || (endLine == 1 && this->_buff[0] == '\r'))
-			this->_endHeader(endLine);
+		{
+			if (this->_msg.header("host") == "")
+				ret = false;
+			else
+				this->_endHeader(endLine);
+		}
 		else
 			if (!this->_setHeader(endLine))
 				ret = false;
-		this->_buff.advance(endLine + 1);
 		return ret;
+	}
+
+	bool	Parser::_acceptedKey(const std::string& key, const std::string& value) const
+	{
+		if (key == "host" && value.empty())
+			return false;
+		return true;
 	}
 
 	bool	Parser::_setHeader(size_t endLine)
 	{
 		int		hasCR = 0;
 		size_t	i = 0;
-		size_t	keyEnd = 0;
 
 		if (this->_buff[endLine - 1] == '\r')
 			hasCR = 1;
 		while (this->_buff[i] != ':'
+			&& this->_buff[i] != ' '
 			&& this->_acceptedChar(this->_buff[i]))
 			++i;
 		if (i != 0)
 		{
+			std::string	key;
+			std::string	val;
+
+			key = std::string(this->_buff.get_ptr(), i);
 			if (this->_buff[i] == ':')
 			{
-				keyEnd = i++;
-				for (; i < endLine && this->_buff[i] <= ' '; ++i); // not sure skip space before value
-				this->_msg.header().insert(
-				std::make_pair(
-					std::string(this->_buff.get_ptr(), keyEnd),
-					std::string(this->_buff.get_ptr() + i, endLine - i - hasCR)
-				));
+				i++;
+				for (; i < endLine && this->_buff[i] == ' '; ++i);
+				val = std::string(this->_buff.get_ptr() + i, endLine - i - hasCR);
+				this->_msg.header().insert(std::make_pair(key, val));
 			}
 			else if (hasCR)
 			{
@@ -243,7 +240,7 @@ namespace http
 			}
 			else if (i != endLine)
 				return false;
-			return true;
+			return _acceptedKey(key, val);
 		}
 		return false;
 	}

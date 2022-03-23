@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 09:03:17 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/01 14:15:06 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/17 11:41:41 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ namespace	http
 		void				setContentLength(size_t contentLength);
 		header_m&			header(void);
 		const header_m&		header(void) const;
-		const std::string&	header(const std::string field);
+		const std::string	header(const std::string field) const;
 		const ws::shared::Buffer&	body(void) const;
 		ws::shared::Buffer&	body(void);
 

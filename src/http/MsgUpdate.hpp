@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 13:56:59 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/03 09:26:18 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/02/07 12:05:41 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@ namespace http
 		bool	update(const ws::shared::Buffer& buff)
 		{ return this->_parser.update(buff); }
 
-		void	chillCheck(const ws::shared::Buffer& buff)
-		{ this->_parser.chillCheck(buff); }
 	};
 
 } // namespace http

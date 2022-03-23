@@ -59,7 +59,7 @@ namespace ws
 		Launcher::~Launcher()
 		{}
 
-		http::Res Launcher::run()
+		Launcher::Response Launcher::run()
 		{
 			http::MsgUpdate<http::Res, http::ResParser>	res;
 			char ** envp;
@@ -86,8 +86,7 @@ namespace ws
 			if ((script = strdup(this->_cgi.c_str())) == NULL)
 				throw std::runtime_error("strdup failed");
 
-			shared::Buffer raw_req = this->_req.body();
-			raw_req.resetCursor();
+			shared::Buffer raw_req = this->_req.getReq();
 
 			if (::write(this->_in[1], raw_req.get_ptr(), raw_req.size()) < (ssize_t)raw_req.size())
 				throw std::runtime_error("syscall write failed");
@@ -96,8 +95,7 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
-			std::cout << "resBuff: " << buff.to_string() << std::endl;
-			res.chillCheck(buff);
+			res.update(buff);
 			return res;
 		}
 
@@ -106,8 +104,6 @@ namespace ws
 			pid_t pid;
 			int ret;
 			shared::Buffer buffer;
-
-			std::cout << "script: " << script << std::endl;
 
 			pid = ::fork();
 			if (pid < 0)

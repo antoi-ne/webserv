@@ -28,7 +28,6 @@ namespace ws
 		void Parser::print_config(server_map server){
 			for (server_map::iterator it = server.begin(); it != server.end(); it++)
 			{
-				std::cout << " nbr srvr on this addr & port:" << it->second.size() << std::endl;
 				for (std::vector<Server>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
 				{
 					std::cout << "_____SERVER_____" << std::endl;
@@ -107,14 +106,20 @@ namespace ws
 			std::ifstream   fd(file_path);
 			std::string     line;
 			
+			if (!fd)
+			{
+				std::cout << "bad file opening." << std::endl;
+				this->valid = false;
+				return ;
+			}
 			while (!fd.eof())
 			{
-				std::getline(fd, line);	
+				std::getline(fd, line);
 				if (line == "server:")
 				{
 					if (this->mapping_servers(this->config.servers, fd) == 0)
 					{
-						this->valid = 0;
+						this->valid = false;
 						std::cout << "probleme occured with filling the server info" << std::endl;
 					}
 				}
