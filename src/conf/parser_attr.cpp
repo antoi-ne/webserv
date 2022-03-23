@@ -177,7 +177,7 @@ namespace ws
         }
 
         int Parser::p_m_bdy_size(std::string line){
-            line.erase(0, 21);
+            line.erase(0, 14);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             try
                 {return (std::stoi(line));}

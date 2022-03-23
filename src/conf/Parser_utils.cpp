@@ -26,7 +26,7 @@ namespace ws
                     ret.accepted_methods = p_accpt_mtde(line);
                 if (!(line.compare(0, 10, "autoindex:")))
                     ret.autoindex = p_a_index(line);
-                if (!(line.compare(0, 21, "client_max_body_size:")))
+                if (!(line.compare(0, 14, "max_body_size:")))
                     ret.max_body_size = p_m_bdy_size(line);
                 if (!(line.compare(0, 12, "error_pages:")))
                     ret.error_pages = p_error_pages(ret.error_pages, line);
@@ -82,7 +82,7 @@ namespace ws
                     tmp_server.index = p_index(line);
                 if (!(line.compare(0, 10, "autoindex:")))
                     tmp_server.autoindex = p_a_index(line);
-                if (!(line.compare(0, 21, "client_max_body_size:")))
+                if (!(line.compare(0, 14, "max_body_size:")))
                     tmp_server.max_body_size = p_m_bdy_size(line);
                 if (!(line.compare(0, 12, "error_pages:")))
                     tmp_server.error_pages = p_error_pages(tmp_server.error_pages, line);

@@ -10,6 +10,7 @@ namespace ws
 			{
 				for (std::vector<Server>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
 				{
+					sit->accepted_methods.push_back(GET);
 					for (std::vector<Location>::iterator it3 = sit->locations.begin(); it3 != sit->locations.end(); it3++)
 					{
 						if (it3->error_pages.empty())

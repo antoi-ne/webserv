@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/22 17:03:04 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/23 17:18:11 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,9 +72,8 @@ namespace ws
 				err = this->_processServ(request, response, mainConf, host);
 			else
 				err = std::make_pair(STATUS400, 400);
-			this->_setError(response, mainConf, err.first, err.second);
-			ext = this->_getExt(err.first);
-			this->_getMIME(response, ext);
+			if (err.second)
+				return this->_setError(response, mainConf, err.first, err.second);
 		}
 
 		http::Res
@@ -140,13 +139,18 @@ namespace ws
 			const uint16_t code) const
 		{
 			const std::string*	errorPage;
+			std::string			ext;
 
 			response.setStatus(str);
 			errorPage = this->_findErrorPage(serv, code);
 			if (errorPage)
+			{
 				this->_getFile(response.body(), *errorPage);
-			if (code == 400 || code == 413)
+				ext = this->_getExt(*errorPage);
+			}
+			if (code == 400)
 				response.header()["connection"] = "close";
+			this->_getMIME(response, ext);
 		}
 
 		const std::string*
