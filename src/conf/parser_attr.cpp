@@ -79,11 +79,10 @@ namespace ws
         }
 
         host_port Parser::map_servers(std::string line){
+
             line.erase(0, 7);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
             host_port ret;
-            //size_t b_addr = line.find_first_not_of(" ");
-            //size_t e_addr = line.find_first_of(":");
             size_t b_addr = finder(line, " ", FIRST_NOT_OFF);
             size_t e_addr = finder(line, ":", FIRST_OFF);
             if (e_addr == -1)
@@ -92,14 +91,17 @@ namespace ws
                 try{ret.second = std::stoi(line);}
                 catch(...){
                     this->valid = false;
-                    std::cout << "bad port number";
+                    std::cout << "bad port number" <<std::endl;
                 }
             }
             else
             {
-                ret.first = line.substr(b_addr, e_addr);
-                try{ret.second = std::stoi(line.substr((e_addr + 1), line.size()));}
-                catch(...){std::cout << "bad port number";}
+                try{ret.first = line.substr(b_addr, e_addr);
+                ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
+                }
+                catch(...){
+                    this->valid = false;
+                    std::cout << "bad port number" << std::endl;}
             }
             return (ret);
             
@@ -130,6 +132,7 @@ namespace ws
         }
 
         std::vector<e_method> Parser::p_accpt_mtde(std::string line){
+            try{
             line.erase(0,17);
             std::vector<e_method> ret;
             for (size_t i = 0; i <= line.size(); i++)
@@ -155,6 +158,13 @@ namespace ws
                 }
             }
             return (ret);
+            }
+            catch(...){
+                std::vector<e_method> ret;
+                std::cout << "accepted method error" << std::endl;
+                this->valid = false;
+                return (ret);
+            }
         }
 
         bool Parser::p_a_index(std::string line){
@@ -168,13 +178,11 @@ namespace ws
         int Parser::p_m_bdy_size(std::string line){
             line.erase(0, 21);
             line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-            try 
-            {
-                //int ret = std::stoi(line);
-                return (std::stoi(line));
-            }
+            try
+                {return (std::stoi(line));}
             catch(...)
             {
+                this->valid = false;
                 std::cout << "max body size problem: number's conversion is not possible" << std::endl;
                 return (0);
             }
@@ -187,7 +195,8 @@ namespace ws
         }
 
         std::string Parser::p_return_path(std::string line){
-            line.erase(0, 12);
+            try{
+                line.erase(0, 12);
             size_t begin = finder(line, "abcdefghijklmnopqrstuvwxyz/", FIRST_OFF);
             if (begin == -1)
                 return ("");
@@ -197,16 +206,20 @@ namespace ws
                 end = line.size();
             tmp = tmp.substr(begin, end);
             return (tmp);
+            }
+            catch(...){
+                std::cout << "return path substr problem" << std::endl;
+                this->valid = false;
+                return(std::string(""));
+            }
         }
 
         std::string Parser::p_return_code(std::string line){
+            try{
             line.erase(0, 7);
             size_t b = finder(line, "0123456789", FIRST_OFF);
             if (b == -1)
-            {
-                std::cout << "return's code wrong parameter" << std::endl;
-                this->valid = false;
-            }
+                throw("bad");
             size_t s = b;
             while (std::isdigit(line[s]))
                 s++;
@@ -215,6 +228,12 @@ namespace ws
             if (ret != TEMPORARY_REDIRECT && ret != SEE_OTHER && ret != MOVED_PERMANENTLY && ret != MOVED_TEMPORARLY)
                 return (UNDIFND);
             return (ret);
+            }
+            catch(...){
+                std::cout << "return's code wrong parameter" << std::endl;
+                this->valid = false;
+                return(std::string(""));
+            }
             
         }
 
@@ -229,7 +248,7 @@ namespace ws
                     line.erase(s, line.size());
                 if ((s = line.find_last_of(" ")) == std::string::npos)
                 {
-                    if ((s = find_first_ascii(line) == line.size()))
+                    if ((s = find_ascii(line, FIRST_OFF) == line.size()))
                     {
                         std::cout << "Error page, bad syntaxe" << std::endl;
                         return (ret);
@@ -261,26 +280,32 @@ namespace ws
         }
 
         std::vector<std::string> Parser::p_server_names(std::string line){
-            line.erase(0, 13);
-            std::vector <std::string> ret;
-            for (size_t i = 0; i < line.size(); i++)
-            {
-                if (line[i] == ' ')
-                    continue;
-                else
+           try{
+                line.erase(0, 13);
+                std::vector <std::string> ret;
+                for (size_t i = 0; i < line.size(); i++)
                 {
-                    std::string strtmp = line.substr(i, line.size());
-                    std::cout << strtmp << std::endl;
-                    size_t end = finder(strtmp, "_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789", FIRST_NOT_OFF);
-                    std::cout << end << std::endl;
-                    if (end == -1)
-                        end = strtmp.size();
-                    std::string tmp = line.substr(i, end);
-                    ret.push_back(tmp);
-                    i += tmp.size();
+                    if (line[i] == ' ')
+                        continue;
+                    else
+                    {
+                        std::string strtmp = line.substr(i, line.size());
+                        size_t end = strtmp.find_first_not_of("_abcdefghiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789");
+                        if (end == std::string::npos)
+                            end = strtmp.size();
+                        std::string tmp = line.substr(i, end);
+                        ret.push_back(tmp);
+                        i += tmp.size();
+                    }
                 }
-            }
-            return (ret);
+                return (ret);
+           }
+           catch(...){
+               std::vector<std::string> ret;
+               this->valid = false;
+               std::cout << "server_names error" << std::endl;
+               return(ret);
+           }
         }
     }
 }

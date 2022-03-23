@@ -13,7 +13,7 @@ namespace ws
             ret.route = p_route(prev_line);
             ret.autoindex = false;
             ret.max_body_size = -1;
-            while (std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
+            while (this->valid == true && std::getline(fd, line) && ( line[0] == '\0' ||!(line.compare(0, 2, "  "))))
             {
                 if (line[0] == '\0')
                     continue;
@@ -59,7 +59,7 @@ namespace ws
             
             tmp_server.autoindex = false;
             tmp_server.max_body_size = -1;
-            while (getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
+            while (this->valid == true && getline(fd, line) && (line[0] == '\0' || line[0] == ' '))
             {
                 if (line[0] == '\0')
                     continue;

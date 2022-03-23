@@ -4,9 +4,9 @@ server:
  root: ./assets/ws1
  index: index.html
  upload_path: /example/path
- client_max_body_size: 128 
- error_pages: 400 404 444 /path/4xx.html
- return: 307 http://example.net
+ client_max_body_size:
+ error_pages: 400 404 444 /path/.html
+ return: 308  http://example.net
 
  location: /hello
   root: /other/path
@@ -20,7 +20,7 @@ server:
  index: index.html
  upload_path: /example/path
  client_max_body_size: 128 
- error_pages: 400 404 444 /path/4xx.html
+ error_pages: 400 404 444 /path/.html
  return: 307 http://example.net
 
 
