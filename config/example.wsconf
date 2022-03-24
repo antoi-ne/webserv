@@ -8,7 +8,7 @@ server:
   root: /other/path
   index: hello.html 
  client_max_body_size: 56
- error_pages: 400 404 444 /path/.html
+ error_pages: 400 404 413 /path/.html
  return: 308 https://example.net
 
 server:
@@ -18,7 +18,7 @@ server:
  index: index.html
  upload_path: /example/path
  client_max_body_size: 128 
- error_pages: 400 404 444 /path/.html
+ error_pages: 400 404 413 /path/.html
  return: 307 http://example.net
 
 

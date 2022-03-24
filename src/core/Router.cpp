@@ -6,7 +6,7 @@
 /*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/24 09:34:42 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/24 11:11:34 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -375,13 +375,17 @@ namespace ws
 			struct stat	info;
 
 			path = serv.root;
+			if (path.back() != '/')
+				path += "/";
 			path += (uri.c_str() + serv.route.size());
 			if (stat(path.c_str(), &info) != 0)
 				return std::string();
 			if (S_ISDIR(info.st_mode))
 			{
-				if (path.back() != '/')
+				if (serv.autoindex || serv.index.size())
 					path.push_back('/');
+				else if (path.back() == '/')
+					path.pop_back();
 				if (!serv.autoindex && method != DELETE)
 				{
 					path.append(serv.index);
