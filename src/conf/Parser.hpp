@@ -20,7 +20,7 @@ namespace ws
 			private:
 				bool valid;
 			public:
-			Parser(std::string file_path = "./config/example.wsconf");
+			Parser(std::string file_path = "../../config/example.wsconf");
 			~Parser();
 			Config						to_config();
 			void						set_default_parameter(server_map &server);

@@ -106,7 +106,6 @@ namespace ws
 			this->valid = true;
 			std::ifstream   fd(file_path);
 			std::string     line;
-			
 			if (!fd)
 			{
 				std::cout << "bad file opening." << std::endl;
