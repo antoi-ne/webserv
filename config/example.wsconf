@@ -1,14 +1,14 @@
 server:
- listen: 127.0.0.1:8080
  server_names: hello.local world.local
  root: ./assets/ws1
  index: index.html
  upload_path: /example/path
  location: /hello
   root: /other/path
-  index: hello.html 
+  index: hello.html
+ listen: 127.0.0.1:8080 
  client_max_body_size: 56
- error_pages: 400 404 444 /path/.html
+ error_pages: 400 /path/.html
  return: 308 https://example.net
 
 server:
