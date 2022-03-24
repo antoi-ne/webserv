@@ -1,6 +1,6 @@
 NAME		= webserv
 
-SRCS		= src/main.cpp $(wildcard src/*/*.cpp)
+SRCS		= src/main.cpp $(wildcard src/*/*.cpp) $(wildcard src/*/*/*.cpp)
 
 OBJS		= $(SRCS:.cpp=.o)
 
@@ -8,7 +8,7 @@ CXX			= clang++
 
 RM			= rm -f
 
-CXXFLAGS	= -fsanitize=address -g -Wall -Wextra -Werror -std=c++98 -I ./src
+CXXFLAGS	= -O3 -Wall -Wextra -Werror -std=c++98 -I ./src
 
 all:		$(NAME)
 

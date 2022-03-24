@@ -1,13 +1,24 @@
 server:
- listen localhost 9000
-
- server_name hello.local
-
- root /example/
-
- location x
-  root /hello
+ server_names: hello.local world.local
+ root: ./assets/ws1
+ index: index.html
+ upload_path: /example/path
+ location: /hello
+  root: /other/path
+  index: hello.html
+ listen: 127.0.0.1:8080 
+ client_max_body_size: 56
+ error_pages: 400 404 413 /path/.html
+ return: 308 https://example.net
 
 server:
- listen 10.5.5.5 9000
+ listen: 230.0.0.1:9000
+ server_names: hello.local world.local
+ root: ./assets/ws1
+ index: index.html
+ upload_path: /example/path
+ client_max_body_size: 128 
+ error_pages: 400 404 413 /path/.html
+ return: 307 http://example.net
+
 

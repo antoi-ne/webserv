@@ -4,23 +4,17 @@ namespace ws
 {
 	namespace net
 	{
-		Connection::Connection(int fd)
-			: Socket(fd)
+		Connection::Connection(int fd, std::time_t created_at)
+			: Socket(fd), _created_at(created_at)
 		{}
 
-		bool Connection::send(shared::Buffer buff)
+		ssize_t Connection::send(shared::Buffer buff)
 		{
 			ssize_t bytes = buff.size();
 			ssize_t rbytes = 0;
 
-			while (bytes > 0)
-			{
-				rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
-				if (rbytes <= 0)
-					return false;
-				bytes -= rbytes;
-			}
-			return true;
+			rbytes = ::send(this->get_fd(), buff.get_ptr() + rbytes, bytes, 0);
+			return rbytes;
 		}
 
 		shared::Option<shared::Buffer> Connection::recv(size_t size)
@@ -52,5 +46,11 @@ namespace ws
 		{
 			return this->get_fd() == rhs.get_fd();
 		}
+
+		std::time_t Connection::created_at()
+		{
+			return this->_created_at;
+		}
+
 	}
 }

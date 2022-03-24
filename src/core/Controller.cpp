@@ -36,56 +36,67 @@ namespace ws
 		{
 			std::list<net::Ctx> ctxs;
 			std::list<net::Ctx>::iterator it;
-			shared::Buffer buff;
-			shared::Option<shared::Buffer> opt;
-
+			std::map<net::Connection, Req>::iterator rqit;
 
 			ctxs = this->_pool.probe();
+			
 			for (it = ctxs.begin(); it != ctxs.end(); it++)
 			{
 				if (it->rread) // new request fragment received
 				{
+					shared::Option<shared::Buffer> opt;
+
 					opt = it->con.recv(4096);
 					if (opt.null())
 					{
 						this->_pool.close_con(it->con);
 						this->_req_cache.erase(it->con);
-						shared::Log::info("connection closed by client");
 						continue;
 					}
-					shared::Log::info("received data");
-					if (this->_req_cache[it->con].update(opt.value()) == false)
+					Req& req = this->_req_cache[it->con];
+					if (req.update(opt.value()) == false)
 					{
-						const http::Req& req = this->_req_cache[it->con];
-						shared::Log::info(this->_req_cache[it->con].body().to_string());
-						shared::Log::info("completed request");
-						std::cout << this->_req_cache[it->con].method() << std::endl;
-						if (req.method() == UNDEF || req.path().empty())
-						{
-							it->con.send(std::string("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\nBad Request\r\n"));
-						}
-						else
-						{
-							const http::Res res = this->_router.process(
-								this->_req_cache[it->con],
-								std::make_pair(it->srv.get_host(),
-								it->srv.get_port())
-							);
-							this->_res_cache[it->con].push_back(res);
-						}
+						http::Res res = this->_router.process(
+							this->_req_cache[it->con],
+							std::make_pair(it->srv.get_host(),
+							it->srv.get_port())
+						);
+						this->_res_cache[it->con] = std::make_pair(res.get_res(), res.header("connection") != "close");
 						this->_req_cache.erase(it->con);
 					}
-					else
-						shared::Log::info("request not complete");
 				}
 
-				if (it->rwrite && !this->_res_cache[it->con].empty()) // ready to receive response if any response is in the cache
+				if (it->rwrite && this->_res_cache.find(it->con) != this->_res_cache.end())
 				{
-					buff = this->_res_cache[it->con].front().get_res();
-					if (!it->con.send(buff))
+					ssize_t rbytes = it->con.send(this->_res_cache[it->con].first);
+					if (rbytes == 0)
+					{
+						this->_res_cache.erase(it->con);
 						this->_pool.close_con(it->con);
-					this->_res_cache[it->con].erase(this->_res_cache[it->con].begin());
+						continue;
+					}
+					if (rbytes < 0)
+						continue;
+					this->_res_cache[it->con].first.advance(rbytes);
+					if (this->_res_cache[it->con].first.size() == 0)
+					{
+						if (this->_res_cache[it->con].second == false)
+							this->_pool.close_con(it->con);
+						this->_res_cache.erase(it->con);
+					}
 				}
+			}
+			rqit = this->_req_cache.begin();
+			while (rqit != this->_req_cache.end())
+				this->_checkTimeout(rqit++);
+		}
+
+		void	Controller::_checkTimeout(std::map<net::Connection, Req>::iterator rqit)
+		{
+			if (rqit->second.getCreatedTime() + 60 < time(NULL))
+			{
+				this->_pool.close_con(rqit->first);
+				this->_req_cache.erase(rqit);
 			}
 		}
 	}
