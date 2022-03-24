@@ -122,7 +122,7 @@ namespace ws
             {
                 try{
                     ret.first = line.substr(0, e_addr);
-                    if (is_IPaddr(ret.first) == true && e_addr != -1)
+                    if (is_IPaddr(ret.first) == true && e_addr != (size_t)-1)
                             ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
                     else
                             throw ("");

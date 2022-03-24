@@ -4,6 +4,11 @@ namespace ws
 {
 	namespace conf
 	{
+		bool	routeSizeCmp(const Location& a, const Location& b)
+		{
+			// Biggers comes first
+			return a.route.size() > b.route.size();
+		}
 
 		void Parser::set_default_parameter(server_map &server){
 			for (server_map::iterator it = server.begin(); it != server.end(); it++)
@@ -11,6 +16,7 @@ namespace ws
 				for (std::vector<Server>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
 				{
 					sit->accepted_methods.push_back(GET);
+					std::sort(sit->locations.begin(), sit->locations.end(), routeSizeCmp);
 					for (std::vector<Location>::iterator it3 = sit->locations.begin(); it3 != sit->locations.end(); it3++)
 					{
 						if (it3->error_pages.empty())

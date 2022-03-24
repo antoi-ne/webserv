@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Router.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 17:40:33 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/23 17:18:11 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/24 09:34:42 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,15 +119,10 @@ namespace ws
 		const conf::Location*
 		Router::_getLocation(const std::string& uri, const conf::Server& serv) const
 		{
-			size_t	res;
-
 			for (conf::location_v::const_iterator it = serv.locations.begin();
-				it != serv.locations.end(); ++it)
-			{
-				res = uri.find(it->route);
-				if (res == 0)
+			it != serv.locations.end(); ++it)
+				if (uri.find(it->route) == 0)
 					return it.base();
-			}
 			return NULL;
 		}
 

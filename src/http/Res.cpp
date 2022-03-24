@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Res.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vneirinc <vneirinc@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 14:15:36 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/02/14 15:30:15 by vneirinc         ###   ########.fr       */
+/*   Updated: 2022/03/24 09:15:08 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,25 +35,31 @@ namespace http
 		buff.join(date_buff, s);
 	}
 
-	ws::shared::Buffer Res::get_res()
+	const std::string	Res::_getStatus(void)
 	{
-		ws::shared::Buffer	buff;
-		std::string			crlf("\r\n"); 
-
-		buff.join(HTTPVER" ");
+		std::string			status;
 		header_m::iterator	it = this->_header.find("status");
 
 		if (it == this->_header.end())
-			buff.join(this->_statusMsg);
+			status = this->_statusMsg;
 		else
 		{
-			buff.join(it->second);
+			status = it->second;
 			this->_header.erase(it);
 		}
+		return status;
+	}
+
+	ws::shared::Buffer Res::get_res()
+	{
+		ws::shared::Buffer	buff;
+		const std::string	crlf("\r\n"); 
+
+		buff.join(HTTPVER" ");
+		buff.join(this->_getStatus());
 		buff.join(crlf);
 
-		buff.join("Server: ");
-		buff.join(SERVER"\r\n");
+		buff.join("Server: "SERVER"\r\n");
 
 		buff.join("Date: ");
 		this->_getTime(buff);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Req.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ancoulon <ancoulon@student.s19.be>         +#+  +:+       +#+        */
+/*   By: vneirinc <vneirinc@students.s19.be>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/01 11:17:46 by vneirinc          #+#    #+#             */
-/*   Updated: 2022/03/18 12:05:42 by ancoulon         ###   ########.fr       */
+/*   Updated: 2022/03/24 09:06:40 by vneirinc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,29 +28,27 @@ namespace	http
 
 	ws::shared::Buffer	Req::getReq(void) const
 	{
-		std::string		methods[] = METHODS;
-		std::string		buff;
-		std::string		crlf("\r\n"); 
+		const std::string	methods[] = METHODS;
+		const std::string	crlf("\r\n"); 
+		ws::shared::Buffer	buff(methods[this->_method]);
 
-		buff += methods[this->_method];
-		buff += this->_path;
-		buff += " ";
-		buff += HTTPVER"\r\n";
+		buff.join(this->_path);
+		buff.join(" "HTTPVER"\r\n");
 
 		if (this->_contentLength == std::string::npos)
 		{
-			buff += "Content-Length: ";
-			buff += std::to_string(this->_body.size());
-			buff += crlf;
+			buff.join("Content-Length: ");
+			buff.join(std::to_string(this->_body.size()));
+			buff.join(crlf);
 		}
+
 		for (header_m::const_iterator it = this->_header.begin(); it != this->_header.end(); ++it)
-			buff += (it->first + std::string(": ") + it->second + crlf);
-		buff += crlf;
-		ws::shared::Buffer	_buff(buff);
+			buff.join(it->first + std::string(": ") + it->second + crlf);
+		buff.join(crlf);
 
 		if (this->_body.size())
-			_buff.join(this->_body);
-		return _buff;
+			buff.join(this->_body);
+		return buff;
 	}
 
 	Req::Req(void)
