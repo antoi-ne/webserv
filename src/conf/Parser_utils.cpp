@@ -64,8 +64,6 @@ namespace ws
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 1);
-                if (!(line.compare(0, 7, "listen:")))
-                    tmp = map_servers(line);
                 if (!(line.compare(0, 9, "location:")))
                 {
                     line = loc_attr(fd, tmp_server, line); 
@@ -74,6 +72,8 @@ namespace ws
                     else
                         line.erase(0, 1);
                 }
+                if (!(line.compare(0, 7, "listen:")))
+                    tmp = map_servers(line);
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
                 if (!(line.compare(0, 5, "root:")))

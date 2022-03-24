@@ -120,14 +120,14 @@ namespace ws
             }
             else
             {
-                try{
+                try {
                     ret.first = line.substr(0, e_addr);
                     if (is_IPaddr(ret.first) == true && e_addr != (size_t)-1)
-                            ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
+                        ret.second = std::stoi(line.substr((e_addr + 1), line.size()));
                     else
-                            throw ("");
+                        ret.second = 8080;
                 }
-                catch(...){
+                catch(...) {
                     this->valid = false;
                     std::cout << "bad port number" << std::endl;}
             }
