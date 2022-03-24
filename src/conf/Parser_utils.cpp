@@ -26,7 +26,7 @@ namespace ws
                     ret.accepted_methods = p_accpt_mtde(line);
                 if (!(line.compare(0, 10, "autoindex:")))
                     ret.autoindex = p_a_index(line);
-                if (!(line.compare(0, 21, "client_max_body_size:")))
+                if (!(line.compare(0, 21, "max_body_size:")))
                     ret.max_body_size = p_m_bdy_size(line);
                 if (!(line.compare(0, 12, "error_pages:")))
                     ret.error_pages = p_error_pages(ret.error_pages, line);
@@ -64,8 +64,6 @@ namespace ws
                 if (line[0] == '\0')
                     continue;
                 line.erase(0, 1);
-                if (!(line.compare(0, 7, "listen:")))
-                    tmp = map_servers(line);
                 if (!(line.compare(0, 9, "location:")))
                 {
                     line = loc_attr(fd, tmp_server, line); 
@@ -74,6 +72,8 @@ namespace ws
                     else
                         line.erase(0, 1);
                 }
+                if (!(line.compare(0, 7, "listen:")))
+                    tmp = map_servers(line);
                 if (!(line.compare(0, 13, "server_names:")))
                     tmp_server.server_names = p_server_names(line);
                 if (!(line.compare(0, 5, "root:")))
@@ -82,7 +82,7 @@ namespace ws
                     tmp_server.index = p_index(line);
                 if (!(line.compare(0, 10, "autoindex:")))
                     tmp_server.autoindex = p_a_index(line);
-                if (!(line.compare(0, 21, "client_max_body_size:")))
+                if (!(line.compare(0, 21, "max_body_size:")))
                     tmp_server.max_body_size = p_m_bdy_size(line);
                 if (!(line.compare(0, 12, "error_pages:")))
                     tmp_server.error_pages = p_error_pages(tmp_server.error_pages, line);

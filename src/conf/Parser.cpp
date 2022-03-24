@@ -10,6 +10,12 @@ namespace ws
 			{
 				for (std::vector<Server>::iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
 				{
+					sit->error_pages.insert(std::make_pair(400, "./src/default_error/400.html"));
+					sit->error_pages.insert(std::make_pair(404, "./src/default_error/404.html"));
+					sit->error_pages.insert(std::make_pair(403, "./src/default_error/403.html"));
+					sit->error_pages.insert(std::make_pair(405, "./src/default_error/405.html"));
+					sit->error_pages.insert(std::make_pair(413, "./src/default_error/413.html"));
+					sit->error_pages.insert(std::make_pair(500, "./src/default_error/500.html"));
 					for (std::vector<Location>::iterator it3 = sit->locations.begin(); it3 != sit->locations.end(); it3++)
 					{
 						if (it3->error_pages.empty())
