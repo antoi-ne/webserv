@@ -95,6 +95,14 @@ namespace ws
 
 			buff = this->_subprocess(script, args, envp);
 
+			for (i = 0; envp[i] != NULL; ++i)
+				free(envp[i]);
+			for (i = 0; i < 3; ++i)
+				free(args[i]);
+			free(script);
+			delete [] envp;
+			delete [] args;
+
 			res.update(buff);
 			return res;
 		}
